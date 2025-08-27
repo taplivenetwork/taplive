@@ -231,10 +231,18 @@ export default function Home() {
               {/* Filters */}
               <div className="space-y-3">
                 <Input
-                  placeholder={useTranslation().currentLanguage === 'en' ? "Search by location or description..." : 
-                    useTranslation().currentLanguage === 'zh' ? "搜索位置或描述..." :
-                    useTranslation().currentLanguage === 'ja' ? "場所や説明で検索..." :
-                    useTranslation().currentLanguage === 'es' ? "Buscar por ubicación o descripción..." :
+                  placeholder={
+                    currentLanguage === 'zh' ? "搜索位置或描述..." :
+                    currentLanguage === 'ja' ? "場所や説明で検索..." :
+                    currentLanguage === 'es' ? "Buscar por ubicación o descripción..." :
+                    currentLanguage === 'ko' ? "위치 또는 설명으로 검색..." :
+                    currentLanguage === 'fr' ? "Rechercher par lieu ou description..." :
+                    currentLanguage === 'de' ? "Nach Ort oder Beschreibung suchen..." :
+                    currentLanguage === 'ru' ? "Поиск по местоположению или описанию..." :
+                    currentLanguage === 'pt' ? "Pesquisar por localização ou descrição..." :
+                    currentLanguage === 'it' ? "Cerca per posizione o descrizione..." :
+                    currentLanguage === 'ar' ? "البحث حسب الموقع أو الوصف..." :
+                    currentLanguage === 'hi' ? "स्थान या विवरण द्वारा खोजें..." :
                     "Search by location or description..."}
                   value={searchFilter}
                   onChange={(e) => setSearchFilter(e.target.value)}
@@ -243,10 +251,18 @@ export default function Home() {
                 <div className="flex gap-2">
                   <Select value={categoryFilter} onValueChange={setCategoryFilter}>
                     <SelectTrigger data-testid="select-category-filter">
-                      <SelectValue placeholder={useTranslation().currentLanguage === 'en' ? "All Categories" : 
-                        useTranslation().currentLanguage === 'zh' ? "所有类别" :
-                        useTranslation().currentLanguage === 'ja' ? "すべてのカテゴリ" :
-                        useTranslation().currentLanguage === 'es' ? "Todas las categorías" :
+                      <SelectValue placeholder={
+                        currentLanguage === 'zh' ? "所有类别" :
+                        currentLanguage === 'ja' ? "すべてのカテゴリ" :
+                        currentLanguage === 'es' ? "Todas las categorías" :
+                        currentLanguage === 'ko' ? "모든 카테고리" :
+                        currentLanguage === 'fr' ? "Toutes les catégories" :
+                        currentLanguage === 'de' ? "Alle Kategorien" :
+                        currentLanguage === 'ru' ? "Все категории" :
+                        currentLanguage === 'pt' ? "Todas as categorias" :
+                        currentLanguage === 'it' ? "Tutte le categorie" :
+                        currentLanguage === 'ar' ? "جميع الفئات" :
+                        currentLanguage === 'hi' ? "सभी श्रेणियां" :
                         "All Categories"} />
                     </SelectTrigger>
                     <SelectContent>
@@ -261,10 +277,18 @@ export default function Home() {
                   </Select>
                   <Select value={priceFilter} onValueChange={setPriceFilter}>
                     <SelectTrigger data-testid="select-price-filter">
-                      <SelectValue placeholder={useTranslation().currentLanguage === 'en' ? "Any Price" : 
-                        useTranslation().currentLanguage === 'zh' ? "任何价格" :
-                        useTranslation().currentLanguage === 'ja' ? "任意の価格" :
-                        useTranslation().currentLanguage === 'es' ? "Cualquier precio" :
+                      <SelectValue placeholder={
+                        currentLanguage === 'zh' ? "任何价格" :
+                        currentLanguage === 'ja' ? "任意の価格" :
+                        currentLanguage === 'es' ? "Cualquier precio" :
+                        currentLanguage === 'ko' ? "모든 가격" :
+                        currentLanguage === 'fr' ? "Tous les prix" :
+                        currentLanguage === 'de' ? "Jeder Preis" :
+                        currentLanguage === 'ru' ? "Любая цена" :
+                        currentLanguage === 'pt' ? "Qualquer preço" :
+                        currentLanguage === 'it' ? "Qualsiasi prezzo" :
+                        currentLanguage === 'ar' ? "أي سعر" :
+                        currentLanguage === 'hi' ? "कोई भी कीमत" :
                         "Any Price"} />
                     </SelectTrigger>
                     <SelectContent>
