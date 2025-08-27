@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { TranslatedText } from "@/components/translated-text";
 import { MapPin, Clock, Users, DollarSign } from "lucide-react";
 import type { Order } from "@shared/schema";
 
@@ -49,10 +50,10 @@ export function OrderCard({ order, onAccept, onJoin, showActions = true }: Order
       <div className="flex items-start justify-between">
         <div className="flex-1">
           <h4 className="font-semibold text-foreground mb-1" data-testid="order-title">
-            {order.title}
+            <TranslatedText>{order.title}</TranslatedText>
           </h4>
           <p className="text-sm text-muted-foreground" data-testid="order-description">
-            {order.description}
+            <TranslatedText>{order.description}</TranslatedText>
           </p>
         </div>
         <Badge 
@@ -60,23 +61,23 @@ export function OrderCard({ order, onAccept, onJoin, showActions = true }: Order
           data-testid="order-status"
         >
           {isLive && <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse mr-1" />}
-          {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+          <TranslatedText>{order.status.charAt(0).toUpperCase() + order.status.slice(1)}</TranslatedText>
         </Badge>
       </div>
       
       <div className="space-y-2 text-sm">
         <div className="flex items-center gap-2 text-muted-foreground" data-testid="order-location">
           <MapPin className="w-4 h-4" />
-          <span>{order.address}</span>
+          <TranslatedText>{order.address}</TranslatedText>
         </div>
         <div className="flex items-center gap-2 text-muted-foreground" data-testid="order-schedule">
           <Clock className="w-4 h-4" />
-          <span>{formatScheduledTime(scheduledDate)} • {order.duration}min</span>
+          <span><TranslatedText>{formatScheduledTime(scheduledDate)}</TranslatedText> • {order.duration}<TranslatedText>min</TranslatedText></span>
         </div>
         {order.type === 'group' && (
           <div className="flex items-center gap-2 text-muted-foreground" data-testid="order-participants">
             <Users className="w-4 h-4" />
-            <span>{order.currentParticipants}/{order.maxParticipants} participants</span>
+            <span>{order.currentParticipants}/{order.maxParticipants} <TranslatedText>participants</TranslatedText></span>
           </div>
         )}
       </div>
@@ -88,7 +89,9 @@ export function OrderCard({ order, onAccept, onJoin, showActions = true }: Order
               <div className="w-6 h-6 bg-primary/20 rounded-full flex items-center justify-center text-primary text-xs font-bold">
                 U
               </div>
-              <span className="text-sm font-medium">Creator</span>
+              <span className="text-sm font-medium">
+                <TranslatedText>Creator</TranslatedText>
+              </span>
             </>
           )}
         </div>
@@ -98,7 +101,7 @@ export function OrderCard({ order, onAccept, onJoin, showActions = true }: Order
             {order.price}
           </div>
           <div className="text-xs text-muted-foreground">
-            {order.type === 'group' ? 'Total Pool' : 'Price'}
+            <TranslatedText>{order.type === 'group' ? 'Total Pool' : 'Price'}</TranslatedText>
           </div>
         </div>
       </div>
@@ -111,7 +114,7 @@ export function OrderCard({ order, onAccept, onJoin, showActions = true }: Order
               onClick={() => onJoin?.(order.id)}
               data-testid="button-join-stream"
             >
-              Join Stream
+              <TranslatedText>Join Stream</TranslatedText>
             </Button>
           ) : order.status === 'open' || order.status === 'pending' ? (
             <Button 
@@ -119,7 +122,7 @@ export function OrderCard({ order, onAccept, onJoin, showActions = true }: Order
               onClick={() => onAccept?.(order.id)}
               data-testid="button-accept-order"
             >
-              Accept Order
+              <TranslatedText>Accept Order</TranslatedText>
             </Button>
           ) : (
             <Button 
@@ -128,7 +131,7 @@ export function OrderCard({ order, onAccept, onJoin, showActions = true }: Order
               disabled
               data-testid="button-order-unavailable"
             >
-              {order.status === 'done' ? 'Completed' : 'Unavailable'}
+              <TranslatedText>{order.status === 'done' ? 'Completed' : 'Unavailable'}</TranslatedText>
             </Button>
           )}
         </div>

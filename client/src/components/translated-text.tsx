@@ -24,17 +24,21 @@ export function TranslatedText({
       return;
     }
 
+    // Clear previous translations when language changes
+    setTranslatedText(children);
+
     // Simple cache key
     const cacheKey = `${currentLanguage}-${children}`;
-    const cached = sessionStorage.getItem(cacheKey);
     
-    if (cached) {
-      setTranslatedText(cached);
-      return;
+    try {
+      const cached = sessionStorage.getItem(cacheKey);
+      if (cached) {
+        setTranslatedText(cached);
+        return;
+      }
+    } catch (error) {
+      // Storage access might fail
     }
-
-    // Simple translation without complex async handling
-    setTranslatedText(children); // Show original text immediately
     
     // Try to translate in background
     const translate = async () => {
@@ -44,17 +48,20 @@ export function TranslatedText({
         const data = await response.json();
         const translated = data.responseData?.translatedText;
         
-        if (translated && translated !== children) {
-          sessionStorage.setItem(cacheKey, translated);
+        if (translated && translated !== children && translated.trim()) {
+          try {
+            sessionStorage.setItem(cacheKey, translated);
+          } catch (error) {
+            // Storage write might fail
+          }
           setTranslatedText(translated);
         }
       } catch (error) {
-        // Silent fallback
-        setTranslatedText(children);
+        // Silent fallback - keep original text
       }
     };
 
-    const timeoutId = setTimeout(translate, 200);
+    const timeoutId = setTimeout(translate, 150);
     return () => clearTimeout(timeoutId);
   }, [children, currentLanguage]);
 
