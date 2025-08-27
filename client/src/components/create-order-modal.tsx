@@ -111,9 +111,10 @@ export function CreateOrderModal({ open, onOpenChange, selectedLocation }: Creat
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto glassmorphism border-border" data-testid="create-order-modal">
+      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto bg-background border-border shadow-lg" data-testid="create-order-modal" aria-describedby="create-order-description">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold text-foreground">Create Streaming Order</DialogTitle>
+          <p id="create-order-description" className="text-sm text-muted-foreground">Fill out the form below to create a new streaming request</p>
         </DialogHeader>
 
         <Form {...form}>
@@ -184,7 +185,7 @@ export function CreateOrderModal({ open, onOpenChange, selectedLocation }: Creat
                       <Input 
                         type="datetime-local" 
                         {...field}
-                        defaultValue={getDefaultScheduledTime()}
+                        value={field.value || getDefaultScheduledTime()}
                         data-testid="input-scheduled-time"
                       />
                     </FormControl>
