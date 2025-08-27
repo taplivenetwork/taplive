@@ -32,36 +32,78 @@ export function TranslatedText({
     
     try {
       const cached = sessionStorage.getItem(cacheKey);
-      if (cached) {
+      // Check if cached translation contains error messages
+      if (cached && 
+          !cached.includes('MYMEMORY WARNING') && 
+          !cached.includes('QUOTA EXCEEDED') &&
+          !cached.includes('NEXT AVAILABLE IN')) {
         setTranslatedText(cached);
         return;
+      } else if (cached) {
+        // Clear bad cached translations
+        sessionStorage.removeItem(cacheKey);
       }
     } catch (error) {
       // Storage access might fail
     }
     
-    // Try to translate in background
+    // Try to translate in background with multiple APIs
     const translate = async () => {
-      try {
-        // Use simple fetch directly to avoid hook dependencies
-        const response = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(children)}&langpair=en|${currentLanguage}&mt=1`);
-        const data = await response.json();
-        const translated = data.responseData?.translatedText;
-        
-        if (translated && translated !== children && translated.trim()) {
-          try {
-            sessionStorage.setItem(cacheKey, translated);
-          } catch (error) {
-            // Storage write might fail
-          }
-          setTranslatedText(translated);
+      const apis = [
+        {
+          name: 'Lingva',
+          url: `https://lingva.ml/api/v1/en/${currentLanguage}/${encodeURIComponent(children)}`,
+          parser: (data: any) => data.translation
+        },
+        {
+          name: 'Lingva2',
+          url: `https://translate.plausibility.cloud/api/v1/en/${currentLanguage}/${encodeURIComponent(children)}`,
+          parser: (data: any) => data.translation
+        },
+        {
+          name: 'MyMemory',
+          url: `https://api.mymemory.translated.net/get?q=${encodeURIComponent(children)}&langpair=en|${currentLanguage}&mt=1`,
+          parser: (data: any) => data.responseData?.translatedText
         }
-      } catch (error) {
-        // Silent fallback - keep original text
+      ];
+
+      for (const api of apis) {
+        try {
+          const response = await fetch(api.url, {
+            headers: {
+              'User-Agent': 'TapLive/1.0'
+            }
+          });
+          
+          if (!response.ok) continue;
+          
+          const data = await response.json();
+          const translated = api.parser(data);
+          
+          if (translated && 
+              translated !== children && 
+              translated.trim() &&
+              !translated.includes('MYMEMORY WARNING') &&
+              !translated.includes('QUOTA EXCEEDED')) {
+            
+            try {
+              sessionStorage.setItem(cacheKey, translated);
+            } catch (error) {
+              // Storage write might fail
+            }
+            setTranslatedText(translated);
+            return; // Success, stop trying other APIs
+          }
+        } catch (error) {
+          // Try next API
+          continue;
+        }
       }
+      
+      // All APIs failed, keep original text
     };
 
-    const timeoutId = setTimeout(translate, 150);
+    const timeoutId = setTimeout(translate, 100);
     return () => clearTimeout(timeoutId);
   }, [children, currentLanguage]);
 
