@@ -5,6 +5,8 @@ interface MapProps {
   orders: Order[];
   onLocationSelect?: (lat: number, lng: number) => void;
   className?: string;
+  center?: { lat: number; lng: number };
+  zoom?: number;
 }
 
 declare global {
@@ -13,7 +15,7 @@ declare global {
   }
 }
 
-export function Map({ orders, onLocationSelect, className }: MapProps) {
+export function Map({ orders, onLocationSelect, className, center, zoom = 13 }: MapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
 
@@ -40,8 +42,9 @@ export function Map({ orders, onLocationSelect, className }: MapProps) {
     function initializeMap() {
       if (!window.L || !mapRef.current || mapInstanceRef.current) return;
 
-      // Initialize map
-      const map = window.L.map(mapRef.current).setView([40.7128, -74.0060], 13);
+      // Initialize map with provided center or default to New York
+      const defaultCenter = center || { lat: 40.7128, lng: -74.0060 };
+      const map = window.L.map(mapRef.current).setView([defaultCenter.lat, defaultCenter.lng], zoom);
       mapInstanceRef.current = map;
 
       // Add tile layer
@@ -106,6 +109,13 @@ export function Map({ orders, onLocationSelect, className }: MapProps) {
       }
     };
   }, [orders, onLocationSelect]);
+
+  // Update map center when center prop changes
+  useEffect(() => {
+    if (mapInstanceRef.current && center) {
+      mapInstanceRef.current.setView([center.lat, center.lng], zoom);
+    }
+  }, [center, zoom]);
 
   return (
     <div 

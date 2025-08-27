@@ -46,6 +46,7 @@ export function CreateOrderModal({ open, onOpenChange, selectedLocation }: Creat
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const modalRef = useRef<HTMLDivElement>(null);
+  const [isGeocoding, setIsGeocoding] = useState(false);
 
   // Set default scheduled time to 2 hours from now
   const getDefaultScheduledTime = () => {
@@ -155,6 +156,64 @@ export function CreateOrderModal({ open, onOpenChange, selectedLocation }: Creat
     createOrderMutation.mutate(data);
   };
 
+  // Geocoding function using Nominatim (OpenStreetMap)
+  const geocodeAddress = async (address: string) => {
+    if (!address.trim()) return;
+    
+    setIsGeocoding(true);
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`
+      );
+      const data = await response.json();
+      
+      if (data && data.length > 0) {
+        const { lat, lon } = data[0];
+        const newLocation = { lat: parseFloat(lat), lng: parseFloat(lon) };
+        
+        // Update form coordinates
+        form.setValue('latitude', newLocation.lat);
+        form.setValue('longitude', newLocation.lng);
+        
+        // Trigger map update through parent component
+        if (window.mapUpdateLocation) {
+          window.mapUpdateLocation(newLocation.lat, newLocation.lng);
+        }
+        
+        toast({
+          title: "Location Found",
+          description: `Map updated to: ${data[0].display_name.split(',').slice(0, 3).join(', ')}`,
+        });
+      } else {
+        toast({
+          title: "Location Not Found",
+          description: "Could not find the specified address. Please try a different location.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Geocoding Error",
+        description: "Failed to search for location. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGeocoding(false);
+    }
+  };
+
+  // Debounced geocoding
+  useEffect(() => {
+    const address = form.watch('address');
+    if (!address || address.length < 3) return;
+
+    const timeoutId = setTimeout(() => {
+      geocodeAddress(address);
+    }, 1000); // Wait 1 second after user stops typing
+
+    return () => clearTimeout(timeoutId);
+  }, [form.watch('address')]);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent 
@@ -226,15 +285,19 @@ export function CreateOrderModal({ open, onOpenChange, selectedLocation }: Creat
                 <FormItem>
                   <FormLabel>Location</FormLabel>
                   <FormControl>
-                    <Input 
-                      placeholder="Enter location or drag window to view map" 
-                      {...field} 
-                      data-testid="input-location"
-                      onChange={(e) => {
-                        field.onChange(e);
-                        // Could add geocoding here to update map position
-                      }}
-                    />
+                    <div className="relative">
+                      <Input 
+                        placeholder="Enter location (e.g., San Francisco, CA)" 
+                        {...field} 
+                        data-testid="input-location"
+                        className={isGeocoding ? "pr-8" : ""}
+                      />
+                      {isGeocoding && (
+                        <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
+                          <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                        </div>
+                      )}
+                    </div>
                   </FormControl>
                   {selectedLocation && (
                     <p className="text-xs text-blue-600">

@@ -13,10 +13,17 @@ import { api } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import type { Order } from "@shared/schema";
 
+declare global {
+  interface Window {
+    mapUpdateLocation?: (lat: number, lng: number) => void;
+  }
+}
+
 export default function Home() {
   const { toast } = useToast();
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | undefined>();
+  const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number } | undefined>();
   const [searchFilter, setSearchFilter] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
   const [priceFilter, setPriceFilter] = useState("");
@@ -29,6 +36,18 @@ export default function Home() {
     refetchInterval: 30000, // Check every 30 seconds
     retry: 3,
   });
+
+  // Set up global map update function for geocoding
+  useEffect(() => {
+    window.mapUpdateLocation = (lat: number, lng: number) => {
+      setMapCenter({ lat, lng });
+      setSelectedLocation({ lat, lng });
+    };
+    
+    return () => {
+      delete window.mapUpdateLocation;
+    };
+  }, []);
 
   useEffect(() => {
     setHealthStatus(healthData ? "connected" : "disconnected");
@@ -143,6 +162,7 @@ export default function Home() {
           <Map 
             orders={orders} 
             onLocationSelect={(lat, lng) => setSelectedLocation({ lat, lng })}
+            center={mapCenter}
           />
         </div>
 
