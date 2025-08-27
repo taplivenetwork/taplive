@@ -49,9 +49,9 @@ export default function Home() {
       order.description.toLowerCase().includes(searchFilter.toLowerCase()) ||
       order.address?.toLowerCase().includes(searchFilter.toLowerCase());
     
-    const matchesCategory = !categoryFilter || order.category === categoryFilter;
+    const matchesCategory = !categoryFilter || categoryFilter === "all" || order.category === categoryFilter;
     
-    const matchesPrice = !priceFilter || (() => {
+    const matchesPrice = !priceFilter || priceFilter === "all" || (() => {
       const price = parseFloat(order.price);
       switch (priceFilter) {
         case "10-25": return price >= 10 && price <= 25;
@@ -203,7 +203,7 @@ export default function Home() {
                       <SelectValue placeholder="All Categories" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">All Categories</SelectItem>
+                      <SelectItem value="all">All Categories</SelectItem>
                       <SelectItem value="music">Music</SelectItem>
                       <SelectItem value="food">Food</SelectItem>
                       <SelectItem value="travel">Travel</SelectItem>
@@ -217,7 +217,7 @@ export default function Home() {
                       <SelectValue placeholder="Any Price" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Any Price</SelectItem>
+                      <SelectItem value="all">Any Price</SelectItem>
                       <SelectItem value="10-25">$10-25</SelectItem>
                       <SelectItem value="25-50">$25-50</SelectItem>
                       <SelectItem value="50+">$50+</SelectItem>

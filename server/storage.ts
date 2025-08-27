@@ -145,6 +145,7 @@ export class MemStorage implements IStorage {
       ...insertUser, 
       id, 
       role: 'user',
+      avatar: insertUser.avatar || null,
       createdAt: new Date()
     };
     this.users.set(id, user);
@@ -167,6 +168,8 @@ export class MemStorage implements IStorage {
       ...insertOrder,
       id,
       status: insertOrder.type === 'single' ? 'open' : 'pending',
+      address: insertOrder.address || null,
+      maxParticipants: insertOrder.maxParticipants || null,
       currentParticipants: 1,
       createdAt: new Date(),
       updatedAt: new Date(),
