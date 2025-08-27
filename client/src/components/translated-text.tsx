@@ -35,7 +35,7 @@ export function TranslatedText({
           setTranslatedText(translated);
         }
       } catch (error) {
-        console.warn('Translation failed:', error);
+        // Silent error handling
         if (isMounted) {
           setTranslatedText(fallbackText || children);
         }

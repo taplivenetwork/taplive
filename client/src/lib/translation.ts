@@ -92,14 +92,14 @@ class TranslationService {
         const translatedText = provider.parseResponse(data);
         
         if (translatedText && translatedText !== text && translatedText.trim()) {
-          console.log(`✅ Translated "${text}" to "${translatedText}" via ${provider.name}`);
+          // Quiet success logging to avoid console clutter
           return { text: translatedText, provider: provider.name };
         }
         
         throw new Error('No valid translation returned');
 
       } catch (error) {
-        console.warn(`❌ ${provider.name} failed:`, (error as Error).message);
+        // Silent error handling to avoid console clutter
         throw error;
       }
     });
@@ -113,8 +113,7 @@ class TranslationService {
       return result.text;
 
     } catch (error) {
-      // All providers failed
-      console.error('All translation providers failed:', error);
+      // All providers failed, return original text silently
       return text;
     }
   }

@@ -78,10 +78,6 @@ export function LanguageSelector({
           </DropdownMenuItem>
         ))}
         
-        <DropdownMenuSeparator />
-        <div className="p-2 text-xs text-muted-foreground text-center">
-          Powered by LibreTranslate • Free Translation
-        </div>
       </DropdownMenuContent>
     </DropdownMenu>
   );
