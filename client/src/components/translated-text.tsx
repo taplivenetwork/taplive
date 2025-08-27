@@ -49,6 +49,7 @@ export function TranslatedText({
       'Earnings': '收益',
       'Settings': '设置',
       'Content Creator': '内容创作者',
+      // Order content translations
       'Central Park Concert Stream': '中央公园音乐会直播',
       'Looking for someone to stream the outdoor concert happening at Central Park this evening': '正在寻找人来直播今晚在中央公园举行的户外音乐会',
       'Central Park, NYC': '纽约中央公园',
@@ -58,6 +59,7 @@ export function TranslatedText({
       'Beach Sunset Yoga': '海滩日落瑜伽',
       'Stream a peaceful sunset yoga session at Santa Monica Beach for wellness enthusiasts': '为健康爱好者直播圣莫尼卡海滩宁静的日落瑜伽',
       'Santa Monica Beach, CA': '加利福尼亚州圣莫尼卡海滩',
+      // Time translations
       'In 1h': '1小时后',
       'In 23h': '23小时后',
       'In 2 days': '2天后',
@@ -83,7 +85,21 @@ export function TranslatedText({
       'Open': 'オープン',
       'Live': 'ライブ',
       'participants': '参加者',
-      'min': '分'
+      'min': '分',
+      // Order content
+      'Central Park Concert Stream': 'セントラルパークコンサートストリーム',
+      'Looking for someone to stream the outdoor concert happening at Central Park this evening': '今夜セントラルパークで開催される野外コンサートをストリーミングしてくれる人を探しています',
+      'Central Park, NYC': 'ニューヨーク、セントラルパーク',
+      'Food Market Tour': 'フードマーケットツアー',
+      'Want someone to stream a guided tour of Pike Place Market, showcasing local vendors and food': 'パイクプレイスマーケットのガイドツアーをストリーミングして、地元の業者と食べ物を紹介してほしい',
+      'Pike Place Market, Seattle': 'シアトル、パイクプレイスマーケット',
+      'Beach Sunset Yoga': 'ビーチサンセットヨガ',
+      'Stream a peaceful sunset yoga session at Santa Monica Beach for wellness enthusiasts': 'ウェルネス愛好家のためにサンタモニカビーチで平和的な夕日ヨガセッションをストリーミング',
+      'Santa Monica Beach, CA': 'カリフォルニア州、サンタモニカビーチ',
+      // Time
+      'In 1h': '1時間後',
+      'In 23h': '23時間後', 
+      'In 2 days': '2日後'
     },
     'es': {
       'Search by location or description...': 'Buscar por ubicación o descripción...',
@@ -104,7 +120,21 @@ export function TranslatedText({
       'Open': 'Abierto',
       'Live': 'En vivo',
       'participants': 'participantes',
-      'min': 'min'
+      'min': 'min',
+      // Order content
+      'Central Park Concert Stream': 'Stream de Concierto en Central Park',
+      'Looking for someone to stream the outdoor concert happening at Central Park this evening': 'Buscando a alguien para transmitir el concierto al aire libre que ocurre en Central Park esta noche',
+      'Central Park, NYC': 'Central Park, Nueva York',
+      'Food Market Tour': 'Tour del Mercado de Comida',
+      'Want someone to stream a guided tour of Pike Place Market, showcasing local vendors and food': 'Quiero que alguien transmita un tour guiado del Mercado Pike Place, mostrando vendedores locales y comida',
+      'Pike Place Market, Seattle': 'Mercado Pike Place, Seattle',
+      'Beach Sunset Yoga': 'Yoga de Atardecer en la Playa',
+      'Stream a peaceful sunset yoga session at Santa Monica Beach for wellness enthusiasts': 'Transmitir una sesión pacífica de yoga al atardecer en la Playa Santa Monica para entusiastas del bienestar',
+      'Santa Monica Beach, CA': 'Playa Santa Monica, California',
+      // Time
+      'In 1h': 'En 1h',
+      'In 23h': 'En 23h',
+      'In 2 days': 'En 2 días'
     }
   };
 
