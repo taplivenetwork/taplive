@@ -2,6 +2,7 @@ import { MapPin, List, Video, User, Globe } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { LanguageSelector } from "@/components/language-selector";
+import { TranslatedText } from "@/components/translated-text";
 import { useTranslation } from "@/hooks/use-translation";
 
 export function MobileNavigation() {
@@ -43,7 +44,9 @@ export function MobileNavigation() {
                 data-testid={`mobile-nav-${item.name.toLowerCase()}`}
               >
                 <Icon className="w-5 h-5" />
-                <span className="text-xs">{item.name}</span>
+                <span className="text-xs">
+                  <TranslatedText>{item.name}</TranslatedText>
+                </span>
               </Button>
             </Link>
           );

@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { OrderCard } from "@/components/order-card";
+import { TranslatedText } from "@/components/translated-text";
 import { api } from "@/lib/api";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { Order } from "@shared/schema";
@@ -37,7 +38,9 @@ export default function Orders() {
     if (orderList.length === 0) {
       return (
         <div className="solid-card rounded-xl p-8 text-center">
-          <p className="text-muted-foreground">{emptyMessage}</p>
+          <p className="text-muted-foreground">
+            <TranslatedText>{emptyMessage}</TranslatedText>
+          </p>
         </div>
       );
     }
@@ -58,18 +61,34 @@ export default function Orders() {
   return (
     <div className="flex-1 p-6">
       <header className="mb-6">
-        <h2 className="text-2xl font-bold text-foreground">My Orders</h2>
-        <p className="text-muted-foreground">Manage your streaming orders and track their progress</p>
+        <h2 className="text-2xl font-bold text-foreground">
+          <TranslatedText>My Orders</TranslatedText>
+        </h2>
+        <p className="text-muted-foreground">
+          <TranslatedText>Manage your streaming orders and track their progress</TranslatedText>
+        </p>
       </header>
 
       <Tabs defaultValue="all" className="w-full">
         <TabsList className="grid w-full grid-cols-6 bg-secondary mb-6">
-          <TabsTrigger value="all" data-testid="tab-all">All</TabsTrigger>
-          <TabsTrigger value="pending" data-testid="tab-pending">Pending</TabsTrigger>
-          <TabsTrigger value="open" data-testid="tab-open">Open</TabsTrigger>
-          <TabsTrigger value="accepted" data-testid="tab-accepted">Accepted</TabsTrigger>
-          <TabsTrigger value="live" data-testid="tab-live">Live</TabsTrigger>
-          <TabsTrigger value="completed" data-testid="tab-completed">Completed</TabsTrigger>
+          <TabsTrigger value="all" data-testid="tab-all">
+            <TranslatedText>All</TranslatedText>
+          </TabsTrigger>
+          <TabsTrigger value="pending" data-testid="tab-pending">
+            <TranslatedText>Pending</TranslatedText>
+          </TabsTrigger>
+          <TabsTrigger value="open" data-testid="tab-open">
+            <TranslatedText>Open</TranslatedText>
+          </TabsTrigger>
+          <TabsTrigger value="accepted" data-testid="tab-accepted">
+            <TranslatedText>Accepted</TranslatedText>
+          </TabsTrigger>
+          <TabsTrigger value="live" data-testid="tab-live">
+            <TranslatedText>Live</TranslatedText>
+          </TabsTrigger>
+          <TabsTrigger value="completed" data-testid="tab-completed">
+            <TranslatedText>Completed</TranslatedText>
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="all">

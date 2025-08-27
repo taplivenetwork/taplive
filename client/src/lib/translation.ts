@@ -24,8 +24,8 @@ export const SUPPORTED_LANGUAGES: Language[] = [
 
 class TranslationService {
   private cache = new Map<string, string>();
-  private retryAttempts = 2;
-  private retryDelay = 1000;
+  private retryAttempts = 1; // Faster response, fewer retries
+  private retryDelay = 500; // Reduced delay
 
   async translateText(
     text: string, 
@@ -43,28 +43,46 @@ class TranslationService {
       return this.cache.get(cacheKey)!;
     }
 
-    let lastError: Error | null = null;
-
     // Ensure source language is valid (default to 'en' if 'auto')
     const validSourceLanguage = sourceLanguage === 'auto' ? 'en' : sourceLanguage;
     
-    // Translation providers to try (all free, no API key required)
+    // Multiple translation providers for better reliability and speed
     const providers = [
       {
+        name: 'Lingva',
+        url: `https://lingva.ml/api/v1/${validSourceLanguage}/${targetLanguage}/${encodeURIComponent(text)}`,
+        parseResponse: (data: any) => data.translation,
+        timeout: 3000
+      },
+      {
         name: 'MyMemory',
-        url: `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${validSourceLanguage}|${targetLanguage}&mt=1`,
-        parseResponse: (data: any) => data.responseData?.translatedText
+        url: `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${validSourceLanguage}|${targetLanguage}&mt=1&de=taplive@app.com`,
+        parseResponse: (data: any) => data.responseData?.translatedText,
+        timeout: 4000
+      },
+      {
+        name: 'Lingva-backup',
+        url: `https://translate.plausibility.cloud/api/v1/${validSourceLanguage}/${targetLanguage}/${encodeURIComponent(text)}`,
+        parseResponse: (data: any) => data.translation,
+        timeout: 3000
       }
     ];
 
-    // Try each provider
-    for (const provider of providers) {
+    // Try providers in parallel for faster response
+    const translationPromises = providers.map(async (provider) => {
       try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), provider.timeout);
+
         const response = await fetch(provider.url, {
           headers: {
             'User-Agent': 'TapLive-Translation-Service/1.0',
+            'Accept': 'application/json',
           },
+          signal: controller.signal,
         });
+
+        clearTimeout(timeoutId);
 
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}`);
@@ -73,22 +91,32 @@ class TranslationService {
         const data = await response.json();
         const translatedText = provider.parseResponse(data);
         
-        if (translatedText && translatedText !== text) {
-          // Cache the result
-          this.cache.set(cacheKey, translatedText);
-          console.log(`Translated "${text}" to "${translatedText}" via ${provider.name}`);
-          return translatedText;
+        if (translatedText && translatedText !== text && translatedText.trim()) {
+          console.log(`✅ Translated "${text}" to "${translatedText}" via ${provider.name}`);
+          return { text: translatedText, provider: provider.name };
         }
+        
+        throw new Error('No valid translation returned');
 
       } catch (error) {
-        lastError = error as Error;
-        console.warn(`${provider.name} translation failed:`, error);
+        console.warn(`❌ ${provider.name} failed:`, (error as Error).message);
+        throw error;
       }
-    }
+    });
 
-    // If all providers fail, return original text
-    console.error('All translation providers failed:', lastError);
-    return text;
+    try {
+      // Use Promise.any to get the first successful translation
+      const result = await Promise.any(translationPromises);
+      
+      // Cache the result
+      this.cache.set(cacheKey, result.text);
+      return result.text;
+
+    } catch (error) {
+      // All providers failed
+      console.error('All translation providers failed:', error);
+      return text;
+    }
   }
 
   async translateMultiple(

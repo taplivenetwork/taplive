@@ -231,7 +231,7 @@ export default function Home() {
               {/* Filters */}
               <div className="space-y-3">
                 <Input
-                  placeholder="Search by location or description..."
+                  placeholder={currentLanguage === 'en' ? "Search by location or description..." : "搜索位置或描述..." }
                   value={searchFilter}
                   onChange={(e) => setSearchFilter(e.target.value)}
                   data-testid="input-search"
@@ -239,24 +239,24 @@ export default function Home() {
                 <div className="flex gap-2">
                   <Select value={categoryFilter} onValueChange={setCategoryFilter}>
                     <SelectTrigger data-testid="select-category-filter">
-                      <SelectValue placeholder="All Categories" />
+                      <SelectValue placeholder={currentLanguage === 'en' ? "All Categories" : "所有类别"} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">All Categories</SelectItem>
-                      <SelectItem value="music">Music</SelectItem>
-                      <SelectItem value="food">Food</SelectItem>
-                      <SelectItem value="travel">Travel</SelectItem>
-                      <SelectItem value="events">Events</SelectItem>
-                      <SelectItem value="fitness">Fitness</SelectItem>
-                      <SelectItem value="education">Education</SelectItem>
+                      <SelectItem value="all"><TranslatedText>All Categories</TranslatedText></SelectItem>
+                      <SelectItem value="music"><TranslatedText>Music</TranslatedText></SelectItem>
+                      <SelectItem value="food"><TranslatedText>Food</TranslatedText></SelectItem>
+                      <SelectItem value="travel"><TranslatedText>Travel</TranslatedText></SelectItem>
+                      <SelectItem value="events"><TranslatedText>Events</TranslatedText></SelectItem>
+                      <SelectItem value="fitness"><TranslatedText>Fitness</TranslatedText></SelectItem>
+                      <SelectItem value="education"><TranslatedText>Education</TranslatedText></SelectItem>
                     </SelectContent>
                   </Select>
                   <Select value={priceFilter} onValueChange={setPriceFilter}>
                     <SelectTrigger data-testid="select-price-filter">
-                      <SelectValue placeholder="Any Price" />
+                      <SelectValue placeholder={currentLanguage === 'en' ? "Any Price" : "任何价格"} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">Any Price</SelectItem>
+                      <SelectItem value="all"><TranslatedText>Any Price</TranslatedText></SelectItem>
                       <SelectItem value="10-25">$10-25</SelectItem>
                       <SelectItem value="25-50">$25-50</SelectItem>
                       <SelectItem value="50+">$50+</SelectItem>
@@ -305,13 +305,15 @@ export default function Home() {
 
             <TabsContent value="my-orders" className="space-y-4">
               <div className="solid-card rounded-xl p-8 text-center">
-                <p className="text-muted-foreground">You haven't created any orders yet</p>
+                <p className="text-muted-foreground">
+                  <TranslatedText>You haven't created any orders yet</TranslatedText>
+                </p>
                 <Button 
                   className="mt-4" 
                   onClick={() => setCreateModalOpen(true)}
                   data-testid="button-create-first-order"
                 >
-                  Create Your First Order
+                  <TranslatedText>Create Your First Order</TranslatedText>
                 </Button>
               </div>
             </TabsContent>

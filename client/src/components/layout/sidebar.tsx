@@ -75,7 +75,9 @@ export function Sidebar() {
           </div>
           <div className="flex-1">
             <p className="text-sm font-medium" data-testid="user-name">Sarah Chen</p>
-            <p className="text-xs text-muted-foreground" data-testid="user-role">Content Creator</p>
+            <p className="text-xs text-muted-foreground" data-testid="user-role">
+              <TranslatedText>Content Creator</TranslatedText>
+            </p>
           </div>
           <Button
             variant="ghost"
