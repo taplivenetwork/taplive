@@ -111,7 +111,7 @@ export function CreateOrderModal({ open, onOpenChange, selectedLocation }: Creat
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto bg-background border-border shadow-lg" data-testid="create-order-modal" aria-describedby="create-order-description">
+      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto bg-white border-2 border-gray-200 shadow-2xl rounded-xl" data-testid="create-order-modal" aria-describedby="create-order-description">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold text-foreground">Create Streaming Order</DialogTitle>
           <p id="create-order-description" className="text-sm text-muted-foreground">Fill out the form below to create a new streaming request</p>
@@ -245,7 +245,7 @@ export function CreateOrderModal({ open, onOpenChange, selectedLocation }: Creat
               )}
             />
 
-            <div className="border border-border rounded-lg p-4 space-y-4">
+            <div className="border-2 border-gray-200 bg-gray-50 rounded-lg p-4 space-y-4">
               <h4 className="font-medium text-foreground">Payment Options</h4>
               
               <FormField
