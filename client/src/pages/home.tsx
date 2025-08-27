@@ -231,7 +231,11 @@ export default function Home() {
               {/* Filters */}
               <div className="space-y-3">
                 <Input
-                  placeholder="Search by location or description..."
+                  placeholder={useTranslation().currentLanguage === 'en' ? "Search by location or description..." : 
+                    useTranslation().currentLanguage === 'zh' ? "搜索位置或描述..." :
+                    useTranslation().currentLanguage === 'ja' ? "場所や説明で検索..." :
+                    useTranslation().currentLanguage === 'es' ? "Buscar por ubicación o descripción..." :
+                    "Search by location or description..."}
                   value={searchFilter}
                   onChange={(e) => setSearchFilter(e.target.value)}
                   data-testid="input-search"
@@ -239,7 +243,11 @@ export default function Home() {
                 <div className="flex gap-2">
                   <Select value={categoryFilter} onValueChange={setCategoryFilter}>
                     <SelectTrigger data-testid="select-category-filter">
-                      <SelectValue placeholder="All Categories" />
+                      <SelectValue placeholder={useTranslation().currentLanguage === 'en' ? "All Categories" : 
+                        useTranslation().currentLanguage === 'zh' ? "所有类别" :
+                        useTranslation().currentLanguage === 'ja' ? "すべてのカテゴリ" :
+                        useTranslation().currentLanguage === 'es' ? "Todas las categorías" :
+                        "All Categories"} />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all"><TranslatedText>All Categories</TranslatedText></SelectItem>
@@ -253,7 +261,11 @@ export default function Home() {
                   </Select>
                   <Select value={priceFilter} onValueChange={setPriceFilter}>
                     <SelectTrigger data-testid="select-price-filter">
-                      <SelectValue placeholder="Any Price" />
+                      <SelectValue placeholder={useTranslation().currentLanguage === 'en' ? "Any Price" : 
+                        useTranslation().currentLanguage === 'zh' ? "任何价格" :
+                        useTranslation().currentLanguage === 'ja' ? "任意の価格" :
+                        useTranslation().currentLanguage === 'es' ? "Cualquier precio" :
+                        "Any Price"} />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all"><TranslatedText>Any Price</TranslatedText></SelectItem>
