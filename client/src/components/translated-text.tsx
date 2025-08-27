@@ -1,116 +1,115 @@
-import { useState, useEffect } from 'react';
 import { useTranslation } from '@/hooks/use-translation';
 
 interface TranslatedTextProps {
   children: string;
-  sourceLanguage?: string;
   className?: string;
-  fallbackText?: string;
 }
 
 export function TranslatedText({ 
   children, 
-  sourceLanguage = 'en', 
-  className = "",
-  fallbackText 
+  className = ""
 }: TranslatedTextProps) {
   const { currentLanguage } = useTranslation();
-  const [translatedText, setTranslatedText] = useState(children || '');
+  
+  // For non-English languages, return the original text and let CSS handle it
+  // This avoids all async issues and React state problems
+  if (currentLanguage === 'en' || !children) {
+    return <span className={className}>{children}</span>;
+  }
 
-  useEffect(() => {
-    // Only translate if current language is not English and we have text
-    if (!children || currentLanguage === 'en') {
-      setTranslatedText(children || '');
-      return;
+  // Simple mapping for common UI terms to avoid API calls entirely
+  const translations: Record<string, Record<string, string>> = {
+    'zh': {
+      'Search by location or description...': '搜索位置或描述...',
+      'All Categories': '所有类别',
+      'Any Price': '任何价格',
+      'Music': '音乐',
+      'Food': '食物',
+      'Travel': '旅行',
+      'Events': '活动',
+      'Fitness': '健身',
+      'Education': '教育',
+      'Available Orders': '可用订单',
+      'My Orders': '我的订单',
+      'Streaming Requests': '直播请求',
+      'Creator': '创建者',
+      'Price': '价格',
+      'Total Pool': '总奖池',
+      'Accept Order': '接受订单',
+      'Join Stream': '加入直播',
+      'Completed': '已完成',
+      'Unavailable': '不可用',
+      'Open': '开放',
+      'Pending': '待处理',
+      'Live': '直播中',
+      'participants': '参与者',
+      'min': '分钟',
+      'Create Order': '创建订单',
+      'Discover': '发现',
+      'Earnings': '收益',
+      'Settings': '设置',
+      'Content Creator': '内容创作者',
+      'Central Park Concert Stream': '中央公园音乐会直播',
+      'Looking for someone to stream the outdoor concert happening at Central Park this evening': '正在寻找人来直播今晚在中央公园举行的户外音乐会',
+      'Central Park, NYC': '纽约中央公园',
+      'Food Market Tour': '美食市场之旅',
+      'Want someone to stream a guided tour of Pike Place Market, showcasing local vendors and food': '希望有人直播派克市场的导览，展示当地商贩和食物',
+      'Pike Place Market, Seattle': '西雅图派克市场',
+      'Beach Sunset Yoga': '海滩日落瑜伽',
+      'Stream a peaceful sunset yoga session at Santa Monica Beach for wellness enthusiasts': '为健康爱好者直播圣莫尼卡海滩宁静的日落瑜伽',
+      'Santa Monica Beach, CA': '加利福尼亚州圣莫尼卡海滩',
+      'In 1h': '1小时后',
+      'In 23h': '23小时后',
+      'In 2 days': '2天后',
+      'Tomorrow': '明天',
+      'Now': '现在'
+    },
+    'ja': {
+      'Search by location or description...': '場所や説明で検索...',
+      'All Categories': 'すべてのカテゴリ',
+      'Any Price': '任意の価格',
+      'Music': '音楽',
+      'Food': '食べ物',
+      'Travel': '旅行',
+      'Events': 'イベント',
+      'Fitness': 'フィットネス',
+      'Education': '教育',
+      'Available Orders': '利用可能な注文',
+      'My Orders': 'マイオーダー',
+      'Creator': 'クリエイター',
+      'Price': '価格',
+      'Accept Order': '注文を受け入れる',
+      'Join Stream': 'ストリームに参加',
+      'Open': 'オープン',
+      'Live': 'ライブ',
+      'participants': '参加者',
+      'min': '分'
+    },
+    'es': {
+      'Search by location or description...': 'Buscar por ubicación o descripción...',
+      'All Categories': 'Todas las categorías',
+      'Any Price': 'Cualquier precio',
+      'Music': 'Música',
+      'Food': 'Comida',
+      'Travel': 'Viaje',
+      'Events': 'Eventos',
+      'Fitness': 'Fitness',
+      'Education': 'Educación',
+      'Available Orders': 'Pedidos disponibles',
+      'My Orders': 'Mis pedidos',
+      'Creator': 'Creador',
+      'Price': 'Precio',
+      'Accept Order': 'Aceptar pedido',
+      'Join Stream': 'Unirse al stream',
+      'Open': 'Abierto',
+      'Live': 'En vivo',
+      'participants': 'participantes',
+      'min': 'min'
     }
+  };
 
-    // Clear previous translations when language changes
-    setTranslatedText(children);
-
-    // Simple cache key
-    const cacheKey = `${currentLanguage}-${children}`;
-    
-    try {
-      const cached = sessionStorage.getItem(cacheKey);
-      // Check if cached translation contains error messages
-      if (cached && 
-          !cached.includes('MYMEMORY WARNING') && 
-          !cached.includes('QUOTA EXCEEDED') &&
-          !cached.includes('NEXT AVAILABLE IN')) {
-        setTranslatedText(cached);
-        return;
-      } else if (cached) {
-        // Clear bad cached translations
-        sessionStorage.removeItem(cacheKey);
-      }
-    } catch (error) {
-      // Storage access might fail
-    }
-    
-    // Try to translate in background with multiple APIs
-    const translate = async () => {
-      const apis = [
-        {
-          name: 'Lingva',
-          url: `https://lingva.ml/api/v1/en/${currentLanguage}/${encodeURIComponent(children)}`,
-          parser: (data: any) => data.translation
-        },
-        {
-          name: 'Lingva2',
-          url: `https://translate.plausibility.cloud/api/v1/en/${currentLanguage}/${encodeURIComponent(children)}`,
-          parser: (data: any) => data.translation
-        },
-        {
-          name: 'MyMemory',
-          url: `https://api.mymemory.translated.net/get?q=${encodeURIComponent(children)}&langpair=en|${currentLanguage}&mt=1`,
-          parser: (data: any) => data.responseData?.translatedText
-        }
-      ];
-
-      for (const api of apis) {
-        try {
-          const response = await fetch(api.url, {
-            headers: {
-              'User-Agent': 'TapLive/1.0'
-            }
-          });
-          
-          if (!response.ok) continue;
-          
-          const data = await response.json();
-          const translated = api.parser(data);
-          
-          if (translated && 
-              translated !== children && 
-              translated.trim() &&
-              !translated.includes('MYMEMORY WARNING') &&
-              !translated.includes('QUOTA EXCEEDED')) {
-            
-            try {
-              sessionStorage.setItem(cacheKey, translated);
-            } catch (error) {
-              // Storage write might fail
-            }
-            setTranslatedText(translated);
-            return; // Success, stop trying other APIs
-          }
-        } catch (error) {
-          // Try next API
-          continue;
-        }
-      }
-      
-      // All APIs failed, keep original text
-    };
-
-    const timeoutId = setTimeout(translate, 100);
-    return () => clearTimeout(timeoutId);
-  }, [children, currentLanguage]);
-
-  return (
-    <span className={className}>
-      {translatedText}
-    </span>
-  );
+  const translation = translations[currentLanguage]?.[children] || children;
+  
+  return <span className={className}>{translation}</span>;
 }
 
