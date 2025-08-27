@@ -10,61 +10,53 @@ interface TranslatedTextProps {
 
 export function TranslatedText({ 
   children, 
-  sourceLanguage = 'auto', 
+  sourceLanguage = 'en', 
   className = "",
   fallbackText 
 }: TranslatedTextProps) {
-  const { translateText, currentLanguage, isTranslating } = useTranslation();
-  const [translatedText, setTranslatedText] = useState(children);
-  const [isLoading, setIsLoading] = useState(false);
+  const { currentLanguage } = useTranslation();
+  const [translatedText, setTranslatedText] = useState(children || '');
 
   useEffect(() => {
-    // Only translate if current language is not English (source)
-    if (currentLanguage === 'en' || !children?.trim()) {
-      setTranslatedText(children);
-      setIsLoading(false);
+    // Only translate if current language is not English and we have text
+    if (!children || currentLanguage === 'en') {
+      setTranslatedText(children || '');
       return;
     }
 
-    let isMounted = true;
-    setIsLoading(true);
+    // Simple cache key
+    const cacheKey = `${currentLanguage}-${children}`;
+    const cached = sessionStorage.getItem(cacheKey);
+    
+    if (cached) {
+      setTranslatedText(cached);
+      return;
+    }
 
-    const performTranslation = async () => {
+    // Simple translation without complex async handling
+    setTranslatedText(children); // Show original text immediately
+    
+    // Try to translate in background
+    const translate = async () => {
       try {
-        if (translateText && typeof translateText === 'function') {
-          const translated = await translateText(children, sourceLanguage);
-          if (isMounted && translated) {
-            setTranslatedText(translated);
-          }
+        // Use simple fetch directly to avoid hook dependencies
+        const response = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(children)}&langpair=en|${currentLanguage}&mt=1`);
+        const data = await response.json();
+        const translated = data.responseData?.translatedText;
+        
+        if (translated && translated !== children) {
+          sessionStorage.setItem(cacheKey, translated);
+          setTranslatedText(translated);
         }
       } catch (error) {
-        // Silent error handling
-        if (isMounted) {
-          setTranslatedText(fallbackText || children);
-        }
-      } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
+        // Silent fallback
+        setTranslatedText(children);
       }
     };
 
-    // Add small delay to prevent rapid re-renders
-    const timeoutId = setTimeout(performTranslation, 100);
-
-    return () => {
-      isMounted = false;
-      clearTimeout(timeoutId);
-    };
-  }, [children, currentLanguage, sourceLanguage, translateText, fallbackText]);
-
-  if (isLoading) {
-    return (
-      <span className={`${className} opacity-70`}>
-        {children}
-      </span>
-    );
-  }
+    const timeoutId = setTimeout(translate, 200);
+    return () => clearTimeout(timeoutId);
+  }, [children, currentLanguage]);
 
   return (
     <span className={className}>

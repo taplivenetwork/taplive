@@ -68,11 +68,13 @@ class TranslationService {
       }
     ];
 
-    // Try providers in parallel for faster response
-    const translationPromises = providers.map(async (provider) => {
+    // Try providers sequentially to avoid Promise.any compatibility issues
+    for (const provider of providers) {
       try {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), provider.timeout);
+        const timeoutId = setTimeout(() => {
+          controller.abort();
+        }, provider.timeout);
 
         const response = await fetch(provider.url, {
           headers: {
@@ -85,40 +87,26 @@ class TranslationService {
         clearTimeout(timeoutId);
 
         if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`);
+          continue; // Try next provider
         }
 
         const data = await response.json();
         const translatedText = provider.parseResponse(data);
         
         if (translatedText && translatedText !== text && translatedText.trim()) {
-          // Quiet success logging to avoid console clutter
-          return { text: translatedText, provider: provider.name };
+          // Cache the result
+          this.cache.set(cacheKey, translatedText);
+          return translatedText;
         }
-        
-        throw new Error('No valid translation returned');
 
       } catch (error) {
-        // Silent error handling to avoid console clutter
-        throw error;
+        // Try next provider
+        continue;
       }
-    });
-
-    try {
-      // Use Promise.any to get the first successful translation
-      const result = await Promise.any(translationPromises);
-      
-      if (result && result.text) {
-        // Cache the result
-        this.cache.set(cacheKey, result.text);
-        return result.text;
-      }
-      
-      return text;
-    } catch (error) {
-      // All providers failed, return original text silently
-      return text;
     }
+
+    // All providers failed, return original text
+    return text;
   }
 
   async translateMultiple(
