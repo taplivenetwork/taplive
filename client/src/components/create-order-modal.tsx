@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { X } from "lucide-react";
+import { X, Move } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -42,6 +42,10 @@ interface CreateOrderModalProps {
 export function CreateOrderModal({ open, onOpenChange, selectedLocation }: CreateOrderModalProps) {
   const { toast } = useToast();
   const [paymentType, setPaymentType] = useState<"single" | "group">("single");
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const modalRef = useRef<HTMLDivElement>(null);
 
   // Set default scheduled time to 2 hours from now
   const getDefaultScheduledTime = () => {
@@ -49,6 +53,48 @@ export function CreateOrderModal({ open, onOpenChange, selectedLocation }: Creat
     now.setHours(now.getHours() + 2);
     return now.toISOString().slice(0, 16);
   };
+
+  // Handle mouse down on header for dragging
+  const handleMouseDown = (e: React.MouseEvent) => {
+    setIsDragging(true);
+    setDragStart({
+      x: e.clientX - position.x,
+      y: e.clientY - position.y
+    });
+  };
+
+  // Handle mouse move for dragging
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (isDragging) {
+        setPosition({
+          x: e.clientX - dragStart.x,
+          y: e.clientY - dragStart.y
+        });
+      }
+    };
+
+    const handleMouseUp = () => {
+      setIsDragging(false);
+    };
+
+    if (isDragging) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging, dragStart]);
+
+  // Reset position when modal opens
+  useEffect(() => {
+    if (open) {
+      setPosition({ x: 0, y: 0 });
+    }
+  }, [open]);
 
   const form = useForm<CreateOrderForm>({
     resolver: zodResolver(createOrderSchema),
@@ -111,14 +157,31 @@ export function CreateOrderModal({ open, onOpenChange, selectedLocation }: Creat
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto bg-white border-2 border-gray-200 shadow-2xl rounded-xl" data-testid="create-order-modal" aria-describedby="create-order-description">
-        <DialogHeader>
-          <DialogTitle className="text-xl font-bold text-foreground">Create Streaming Order</DialogTitle>
-          <p id="create-order-description" className="text-sm text-muted-foreground">Fill out the form below to create a new streaming request</p>
+      <DialogContent 
+        ref={modalRef}
+        className="sm:max-w-md max-h-[80vh] overflow-y-auto bg-white border-2 border-gray-200 shadow-2xl rounded-xl fixed"
+        style={{
+          transform: `translate(${position.x}px, ${position.y}px)`,
+          cursor: isDragging ? 'grabbing' : 'default'
+        }}
+        data-testid="create-order-modal" 
+        aria-describedby="create-order-description"
+      >
+        <DialogHeader 
+          className="cursor-grab active:cursor-grabbing border-b border-gray-100 pb-3 mb-4"
+          onMouseDown={handleMouseDown}
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Move className="w-4 h-4 text-gray-400" />
+              <DialogTitle className="text-lg font-bold text-foreground">Create Streaming Order</DialogTitle>
+            </div>
+          </div>
+          <p id="create-order-description" className="text-sm text-muted-foreground">Fill out the form below to create a new streaming request. Drag this window to view the map.</p>
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
             <FormField
               control={form.control}
               name="title"
@@ -164,11 +227,20 @@ export function CreateOrderModal({ open, onOpenChange, selectedLocation }: Creat
                   <FormLabel>Location</FormLabel>
                   <FormControl>
                     <Input 
-                      placeholder="Enter location or click on map" 
+                      placeholder="Enter location or drag window to view map" 
                       {...field} 
                       data-testid="input-location"
+                      onChange={(e) => {
+                        field.onChange(e);
+                        // Could add geocoding here to update map position
+                      }}
                     />
                   </FormControl>
+                  {selectedLocation && (
+                    <p className="text-xs text-blue-600">
+                      Selected: {selectedLocation.lat.toFixed(4)}, {selectedLocation.lng.toFixed(4)}
+                    </p>
+                  )}
                   <FormMessage />
                 </FormItem>
               )}
