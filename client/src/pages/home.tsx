@@ -9,8 +9,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Map } from "@/components/ui/map";
 import { OrderCard } from "@/components/order-card";
 import { CreateOrderModal } from "@/components/create-order-modal";
+import { TranslatedText } from "@/components/translated-text";
 import { api } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "@/hooks/use-translation";
 import type { Order } from "@shared/schema";
 
 declare global {
@@ -21,6 +23,7 @@ declare global {
 
 export default function Home() {
   const { toast } = useToast();
+  const { currentLanguage } = useTranslation();
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | undefined>();
   const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number } | undefined>();
@@ -128,8 +131,12 @@ export default function Home() {
         {/* Header */}
         <header className="flex flex-col sm:flex-row sm:items-center justify-between mb-6">
           <div>
-            <h2 className="text-2xl font-bold text-foreground">Discover Live Streams</h2>
-            <p className="text-muted-foreground">Find and create location-based streaming experiences</p>
+            <h2 className="text-2xl font-bold text-foreground">
+              <TranslatedText>Discover Live Streams</TranslatedText>
+            </h2>
+            <p className="text-muted-foreground">
+              <TranslatedText>Find and create location-based streaming experiences</TranslatedText>
+            </p>
           </div>
           <div className="flex items-center gap-3 mt-4 sm:mt-0">
             {/* Health Status */}
@@ -144,7 +151,11 @@ export default function Home() {
               <div className={`w-2 h-2 rounded-full animate-pulse mr-2 ${
                 healthStatus === "connected" ? "bg-green-400" : "bg-red-400"
               }`} />
-              <span>{healthStatus === "connected" ? "API Connected" : "API Disconnected"}</span>
+              <span>
+                <TranslatedText>
+                  {healthStatus === "connected" ? "API Connected" : "API Disconnected"}
+                </TranslatedText>
+              </span>
             </Badge>
             <Button 
               className="bg-primary text-primary-foreground hover:bg-primary/90" 
@@ -152,7 +163,7 @@ export default function Home() {
               data-testid="button-create-order"
             >
               <Plus className="w-4 h-4 mr-2" />
-              Create Order
+              <TranslatedText>Create Order</TranslatedText>
             </Button>
           </div>
         </header>
@@ -168,7 +179,9 @@ export default function Home() {
 
         {/* Active Streams */}
         <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-foreground">Active Streams Nearby</h3>
+          <h3 className="text-lg font-semibold text-foreground">
+            <TranslatedText>Active Streams Nearby</TranslatedText>
+          </h3>
           
           {isLoading ? (
             <div className="space-y-4">
@@ -192,7 +205,9 @@ export default function Home() {
             </div>
           ) : (
             <div className="solid-card rounded-xl p-8 text-center">
-              <p className="text-muted-foreground">No active streams nearby at the moment</p>
+              <p className="text-muted-foreground">
+                <TranslatedText>No active streams nearby at the moment</TranslatedText>
+              </p>
             </div>
           )}
         </div>
@@ -204,8 +219,12 @@ export default function Home() {
           {/* Tabs */}
           <Tabs defaultValue="available" className="w-full">
             <TabsList className="grid w-full grid-cols-2 bg-secondary">
-              <TabsTrigger value="available" data-testid="tab-available">Available Orders</TabsTrigger>
-              <TabsTrigger value="my-orders" data-testid="tab-my-orders">My Orders</TabsTrigger>
+              <TabsTrigger value="available" data-testid="tab-available">
+                <TranslatedText>Available Orders</TranslatedText>
+              </TabsTrigger>
+              <TabsTrigger value="my-orders" data-testid="tab-my-orders">
+                <TranslatedText>My Orders</TranslatedText>
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="available" className="space-y-4">
@@ -248,7 +267,9 @@ export default function Home() {
 
               {/* Orders List */}
               <div className="space-y-4">
-                <h3 className="font-semibold text-foreground">Streaming Requests</h3>
+                <h3 className="font-semibold text-foreground">
+                  <TranslatedText>Streaming Requests</TranslatedText>
+                </h3>
                 
                 {isLoading ? (
                   <div className="space-y-4">
@@ -274,7 +295,9 @@ export default function Home() {
                   </div>
                 ) : (
                   <div className="solid-card rounded-xl p-8 text-center">
-                    <p className="text-muted-foreground">No orders match your filters</p>
+                    <p className="text-muted-foreground">
+                      <TranslatedText>No orders match your filters</TranslatedText>
+                    </p>
                   </div>
                 )}
               </div>

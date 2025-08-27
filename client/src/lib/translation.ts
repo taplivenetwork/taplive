@@ -24,16 +24,16 @@ export const SUPPORTED_LANGUAGES: Language[] = [
 
 class TranslationService {
   private cache = new Map<string, string>();
-  private retryAttempts = 3;
+  private retryAttempts = 2;
   private retryDelay = 1000;
 
   async translateText(
     text: string, 
-    sourceLanguage: string = 'auto', 
+    sourceLanguage: string = 'en', 
     targetLanguage: string = 'en'
   ): Promise<string> {
-    // Return original text if no translation needed
-    if (sourceLanguage === targetLanguage || !text.trim()) {
+    // Return original text if no translation needed or if target is same as source
+    if (sourceLanguage === targetLanguage || !text.trim() || targetLanguage === 'en') {
       return text;
     }
 
@@ -45,53 +45,49 @@ class TranslationService {
 
     let lastError: Error | null = null;
 
-    // Try multiple times with exponential backoff
-    for (let attempt = 1; attempt <= this.retryAttempts; attempt++) {
+    // Ensure source language is valid (default to 'en' if 'auto')
+    const validSourceLanguage = sourceLanguage === 'auto' ? 'en' : sourceLanguage;
+    
+    // Translation providers to try (all free, no API key required)
+    const providers = [
+      {
+        name: 'MyMemory',
+        url: `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${validSourceLanguage}|${targetLanguage}&mt=1`,
+        parseResponse: (data: any) => data.responseData?.translatedText
+      }
+    ];
+
+    // Try each provider
+    for (const provider of providers) {
       try {
-        const response = await fetch('https://libretranslate.com/translate', {
-          method: 'POST',
+        const response = await fetch(provider.url, {
           headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
+            'User-Agent': 'TapLive-Translation-Service/1.0',
           },
-          body: JSON.stringify({
-            q: text,
-            source: sourceLanguage,
-            target: targetLanguage,
-            format: 'text',
-          }),
         });
 
         if (!response.ok) {
-          throw new Error(`Translation API error: ${response.status}`);
+          throw new Error(`HTTP ${response.status}`);
         }
 
         const data = await response.json();
+        const translatedText = provider.parseResponse(data);
         
-        if (data.error) {
-          throw new Error(data.error);
+        if (translatedText && translatedText !== text) {
+          // Cache the result
+          this.cache.set(cacheKey, translatedText);
+          console.log(`Translated "${text}" to "${translatedText}" via ${provider.name}`);
+          return translatedText;
         }
-
-        const translatedText = data.translatedText || text;
-        
-        // Cache the result
-        this.cache.set(cacheKey, translatedText);
-        
-        return translatedText;
 
       } catch (error) {
         lastError = error as Error;
-        console.warn(`Translation attempt ${attempt} failed:`, error);
-        
-        // Wait before retry (exponential backoff)
-        if (attempt < this.retryAttempts) {
-          await new Promise(resolve => setTimeout(resolve, this.retryDelay * attempt));
-        }
+        console.warn(`${provider.name} translation failed:`, error);
       }
     }
 
-    // All attempts failed, return original text
-    console.error('Translation failed after all retries:', lastError);
+    // If all providers fail, return original text
+    console.error('All translation providers failed:', lastError);
     return text;
   }
 

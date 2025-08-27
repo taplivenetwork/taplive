@@ -51,7 +51,8 @@ export function useTranslationState() {
 
     setIsTranslating(true);
     try {
-      const source = sourceLanguage || detectLanguageFromText(text);
+      // Default to English as source language for most UI text
+      const source = sourceLanguage || 'en';
       const translated = await translationService.translateText(text, source, currentLanguage);
       return translated;
     } catch (error) {

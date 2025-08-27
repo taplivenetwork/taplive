@@ -2,6 +2,7 @@ import { Video, MapPin, List, Wallet, Settings, LogOut, User } from "lucide-reac
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "wouter";
 import { LanguageSelector } from "@/components/language-selector";
+import { TranslatedText } from "@/components/translated-text";
 import { useTranslation } from "@/hooks/use-translation";
 
 export function Sidebar() {
@@ -45,7 +46,9 @@ export function Sidebar() {
                 data-testid={`nav-${item.name.toLowerCase().replace(' ', '-')}`}
               >
                 <Icon className="w-5 h-5" />
-                <span>{item.name}</span>
+                <span>
+                  <TranslatedText>{item.name}</TranslatedText>
+                </span>
               </Button>
             </Link>
           );
