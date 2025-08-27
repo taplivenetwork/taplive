@@ -5,17 +5,8 @@ interface TranslatedTextProps {
   className?: string;
 }
 
-export function TranslatedText({ 
-  children, 
-  className = ""
-}: TranslatedTextProps) {
+export function TranslatedText({ children, className }: TranslatedTextProps) {
   const { currentLanguage } = useTranslation();
-  
-  // For non-English languages, return the original text and let CSS handle it
-  // This avoids all async issues and React state problems
-  if (currentLanguage === 'en' || !children) {
-    return <span className={className}>{children}</span>;
-  }
 
   // Simple mapping for common UI terms to avoid API calls entirely
   const translations: Record<string, Record<string, string>> = {
@@ -55,7 +46,6 @@ export function TranslatedText({
       'Streams': '直播',
       'Profile': '个人资料',
       'All': '全部',
-      // Home page content
       'Discover Live Streams': '发现直播',
       'Find and create location-based streaming experiences': '发现和创建基于位置的直播体验',
       'API Connected': 'API已连接',
@@ -65,7 +55,6 @@ export function TranslatedText({
       'No orders match your filters': '没有订单符合您的筛选条件',
       'You haven\'t created any orders yet': '您还没有创建任何订单',
       'Create Your First Order': '创建您的第一个订单',
-      // Form content
       'What would you like to stream?': '您想直播什么？',
       'Describe the streaming experience you want...': '描述您想要的直播体验...',
       'Enter location (e.g., San Francisco, CA)': '输入位置 (例如：北京，中国)',
@@ -73,7 +62,6 @@ export function TranslatedText({
       'Select category': '选择类别',
       'Get Current Location': '获取当前位置',
       'Creating...': '创建中...',
-      // Specific order content
       'Central Park Concert Stream': '中央公园音乐会直播',
       'Looking for someone to stream the outdoor concert happening at Central Park this evening': '正在寻找人来直播今晚在中央公园举行的户外音乐会',
       'Central Park, NYC': '纽约中央公园',
@@ -83,7 +71,6 @@ export function TranslatedText({
       'Beach Sunset Yoga': '海滩日落瑜伽',
       'Stream a peaceful sunset yoga session at Santa Monica Beach for wellness enthusiasts': '为健康爱好者直播圣莫尼卡海滩宁静的日落瑜伽',
       'Santa Monica Beach, CA': '加利福尼亚州圣莫尼卡海滩',
-      // Messages and status
       'Success': '成功',
       'Error': '错误',
       'Connection Error': '连接错误',
@@ -95,11 +82,9 @@ export function TranslatedText({
       'Manage your streaming orders and track their progress': '管理您的直播订单并跟踪进度',
       'No orders found': '未找到订单',
       'Your orders will appear here once you create them': '创建订单后将显示在这里',
-      // Language selector
       'Select Language / 选择语言': '选择语言 / Select Language',
       'Active': '当前',
       'Language / 语言': '语言 / Language',
-      // Time
       'In 1h': '1小时后',
       'In 23h': '23小时后',
       'In 2 days': '2天后',
@@ -107,7 +92,6 @@ export function TranslatedText({
       'Now': '现在'
     },
     'ja': {
-      // Basic UI (removed duplicates)
       'Search by location or description...': '場所や説明で検索...',
       'All Categories': 'すべてのカテゴリ',
       'Any Price': '任意の価格',
@@ -119,12 +103,17 @@ export function TranslatedText({
       'Education': '教育',
       'Available Orders': '利用可能な注文',
       'My Orders': 'マイオーダー',
+      'Streaming Requests': 'ストリーミング要求',
       'Creator': 'クリエイター',
       'Price': '価格',
+      'Total Pool': '総プール',
       'Accept Order': '注文を受け入れる',
       'Join Stream': 'ストリームに参加',
       'Open': 'オープン',
       'Live': 'ライブ',
+      'Completed': '完了',
+      'Unavailable': '利用不可',
+      'Pending': '保留中',
       'participants': '参加者',
       'min': '分',
       'Live Streams': 'ライブストリーム',
@@ -171,7 +160,6 @@ export function TranslatedText({
       'In 2 days': '2日後'
     },
     'es': {
-      // Basic UI (removed duplicates)
       'Search by location or description...': 'Buscar por ubicación o descripción...',
       'All Categories': 'Todas las categorías',
       'Any Price': 'Cualquier precio',
@@ -183,12 +171,17 @@ export function TranslatedText({
       'Education': 'Educación',
       'Available Orders': 'Pedidos disponibles',
       'My Orders': 'Mis pedidos',
+      'Streaming Requests': 'Solicitudes de transmisión',
       'Creator': 'Creador',
       'Price': 'Precio',
+      'Total Pool': 'Pool total',
       'Accept Order': 'Aceptar pedido',
       'Join Stream': 'Unirse al stream',
       'Open': 'Abierto',
       'Live': 'En vivo',
+      'Completed': 'Completado',
+      'Unavailable': 'No disponible',
+      'Pending': 'Pendiente',
       'participants': 'participantes',
       'min': 'min',
       'Live Streams': 'Transmisiones en Vivo',
@@ -235,7 +228,6 @@ export function TranslatedText({
       'In 2 days': 'En 2 días'
     },
     'ko': {
-      // Basic UI
       'Search by location or description...': '위치 또는 설명으로 검색...',
       'All Categories': '모든 카테고리',
       'Any Price': '모든 가격',
@@ -308,7 +300,6 @@ export function TranslatedText({
       'In 2 days': '2일 후'
     },
     'fr': {
-      // Basic UI  
       'Search by location or description...': 'Rechercher par lieu ou description...',
       'All Categories': 'Toutes les catégories',
       'Any Price': 'Tous les prix',
@@ -364,7 +355,6 @@ export function TranslatedText({
       'In 2 days': 'Dans 2 jours'
     },
     'de': {
-      // Basic UI
       'Search by location or description...': 'Nach Ort oder Beschreibung suchen...',
       'All Categories': 'Alle Kategorien',
       'Any Price': 'Jeder Preis',
@@ -376,8 +366,10 @@ export function TranslatedText({
       'Education': 'Bildung',
       'Available Orders': 'Verfügbare Bestellungen',
       'My Orders': 'Meine Bestellungen',
+      'Streaming Requests': 'Streaming-Anfragen',
       'Creator': 'Ersteller',
       'Price': 'Preis',
+      'Total Pool': 'Gesamtpool',
       'Accept Order': 'Bestellung annehmen',
       'Join Stream': 'Stream beitreten',
       'Open': 'Offen',
@@ -391,7 +383,6 @@ export function TranslatedText({
       'In 2 days': 'In 2 Tagen'
     },
     'ru': {
-      // Basic UI
       'Search by location or description...': 'Поиск по местоположению или описанию...',
       'All Categories': 'Все категории',
       'Any Price': 'Любая цена',
@@ -403,8 +394,10 @@ export function TranslatedText({
       'Education': 'Образование',
       'Available Orders': 'Доступные заказы',
       'My Orders': 'Мои заказы',
+      'Streaming Requests': 'Запросы на стриминг',
       'Creator': 'Создатель',
       'Price': 'Цена',
+      'Total Pool': 'Общий пул',
       'Accept Order': 'Принять заказ',
       'Join Stream': 'Присоединиться к стриму',
       'Open': 'Открыт',
@@ -418,7 +411,6 @@ export function TranslatedText({
       'In 2 days': 'Через 2 дня'
     },
     'pt': {
-      // Basic UI
       'Search by location or description...': 'Pesquisar por localização ou descrição...',
       'All Categories': 'Todas as categorias',
       'Any Price': 'Qualquer preço',
@@ -430,8 +422,10 @@ export function TranslatedText({
       'Education': 'Educação',
       'Available Orders': 'Pedidos disponíveis',
       'My Orders': 'Meus pedidos',
+      'Streaming Requests': 'Solicitações de streaming',
       'Creator': 'Criador',
       'Price': 'Preço',
+      'Total Pool': 'Pool total',
       'Accept Order': 'Aceitar pedido',
       'Join Stream': 'Participar do stream',
       'Open': 'Aberto',
@@ -445,7 +439,6 @@ export function TranslatedText({
       'In 2 days': 'Em 2 dias'
     },
     'it': {
-      // Basic UI
       'Search by location or description...': 'Cerca per posizione o descrizione...',
       'All Categories': 'Tutte le categorie',
       'Any Price': 'Qualsiasi prezzo',
@@ -457,8 +450,10 @@ export function TranslatedText({
       'Education': 'Educazione',
       'Available Orders': 'Ordini disponibili',
       'My Orders': 'I miei ordini',
+      'Streaming Requests': 'Richieste di streaming',
       'Creator': 'Creatore',
       'Price': 'Prezzo',
+      'Total Pool': 'Pool totale',
       'Accept Order': 'Accetta ordine',
       'Join Stream': 'Unisciti al stream',
       'Open': 'Aperto',
@@ -472,7 +467,6 @@ export function TranslatedText({
       'In 2 days': 'Tra 2 giorni'
     },
     'ar': {
-      // Basic UI
       'Search by location or description...': 'البحث حسب الموقع أو الوصف...',
       'All Categories': 'جميع الفئات',
       'Any Price': 'أي سعر',
@@ -484,8 +478,10 @@ export function TranslatedText({
       'Education': 'تعليم',
       'Available Orders': 'الطلبات المتاحة',
       'My Orders': 'طلباتي',
+      'Streaming Requests': 'طلبات البث',
       'Creator': 'منشئ',
       'Price': 'سعر',
+      'Total Pool': 'المجموع الكلي',
       'Accept Order': 'قبول الطلب',
       'Join Stream': 'انضم للبث',
       'Open': 'مفتوح',
@@ -499,7 +495,6 @@ export function TranslatedText({
       'In 2 days': 'خلال يومين'
     },
     'hi': {
-      // Basic UI
       'Search by location or description...': 'स्थान या विवरण द्वारा खोजें...',
       'All Categories': 'सभी श्रेणियां',
       'Any Price': 'कोई भी कीमत',
@@ -511,16 +506,70 @@ export function TranslatedText({
       'Education': 'शिक्षा',
       'Available Orders': 'उपलब्ध ऑर्डर',
       'My Orders': 'मेरे ऑर्डर',
+      'Streaming Requests': 'स्ट्रीमिंग अनुरोध',
       'Creator': 'निर्माता',
       'Price': 'कीमत',
+      'Total Pool': 'कुल पूल',
       'Accept Order': 'ऑर्डर स्वीकार करें',
       'Join Stream': 'स्ट्रीम में शामिल हों',
       'Open': 'खुला',
       'Live': 'लाइव',
+      'Completed': 'पूर्ण',
+      'Unavailable': 'अनुपलब्ध',
+      'Pending': 'लंबित',
       'participants': 'प्रतिभागी',
       'min': 'मिनट',
       'Create Order': 'ऑर्डर बनाएं',
       'Discover': 'खोजें',
+      'Content Creator': 'सामग्री निर्माता',
+      'Live Streams': 'लाइव स्ट्रीम',
+      'Settings': 'सेटिंग्स',
+      'Earnings': 'कमाई',
+      'Orders': 'ऑर्डर',
+      'Streams': 'स्ट्रीम',
+      'Profile': 'प्रोफ़ाइल',
+      'All': 'सभी',
+      'Discover Live Streams': 'लाइव स्ट्रीम खोजें',
+      'Find and create location-based streaming experiences': 'स्थान-आधारित स्ट्रीमिंग अनुभव खोजें और बनाएं',
+      'API Connected': 'API कनेक्टेड',
+      'API Disconnected': 'API डिस्कनेक्टेड',
+      'Active Streams Nearby': 'आस-पास सक्रिय स्ट्रीम',
+      'No active streams nearby at the moment': 'इस समय आस-पास कोई सक्रिय स्ट्रीम नहीं',
+      'No orders match your filters': 'आपके फिल्टर से कोई ऑर्डर मेल नहीं खाता',
+      'You haven\'t created any orders yet': 'आपने अभी तक कोई ऑर्डर नहीं बनाया है',
+      'Create Your First Order': 'अपना पहला ऑर्डर बनाएं',
+      'What would you like to stream?': 'आप क्या स्ट्रीम करना चाहेंगे?',
+      'Describe the streaming experience you want...': 'जो स्ट्रीमिंग अनुभव आप चाहते हैं उसका वर्णन करें...',
+      'Enter location (e.g., San Francisco, CA)': 'स्थान दर्ज करें (जैसे: दिल्ली, भारत)',
+      'Select duration': 'अवधि चुनें',
+      'Select category': 'श्रेणी चुनें',
+      'Get Current Location': 'वर्तमान स्थान प्राप्त करें',
+      'Creating...': 'बना रहे हैं...',
+      'Central Park Concert Stream': 'सेंट्रल पार्क कॉन्सर्ट स्ट्रीम',
+      'Looking for someone to stream the outdoor concert happening at Central Park this evening': 'आज शाम सेंट्रल पार्क में हो रहे आउटडोर कॉन्सर्ट को स्ट्रीम करने के लिए किसी की तलाश',
+      'Central Park, NYC': 'सेंट्रल पार्क, न्यूयॉर्क',
+      'Food Market Tour': 'फूड मार्केट टूर',
+      'Want someone to stream a guided tour of Pike Place Market, showcasing local vendors and food': 'पाइक प्लेस मार्केट का गाइडेड टूर स्ट्रीम करने के लिए किसी को चाहिए, जो स्थानीय विक्रेताओं और भोजन को दिखाए',
+      'Pike Place Market, Seattle': 'पाइक प्लेस मार्केट, सिएटल',
+      'Beach Sunset Yoga': 'बीच सनसेट योग',
+      'Stream a peaceful sunset yoga session at Santa Monica Beach for wellness enthusiasts': 'स्वास्थ्य उत्साही लोगों के लिए सांता मोनिका बीच पर शांतिपूर्ण सनसेट योग सत्र स्ट्रीम करें',
+      'Santa Monica Beach, CA': 'सांता मोनिका बीच, कैलिफोर्निया',
+      'Success': 'सफलता',
+      'Error': 'त्रुटि',
+      'Connection Error': 'कनेक्शन त्रुटि',
+      'Failed to connect to the server': 'सर्वर से कनेक्ट करने में विफल',
+      'Order accepted successfully!': 'ऑर्डर सफलतापूर्वक स्वीकार किया गया!',
+      'Failed to accept order': 'ऑर्डर स्वीकार करने में विफल',
+      'Joining Stream': 'स्ट्रीम में शामिल हो रहे हैं',
+      'Opening live stream...': 'लाइव स्ट्रीम खोल रहे हैं...',
+      'Manage your streaming orders and track their progress': 'अपने स्ट्रीमिंग ऑर्डर का प्रबंधन करें और उनकी प्रगति को ट्रैक करें',
+      'No orders found': 'कोई ऑर्डर नहीं मिला',
+      'Your orders will appear here once you create them': 'आपके ऑर्डर बनाने के बाद यहाँ दिखाई देंगे',
+      'Select Language / 选择语言': 'भाषा चुनें / Select Language',
+      'Active': 'सक्रिय',
+      'Language / 语言': 'भाषा / Language',
+      'Tomorrow': 'कल',
+      'Now': 'अब',
       'In 1h': '1 घंटे में',
       'In 23h': '23 घंटे में',
       'In 2 days': '2 दिन में'
@@ -531,4 +580,3 @@ export function TranslatedText({
   
   return <span className={className}>{translation}</span>;
 }
-
