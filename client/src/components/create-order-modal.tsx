@@ -267,7 +267,7 @@ export function CreateOrderModal({ open, onOpenChange, selectedLocation }: Creat
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent 
         ref={modalRef}
-        className="sm:max-w-md max-h-[80vh] overflow-y-auto bg-white border-2 border-gray-200 shadow-2xl rounded-xl fixed"
+        className="sm:max-w-md max-h-[80vh] overflow-y-auto bg-white border-2 border-gray-200 shadow-2xl rounded-xl fixed z-[9999]"
         style={{
           transform: `translate(${position.x}px, ${position.y}px)`,
           cursor: isDragging ? 'grabbing' : 'default'

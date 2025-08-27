@@ -114,6 +114,8 @@
   height: 400px;
   border-radius: var(--radius);
   overflow: hidden;
+  position: relative;
+  z-index: 1;
 }
 
 .live-indicator {
