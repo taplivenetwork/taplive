@@ -68,7 +68,7 @@ export function OrderCard({ order, onAccept, onJoin, showActions = true }: Order
       <div className="space-y-2 text-sm">
         <div className="flex items-center gap-2 text-muted-foreground" data-testid="order-location">
           <MapPin className="w-4 h-4" />
-          <TranslatedText>{order.address}</TranslatedText>
+          <span><TranslatedText>{order.address}</TranslatedText></span>
         </div>
         <div className="flex items-center gap-2 text-muted-foreground" data-testid="order-schedule">
           <Clock className="w-4 h-4" />
