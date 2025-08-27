@@ -1,9 +1,12 @@
 import { Video, MapPin, List, Wallet, Settings, LogOut, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "wouter";
+import { LanguageSelector } from "@/components/language-selector";
+import { useTranslation } from "@/hooks/use-translation";
 
 export function Sidebar() {
   const [location] = useLocation();
+  const { currentLanguage, setCurrentLanguage } = useTranslation();
 
   const navigation = [
     { name: "Discover", href: "/", icon: MapPin, current: location === "/" },
@@ -49,8 +52,20 @@ export function Sidebar() {
         })}
       </nav>
 
+      {/* Language Selector */}
+      <div className="mt-6 pt-4 border-t border-border">
+        <div className="mb-3">
+          <p className="text-xs font-medium text-muted-foreground mb-2">Language / 语言</p>
+          <LanguageSelector 
+            currentLanguage={currentLanguage}
+            onLanguageChange={setCurrentLanguage}
+            className="w-full"
+          />
+        </div>
+      </div>
+
       {/* User Profile */}
-      <div className="mt-auto pt-6 border-t border-border">
+      <div className="pt-4 border-t border-border">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center">
             <User className="w-5 h-5 text-primary" />

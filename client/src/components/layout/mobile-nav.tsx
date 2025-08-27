@@ -1,9 +1,12 @@
-import { MapPin, List, Video, User } from "lucide-react";
+import { MapPin, List, Video, User, Globe } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
+import { LanguageSelector } from "@/components/language-selector";
+import { useTranslation } from "@/hooks/use-translation";
 
 export function MobileNavigation() {
   const [location] = useLocation();
+  const { currentLanguage, setCurrentLanguage } = useTranslation();
 
   const navigation = [
     { name: "Discover", href: "/", icon: MapPin },
@@ -13,8 +16,18 @@ export function MobileNavigation() {
   ];
 
   return (
-    <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-card border-t border-border p-4 z-40" data-testid="mobile-nav">
-      <div className="flex items-center justify-around">
+    <>
+      {/* Language selector for mobile - positioned at top right */}
+      <div className="lg:hidden fixed top-4 right-4 z-50">
+        <LanguageSelector 
+          currentLanguage={currentLanguage}
+          onLanguageChange={setCurrentLanguage}
+          className="bg-white shadow-lg"
+        />
+      </div>
+      
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-card border-t border-border p-4 z-40" data-testid="mobile-nav">
+        <div className="flex items-center justify-around">
         {navigation.map((item) => {
           const Icon = item.icon;
           const isActive = location === item.href;
@@ -35,7 +48,8 @@ export function MobileNavigation() {
             </Link>
           );
         })}
-      </div>
-    </nav>
+        </div>
+      </nav>
+    </>
   );
 }
