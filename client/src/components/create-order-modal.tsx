@@ -156,50 +156,99 @@ export function CreateOrderModal({ open, onOpenChange, selectedLocation }: Creat
     createOrderMutation.mutate(data);
   };
 
-  // Geocoding function using Nominatim (OpenStreetMap)
+  // Multi-provider geocoding with automatic fallback
   const geocodeAddress = async (address: string) => {
     if (!address.trim()) return;
     
     setIsGeocoding(true);
-    try {
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`
-      );
-      const data = await response.json();
+    
+    // Geocoding providers in order of preference
+    const geocodingProviders = [
+      {
+        name: "OpenStreetMap Nominatim",
+        url: `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`,
+        parseResponse: (data: any[]) => data.length > 0 ? { 
+          lat: parseFloat(data[0].lat), 
+          lng: parseFloat(data[0].lon),
+          display_name: data[0].display_name 
+        } : null
+      },
+      {
+        name: "Photon API",
+        url: `https://photon.komoot.io/api/?q=${encodeURIComponent(address)}&limit=1`,
+        parseResponse: (data: any) => data.features && data.features.length > 0 ? {
+          lat: data.features[0].geometry.coordinates[1],
+          lng: data.features[0].geometry.coordinates[0],
+          display_name: data.features[0].properties.name || address
+        } : null
+      },
+      {
+        name: "LocationIQ",
+        url: `https://us1.locationiq.com/v1/search.php?key=pk.0f147952a41c209c5446b00b0c7587e9&q=${encodeURIComponent(address)}&format=json&limit=1`,
+        parseResponse: (data: any[]) => data.length > 0 ? {
+          lat: parseFloat(data[0].lat),
+          lng: parseFloat(data[0].lon),
+          display_name: data[0].display_name
+        } : null
+      }
+    ];
+
+    let lastError = null;
+    
+    for (let i = 0; i < geocodingProviders.length; i++) {
+      const provider = geocodingProviders[i];
       
-      if (data && data.length > 0) {
-        const { lat, lon } = data[0];
-        const newLocation = { lat: parseFloat(lat), lng: parseFloat(lon) };
+      try {
+        const response = await fetch(provider.url, {
+          headers: {
+            'User-Agent': 'TapLive-Location-Service'
+          }
+        });
         
-        // Update form coordinates
-        form.setValue('latitude', newLocation.lat);
-        form.setValue('longitude', newLocation.lng);
-        
-        // Trigger map update through parent component
-        if (window.mapUpdateLocation) {
-          window.mapUpdateLocation(newLocation.lat, newLocation.lng);
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
         }
         
-        toast({
-          title: "Location Found",
-          description: `Map updated to: ${data[0].display_name.split(',').slice(0, 3).join(', ')}`,
-        });
-      } else {
-        toast({
-          title: "Location Not Found",
-          description: "Could not find the specified address. Please try a different location.",
-          variant: "destructive",
-        });
+        const data = await response.json();
+        const result = provider.parseResponse(data);
+        
+        if (result) {
+          // Success! Update form coordinates
+          form.setValue('latitude', result.lat);
+          form.setValue('longitude', result.lng);
+          
+          // Trigger map update through parent component
+          if (window.mapUpdateLocation) {
+            window.mapUpdateLocation(result.lat, result.lng);
+          }
+          
+          toast({
+            title: "Location Found",
+            description: `📍 ${result.display_name.split(',').slice(0, 3).join(', ')} (via ${provider.name})`,
+          });
+          
+          setIsGeocoding(false);
+          return; // Exit successfully
+        }
+      } catch (error) {
+        lastError = error;
+        console.warn(`${provider.name} failed:`, error);
+        
+        // Continue to next provider if not the last one
+        if (i < geocodingProviders.length - 1) {
+          continue;
+        }
       }
-    } catch (error) {
-      toast({
-        title: "Geocoding Error",
-        description: "Failed to search for location. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsGeocoding(false);
     }
+    
+    // All providers failed
+    toast({
+      title: "Location Not Found",
+      description: "Could not find the specified address using any available service. Please try a different location.",
+      variant: "destructive",
+    });
+    
+    setIsGeocoding(false);
   };
 
   // Debounced geocoding
