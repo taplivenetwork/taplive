@@ -45,7 +45,7 @@ export function OrderCard({ order, onAccept, onJoin, showActions = true }: Order
   };
 
   return (
-    <div className="glassmorphism rounded-xl p-4 space-y-3 order-card" data-testid={`order-card-${order.id}`}>
+    <div className="solid-card rounded-xl p-4 space-y-3 order-card" data-testid={`order-card-${order.id}`}>
       <div className="flex items-start justify-between">
         <div className="flex-1">
           <h4 className="font-semibold text-foreground mb-1" data-testid="order-title">

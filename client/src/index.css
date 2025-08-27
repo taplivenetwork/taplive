@@ -104,10 +104,10 @@
   }
 }
 
-.glassmorphism {
-  background-color: rgba(255, 255, 255, 0.95);
-  border: 1px solid rgba(200, 200, 200, 0.3);
-  backdrop-filter: blur(10px);
+.solid-card {
+  background-color: white;
+  border: 2px solid #e5e7eb;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 .map-container {
@@ -126,7 +126,7 @@
 }
 
 .streaming-overlay {
-  background: linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.8) 100%);
+  background: linear-gradient(180deg, rgba(255,255,255,0.9) 0%, rgba(0,0,0,0.9) 100%);
 }
 
 .animate-fade-in {

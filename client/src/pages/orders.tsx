@@ -24,7 +24,7 @@ export default function Orders() {
       return (
         <div className="space-y-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="glassmorphism rounded-xl p-4 animate-pulse">
+            <div key={i} className="solid-card rounded-xl p-4 animate-pulse">
               <div className="h-4 bg-muted rounded w-3/4 mb-2"></div>
               <div className="h-3 bg-muted rounded w-1/2 mb-2"></div>
               <div className="h-3 bg-muted rounded w-2/3"></div>
@@ -36,7 +36,7 @@ export default function Orders() {
 
     if (orderList.length === 0) {
       return (
-        <div className="glassmorphism rounded-xl p-8 text-center">
+        <div className="solid-card rounded-xl p-8 text-center">
           <p className="text-muted-foreground">{emptyMessage}</p>
         </div>
       );

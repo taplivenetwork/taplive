@@ -158,7 +158,7 @@ export default function Home() {
         </header>
 
         {/* Map Container */}
-        <div className="glassmorphism rounded-xl p-1 mb-6">
+        <div className="solid-card rounded-xl p-1 mb-6">
           <Map 
             orders={orders} 
             onLocationSelect={(lat, lng) => setSelectedLocation({ lat, lng })}
@@ -173,7 +173,7 @@ export default function Home() {
           {isLoading ? (
             <div className="space-y-4">
               {[1, 2].map((i) => (
-                <div key={i} className="glassmorphism rounded-xl p-4 animate-pulse">
+                <div key={i} className="solid-card rounded-xl p-4 animate-pulse">
                   <div className="h-4 bg-muted rounded w-3/4 mb-2"></div>
                   <div className="h-3 bg-muted rounded w-1/2"></div>
                 </div>
@@ -191,7 +191,7 @@ export default function Home() {
               ))}
             </div>
           ) : (
-            <div className="glassmorphism rounded-xl p-8 text-center">
+            <div className="solid-card rounded-xl p-8 text-center">
               <p className="text-muted-foreground">No active streams nearby at the moment</p>
             </div>
           )}
@@ -199,7 +199,7 @@ export default function Home() {
       </div>
 
       {/* Order Panel */}
-      <aside className="w-full lg:w-96 border-l border-border p-6 bg-card/50">
+      <aside className="w-full lg:w-96 border-l border-border p-6 bg-white">
         <div className="space-y-6">
           {/* Tabs */}
           <Tabs defaultValue="available" className="w-full">
@@ -253,7 +253,7 @@ export default function Home() {
                 {isLoading ? (
                   <div className="space-y-4">
                     {[1, 2, 3].map((i) => (
-                      <div key={i} className="glassmorphism rounded-xl p-4 animate-pulse">
+                      <div key={i} className="solid-card rounded-xl p-4 animate-pulse">
                         <div className="h-4 bg-muted rounded w-3/4 mb-2"></div>
                         <div className="h-3 bg-muted rounded w-1/2 mb-2"></div>
                         <div className="h-3 bg-muted rounded w-2/3"></div>
@@ -273,7 +273,7 @@ export default function Home() {
                     ))}
                   </div>
                 ) : (
-                  <div className="glassmorphism rounded-xl p-8 text-center">
+                  <div className="solid-card rounded-xl p-8 text-center">
                     <p className="text-muted-foreground">No orders match your filters</p>
                   </div>
                 )}
@@ -281,7 +281,7 @@ export default function Home() {
             </TabsContent>
 
             <TabsContent value="my-orders" className="space-y-4">
-              <div className="glassmorphism rounded-xl p-8 text-center">
+              <div className="solid-card rounded-xl p-8 text-center">
                 <p className="text-muted-foreground">You haven't created any orders yet</p>
                 <Button 
                   className="mt-4" 
