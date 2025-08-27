@@ -20,8 +20,9 @@ export function TranslatedText({
 
   useEffect(() => {
     // Only translate if current language is not English (source)
-    if (currentLanguage === 'en' || !children.trim()) {
+    if (currentLanguage === 'en' || !children?.trim()) {
       setTranslatedText(children);
+      setIsLoading(false);
       return;
     }
 
@@ -30,9 +31,11 @@ export function TranslatedText({
 
     const performTranslation = async () => {
       try {
-        const translated = await translateText(children, sourceLanguage);
-        if (isMounted) {
-          setTranslatedText(translated);
+        if (translateText && typeof translateText === 'function') {
+          const translated = await translateText(children, sourceLanguage);
+          if (isMounted && translated) {
+            setTranslatedText(translated);
+          }
         }
       } catch (error) {
         // Silent error handling
@@ -46,10 +49,12 @@ export function TranslatedText({
       }
     };
 
-    performTranslation();
+    // Add small delay to prevent rapid re-renders
+    const timeoutId = setTimeout(performTranslation, 100);
 
     return () => {
       isMounted = false;
+      clearTimeout(timeoutId);
     };
   }, [children, currentLanguage, sourceLanguage, translateText, fallbackText]);
 
@@ -68,21 +73,3 @@ export function TranslatedText({
   );
 }
 
-// Higher-order component for wrapping elements with translation
-export function withTranslation<T extends { children?: React.ReactNode }>(
-  Component: React.ComponentType<T>
-) {
-  return function TranslatedComponent(props: T) {
-    const { children, ...rest } = props;
-    
-    if (typeof children === 'string') {
-      return (
-        <Component {...(rest as T)}>
-          <TranslatedText>{children}</TranslatedText>
-        </Component>
-      );
-    }
-    
-    return <Component {...props} />;
-  };
-}

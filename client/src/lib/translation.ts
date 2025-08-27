@@ -108,10 +108,13 @@ class TranslationService {
       // Use Promise.any to get the first successful translation
       const result = await Promise.any(translationPromises);
       
-      // Cache the result
-      this.cache.set(cacheKey, result.text);
-      return result.text;
-
+      if (result && result.text) {
+        // Cache the result
+        this.cache.set(cacheKey, result.text);
+        return result.text;
+      }
+      
+      return text;
     } catch (error) {
       // All providers failed, return original text silently
       return text;
