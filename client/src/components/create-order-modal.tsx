@@ -43,6 +43,13 @@ export function CreateOrderModal({ open, onOpenChange, selectedLocation }: Creat
   const { toast } = useToast();
   const [paymentType, setPaymentType] = useState<"single" | "group">("single");
 
+  // Set default scheduled time to 2 hours from now
+  const getDefaultScheduledTime = () => {
+    const now = new Date();
+    now.setHours(now.getHours() + 2);
+    return now.toISOString().slice(0, 16);
+  };
+
   const form = useForm<CreateOrderForm>({
     resolver: zodResolver(createOrderSchema),
     defaultValues: {
@@ -52,7 +59,7 @@ export function CreateOrderModal({ open, onOpenChange, selectedLocation }: Creat
       latitude: selectedLocation?.lat || 40.7128,
       longitude: selectedLocation?.lng || -74.0060,
       address: "",
-      scheduledAt: "",
+      scheduledAt: getDefaultScheduledTime(),
       duration: 60,
       price: "",
       type: "single",
@@ -100,13 +107,6 @@ export function CreateOrderModal({ open, onOpenChange, selectedLocation }: Creat
 
   const onSubmit = (data: CreateOrderForm) => {
     createOrderMutation.mutate(data);
-  };
-
-  // Set default scheduled time to 2 hours from now
-  const getDefaultScheduledTime = () => {
-    const now = new Date();
-    now.setHours(now.getHours() + 2);
-    return now.toISOString().slice(0, 16);
   };
 
   return (
@@ -185,7 +185,6 @@ export function CreateOrderModal({ open, onOpenChange, selectedLocation }: Creat
                       <Input 
                         type="datetime-local" 
                         {...field}
-                        value={field.value || getDefaultScheduledTime()}
                         data-testid="input-scheduled-time"
                       />
                     </FormControl>
