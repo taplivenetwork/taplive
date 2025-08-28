@@ -1,8 +1,10 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertOrderSchema, ratingValidationSchema, paymentValidationSchema, cryptoPaymentSchema, disputeSubmissionSchema, type Order } from "@shared/schema";
+import { insertOrderSchema, ratingValidationSchema, paymentValidationSchema, cryptoPaymentSchema, disputeSubmissionSchema, geoLocationSchema, aaGroupCreationSchema, type Order } from "@shared/schema";
 import { calculateCommission, PAYMENT_METHODS } from "@shared/payment";
+import { assessGeoRisk, checkContentViolations, checkVoiceContent, formatRiskLevel } from "@shared/geo-safety";
+import { validateAAGroupCreation, getAAGroupStatus, calculateSplitAmount, getAAGroupExpirationTime } from "@shared/aa-group";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -1114,5 +1116,254 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   const httpServer = createServer(app);
+  // Geographic safety routes
+  app.post("/api/orders/check-location", async (req, res) => {
+    try {
+      const location = geoLocationSchema.parse(req.body);
+      const assessment = assessGeoRisk(location.latitude, location.longitude);
+      const riskInfo = formatRiskLevel(assessment.riskLevel);
+      
+      res.json({
+        success: true,
+        data: {
+          ...assessment,
+          riskInfo
+        }
+      });
+    } catch (error) {
+      res.status(400).json({
+        success: false,
+        message: error instanceof Error ? error.message : "Location check failed"
+      });
+    }
+  });
+
+  // Content moderation routes
+  app.post("/api/orders/:id/check-content", async (req, res) => {
+    try {
+      const { content, type } = req.body;
+      const orderId = req.params.id;
+      
+      if (type === 'voice') {
+        const voiceCheck = checkVoiceContent(content);
+        if (voiceCheck.emergencyDetected || voiceCheck.shouldTerminate) {
+          // Create content violation
+          await storage.createContentViolation({
+            orderId,
+            userId: 'system',
+            violationType: 'voice_violation',
+            content,
+            confidence: '0.95',
+            isConfirmed: false,
+            action: voiceCheck.shouldTerminate ? 'order_cancelled' : 'warning'
+          });
+
+          res.json({
+            success: true,
+            data: {
+              violation: true,
+              action: voiceCheck.shouldTerminate ? 'terminate' : 'warning',
+              alerts: voiceCheck.alerts,
+              emergency: voiceCheck.emergencyDetected
+            }
+          });
+        } else {
+          res.json({
+            success: true,
+            data: { violation: false }
+          });
+        }
+      } else {
+        const contentCheck = checkContentViolations(content);
+        if (contentCheck.violations.length > 0) {
+          await storage.createContentViolation({
+            orderId,
+            userId: 'system',
+            violationType: 'keyword_detected',
+            content,
+            confidence: contentCheck.confidence.toString(),
+            isConfirmed: false,
+            action: contentCheck.severity === 'critical' ? 'order_cancelled' : 'warning'
+          });
+
+          res.json({
+            success: true,
+            data: {
+              violation: true,
+              severity: contentCheck.severity,
+              violations: contentCheck.violations,
+              action: contentCheck.severity === 'critical' ? 'terminate' : 'warning'
+            }
+          });
+        } else {
+          res.json({
+            success: true,
+            data: { violation: false }
+          });
+        }
+      }
+    } catch (error) {
+      res.status(400).json({
+        success: false,
+        message: error instanceof Error ? error.message : "Content check failed"
+      });
+    }
+  });
+
+  // AA Group routes
+  app.post("/api/orders/:id/create-aa-group", async (req, res) => {
+    try {
+      const orderId = req.params.id;
+      const groupData = aaGroupCreationSchema.parse(req.body);
+      
+      const order = await storage.getOrder(orderId);
+      if (!order) {
+        return res.status(404).json({
+          success: false,
+          message: "Order not found"
+        });
+      }
+
+      const validation = validateAAGroupCreation(order, groupData.maxParticipants);
+      if (!validation.isValid) {
+        return res.status(400).json({
+          success: false,
+          message: validation.errors.join(', ')
+        });
+      }
+
+      const splitAmount = calculateSplitAmount(parseFloat(order.price), groupData.maxParticipants);
+      const expiresAt = getAAGroupExpirationTime(groupData.expirationHours);
+
+      const aaGroup = await storage.createOrderGroup({
+        originalOrderId: orderId,
+        groupType: 'aa_split',
+        totalAmount: order.price,
+        splitAmount: splitAmount.toString(),
+        maxParticipants: groupData.maxParticipants,
+        currentParticipants: 1,
+        isComplete: false,
+        expiresAt
+      });
+
+      // Add creator as first participant
+      await storage.addGroupParticipant({
+        groupId: aaGroup.id,
+        userId: order.creatorId || 'anonymous',
+        amount: splitAmount.toString(),
+        isPaid: false
+      });
+
+      res.json({
+        success: true,
+        data: aaGroup
+      });
+    } catch (error) {
+      res.status(400).json({
+        success: false,
+        message: error instanceof Error ? error.message : "Failed to create AA group"
+      });
+    }
+  });
+
+  app.get("/api/aa-groups/:id", async (req, res) => {
+    try {
+      const groupId = req.params.id;
+      
+      const group = await storage.getOrderGroupById(groupId);
+      if (!group) {
+        return res.status(404).json({
+          success: false,
+          message: "AA group not found"
+        });
+      }
+
+      const participants = await storage.getGroupParticipants(groupId);
+      const status = getAAGroupStatus(group, participants);
+
+      res.json({
+        success: true,
+        data: status
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: error instanceof Error ? error.message : "Failed to get AA group"
+      });
+    }
+  });
+
+  app.post("/api/aa-groups/:id/join", async (req, res) => {
+    try {
+      const groupId = req.params.id;
+      const { userId } = req.body;
+      
+      const group = await storage.getOrderGroupById(groupId);
+      if (!group) {
+        return res.status(404).json({
+          success: false,
+          message: "AA group not found"
+        });
+      }
+
+      const participants = await storage.getGroupParticipants(groupId);
+      const status = getAAGroupStatus(group, participants);
+
+      if (!status.canJoin) {
+        return res.status(400).json({
+          success: false,
+          message: "Cannot join this group"
+        });
+      }
+
+      // Check if user already joined
+      const existingParticipant = participants.find(p => p.userId === userId);
+      if (existingParticipant) {
+        return res.status(400).json({
+          success: false,
+          message: "User already joined this group"
+        });
+      }
+
+      await storage.addGroupParticipant({
+        groupId,
+        userId,
+        amount: group.splitAmount.toString(),
+        isPaid: false
+      });
+
+      // Update group participant count
+      await storage.updateOrderGroup(groupId, {
+        currentParticipants: (group.currentParticipants || 0) + 1
+      });
+
+      res.json({
+        success: true,
+        message: "Successfully joined AA group"
+      });
+    } catch (error) {
+      res.status(400).json({
+        success: false,
+        message: error instanceof Error ? error.message : "Failed to join AA group"
+      });
+    }
+  });
+
+  // Weather alerts
+  app.get("/api/weather/alerts", async (req, res) => {
+    try {
+      const alerts = await storage.getActiveWeatherAlerts();
+      res.json({
+        success: true,
+        data: alerts
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: error instanceof Error ? error.message : "Failed to get weather alerts"
+      });
+    }
+  });
+
   return httpServer;
 }

@@ -1,6 +1,9 @@
 import { type User, type InsertUser, type Order, type InsertOrder, type Rating, type InsertRating,
          type Payment, type InsertPayment, type Payout, type InsertPayout, type Transaction, type InsertTransaction,
-         type Dispute, type InsertDispute, type OrderApproval, type InsertOrderApproval } from "@shared/schema";
+         type Dispute, type InsertDispute, type OrderApproval, type InsertOrderApproval,
+         type GeoRiskZone, type InsertGeoRiskZone, type WeatherAlert, type InsertWeatherAlert,
+         type ContentViolation, type InsertContentViolation, type OrderGroup, type InsertOrderGroup,
+         type GroupParticipant, type InsertGroupParticipant } from "@shared/schema";
 import { type ProviderRanking, rankProvidersForOrder, updateUserDispatchScore } from "@shared/dispatch";
 import { calculateCommission } from "@shared/payment";
 import { randomUUID } from "crypto";
@@ -69,6 +72,32 @@ export interface IStorage {
   getOrderApprovalById(id: string): Promise<OrderApproval | undefined>;
   updateOrderApproval(id: string, updates: Partial<OrderApproval>): Promise<OrderApproval | undefined>;
   getOrderApprovalByOrder(orderId: string): Promise<OrderApproval | undefined>;
+
+  // Geographic safety operations
+  createGeoRiskZone(zone: InsertGeoRiskZone): Promise<GeoRiskZone>;
+  getGeoRiskZones(): Promise<GeoRiskZone[]>;
+  checkLocationRisk(latitude: number, longitude: number): Promise<{ riskLevel: string; restrictions: string[] }>;
+
+  // Weather alert operations
+  createWeatherAlert(alert: InsertWeatherAlert): Promise<WeatherAlert>;
+  getWeatherAlerts(latitude: number, longitude: number, radius: number): Promise<WeatherAlert[]>;
+  getActiveWeatherAlerts(): Promise<WeatherAlert[]>;
+
+  // Content violation operations
+  createContentViolation(violation: InsertContentViolation): Promise<ContentViolation>;
+  getContentViolationsByOrder(orderId: string): Promise<ContentViolation[]>;
+  getContentViolationsByUser(userId: string): Promise<ContentViolation[]>;
+
+  // AA Group operations
+  createOrderGroup(group: InsertOrderGroup): Promise<OrderGroup>;
+  getOrderGroupById(id: string): Promise<OrderGroup | undefined>;
+  updateOrderGroup(id: string, updates: Partial<OrderGroup>): Promise<OrderGroup | undefined>;
+  getOrderGroupByOrder(orderId: string): Promise<OrderGroup | undefined>;
+  
+  // Group participant operations
+  addGroupParticipant(participant: InsertGroupParticipant): Promise<GroupParticipant>;
+  getGroupParticipants(groupId: string): Promise<GroupParticipant[]>;
+  updateGroupParticipant(id: string, updates: Partial<GroupParticipant>): Promise<GroupParticipant | undefined>;
 }
 
 export class MemStorage implements IStorage {
@@ -80,6 +109,11 @@ export class MemStorage implements IStorage {
   private transactions: Map<string, Transaction>;
   private disputes: Map<string, Dispute>;
   private orderApprovals: Map<string, OrderApproval>;
+  private geoRiskZones: Map<string, GeoRiskZone>;
+  private weatherAlerts: Map<string, WeatherAlert>;
+  private contentViolations: Map<string, ContentViolation>;
+  private orderGroups: Map<string, OrderGroup>;
+  private groupParticipants: Map<string, GroupParticipant>;
 
   constructor() {
     this.users = new Map();
@@ -90,6 +124,11 @@ export class MemStorage implements IStorage {
     this.transactions = new Map();
     this.disputes = new Map();
     this.orderApprovals = new Map();
+    this.geoRiskZones = new Map();
+    this.weatherAlerts = new Map();
+    this.contentViolations = new Map();
+    this.orderGroups = new Map();
+    this.groupParticipants = new Map();
     this.initializeTestData();
   }
 
@@ -844,6 +883,135 @@ export class MemStorage implements IStorage {
     await this.updateUser(userId, {
       dispatchScore: dispatchScore.toString(),
     });
+  }
+
+  // Geographic safety operations
+  async createGeoRiskZone(zone: InsertGeoRiskZone): Promise<GeoRiskZone> {
+    const id = randomUUID();
+    const newZone: GeoRiskZone = {
+      id,
+      ...zone,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.geoRiskZones.set(id, newZone);
+    return newZone;
+  }
+
+  async getGeoRiskZones(): Promise<GeoRiskZone[]> {
+    return Array.from(this.geoRiskZones.values()).filter(zone => zone.isActive);
+  }
+
+  async checkLocationRisk(latitude: number, longitude: number): Promise<{ riskLevel: string; restrictions: string[] }> {
+    if (latitude > 70 || latitude < -60) {
+      return {
+        riskLevel: 'extreme',
+        restrictions: ['Extreme weather conditions', 'Limited rescue access']
+      };
+    }
+    return {
+      riskLevel: 'safe',
+      restrictions: []
+    };
+  }
+
+  // Weather alert operations
+  async createWeatherAlert(alert: InsertWeatherAlert): Promise<WeatherAlert> {
+    const id = randomUUID();
+    const newAlert: WeatherAlert = {
+      id,
+      ...alert,
+      createdAt: new Date(),
+    };
+    this.weatherAlerts.set(id, newAlert);
+    return newAlert;
+  }
+
+  async getWeatherAlerts(latitude: number, longitude: number, radius: number): Promise<WeatherAlert[]> {
+    return Array.from(this.weatherAlerts.values()).filter(alert => alert.isActive);
+  }
+
+  async getActiveWeatherAlerts(): Promise<WeatherAlert[]> {
+    const now = new Date();
+    return Array.from(this.weatherAlerts.values()).filter(alert => 
+      alert.isActive && 
+      new Date(alert.startTime) <= now && 
+      (!alert.endTime || new Date(alert.endTime) >= now)
+    );
+  }
+
+  // Content violation operations
+  async createContentViolation(violation: InsertContentViolation): Promise<ContentViolation> {
+    const id = randomUUID();
+    const newViolation: ContentViolation = {
+      id,
+      ...violation,
+      createdAt: new Date(),
+    };
+    this.contentViolations.set(id, newViolation);
+    return newViolation;
+  }
+
+  async getContentViolationsByOrder(orderId: string): Promise<ContentViolation[]> {
+    return Array.from(this.contentViolations.values()).filter(violation => violation.orderId === orderId);
+  }
+
+  async getContentViolationsByUser(userId: string): Promise<ContentViolation[]> {
+    return Array.from(this.contentViolations.values()).filter(violation => violation.userId === userId);
+  }
+
+  // AA Group operations
+  async createOrderGroup(group: InsertOrderGroup): Promise<OrderGroup> {
+    const id = randomUUID();
+    const newGroup: OrderGroup = {
+      id,
+      ...group,
+      createdAt: new Date(),
+    };
+    this.orderGroups.set(id, newGroup);
+    return newGroup;
+  }
+
+  async getOrderGroupById(id: string): Promise<OrderGroup | undefined> {
+    return this.orderGroups.get(id);
+  }
+
+  async updateOrderGroup(id: string, updates: Partial<OrderGroup>): Promise<OrderGroup | undefined> {
+    const group = this.orderGroups.get(id);
+    if (!group) return undefined;
+    
+    const updatedGroup = { ...group, ...updates };
+    this.orderGroups.set(id, updatedGroup);
+    return updatedGroup;
+  }
+
+  async getOrderGroupByOrder(orderId: string): Promise<OrderGroup | undefined> {
+    return Array.from(this.orderGroups.values()).find(group => group.originalOrderId === orderId);
+  }
+  
+  // Group participant operations
+  async addGroupParticipant(participant: InsertGroupParticipant): Promise<GroupParticipant> {
+    const id = randomUUID();
+    const newParticipant: GroupParticipant = {
+      id,
+      ...participant,
+      joinedAt: new Date(),
+    };
+    this.groupParticipants.set(id, newParticipant);
+    return newParticipant;
+  }
+
+  async getGroupParticipants(groupId: string): Promise<GroupParticipant[]> {
+    return Array.from(this.groupParticipants.values()).filter(participant => participant.groupId === groupId);
+  }
+
+  async updateGroupParticipant(id: string, updates: Partial<GroupParticipant>): Promise<GroupParticipant | undefined> {
+    const participant = this.groupParticipants.get(id);
+    if (!participant) return undefined;
+    
+    const updatedParticipant = { ...participant, ...updates };
+    this.groupParticipants.set(id, updatedParticipant);
+    return updatedParticipant;
   }
 }
 

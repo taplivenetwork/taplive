@@ -11,6 +11,10 @@ export const transactionTypeEnum = pgEnum('transaction_type', ['payment', 'payou
 export const currencyEnum = pgEnum('currency', ['USD', 'USDT', 'BTC', 'ETH']);
 export const disputeStatusEnum = pgEnum('dispute_status', ['submitted', 'ai_review', 'human_review', 'resolved_approved', 'resolved_rejected']);
 export const disputeTypeEnum = pgEnum('dispute_type', ['quality_issue', 'content_mismatch', 'technical_issue', 'service_incomplete', 'other']);
+export const riskLevelEnum = pgEnum('risk_level', ['safe', 'low', 'medium', 'high', 'extreme', 'forbidden']);
+export const weatherAlertEnum = pgEnum('weather_alert', ['clear', 'watch', 'warning', 'emergency']);
+export const orderGroupTypeEnum = pgEnum('order_group_type', ['single', 'aa_split', 'group_booking']);
+export const violationTypeEnum = pgEnum('violation_type', ['keyword_detected', 'illegal_content', 'prohibited_area', 'weather_risk', 'voice_violation']);
 
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -70,6 +74,30 @@ export const orders = pgTable("orders", {
   // Payment status
   isPaid: boolean("is_paid").default(false),
   isPayoutProcessed: boolean("is_payout_processed").default(false),
+  
+  // AA Split and Group features
+  groupType: orderGroupTypeEnum("group_type").default('single'),
+  groupId: varchar("group_id"), // For AA split orders
+  splitAmount: decimal("split_amount", { precision: 10, scale: 2 }), // Individual amount in AA split
+  minParticipants: integer("min_participants").default(1),
+  
+  // Geographic and Safety features
+  riskLevel: riskLevelEnum("risk_level").default('safe'),
+  weatherAlert: weatherAlertEnum("weather_alert").default('clear'),
+  geoFenceStatus: text("geo_fence_status"), // JSON with fence checks
+  isHighRiskArea: boolean("is_high_risk_area").default(false),
+  isMilitaryZone: boolean("is_military_zone").default(false),
+  weatherConditions: text("weather_conditions"), // JSON weather data
+  
+  // Content Safety
+  contentFlags: text("content_flags").array(), // Detected issues
+  keywordViolations: text("keyword_violations").array(), // Flagged keywords
+  voiceAlerts: integer("voice_alerts").default(0), // Voice violation count
+  
+  // Replay and Recording
+  recordingUrl: text("recording_url"),
+  replayAvailable: boolean("replay_available").default(false),
+  recordingDuration: integer("recording_duration"), // in seconds
   
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -321,3 +349,123 @@ export type InsertOrderApproval = z.infer<typeof insertOrderApprovalSchema>;
 export type OrderApproval = typeof orderApprovals.$inferSelect;
 export type DisputeSubmission = z.infer<typeof disputeSubmissionSchema>;
 export type OrderApprovalValidation = z.infer<typeof orderApprovalSchema>;
+
+// Geographic Risk Management
+export const geoRiskZones = pgTable("geo_risk_zones", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  type: text("type").notNull(), // 'military', 'extreme_weather', 'no_service', 'high_crime'
+  riskLevel: riskLevelEnum("risk_level").notNull(),
+  coordinates: text("coordinates").notNull(), // GeoJSON polygon
+  restrictions: text("restrictions"), // JSON with specific restrictions
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Weather Alerts
+export const weatherAlerts = pgTable("weather_alerts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  latitude: decimal("latitude", { precision: 10, scale: 7 }).notNull(),
+  longitude: decimal("longitude", { precision: 10, scale: 7 }).notNull(),
+  radius: decimal("radius", { precision: 8, scale: 2 }).notNull(), // in kilometers
+  alertType: weatherAlertEnum("alert_type").notNull(),
+  weatherCondition: text("weather_condition").notNull(), // 'storm', 'flood', 'earthquake', etc.
+  severity: text("severity").notNull(), // 'minor', 'moderate', 'severe', 'extreme'
+  message: text("message").notNull(),
+  startTime: timestamp("start_time").notNull(),
+  endTime: timestamp("end_time"),
+  isActive: boolean("is_active").default(true),
+  source: text("source").default('weather_api'), // 'weather_api', 'emergency_service', 'manual'
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Content Moderation
+export const contentViolations = pgTable("content_violations", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  orderId: varchar("order_id").notNull().references(() => orders.id),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  violationType: violationTypeEnum("violation_type").notNull(),
+  content: text("content"), // The flagged content
+  confidence: decimal("confidence", { precision: 3, scale: 2 }), // AI confidence score
+  isConfirmed: boolean("is_confirmed").default(false), // Human review result
+  action: text("action"), // 'warning', 'order_cancelled', 'user_suspended'
+  reviewedBy: varchar("reviewed_by").references(() => users.id),
+  reviewedAt: timestamp("reviewed_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// AA Split Group Management
+export const orderGroups = pgTable("order_groups", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  originalOrderId: varchar("original_order_id").notNull().references(() => orders.id),
+  groupType: orderGroupTypeEnum("group_type").notNull(),
+  totalAmount: decimal("total_amount", { precision: 10, scale: 2 }).notNull(),
+  splitAmount: decimal("split_amount", { precision: 10, scale: 2 }).notNull(),
+  maxParticipants: integer("max_participants").notNull(),
+  currentParticipants: integer("current_participants").default(1),
+  isComplete: boolean("is_complete").default(false),
+  expiresAt: timestamp("expires_at").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Group Participants
+export const groupParticipants = pgTable("group_participants", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  groupId: varchar("group_id").notNull().references(() => orderGroups.id),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+  isPaid: boolean("is_paid").default(false),
+  joinedAt: timestamp("joined_at").defaultNow(),
+});
+
+// Insert schemas for new tables
+export const insertGeoRiskZoneSchema = createInsertSchema(geoRiskZones).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertWeatherAlertSchema = createInsertSchema(weatherAlerts).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertContentViolationSchema = createInsertSchema(contentViolations).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertOrderGroupSchema = createInsertSchema(orderGroups).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertGroupParticipantSchema = createInsertSchema(groupParticipants).omit({
+  id: true,
+  joinedAt: true,
+});
+
+// Validation schemas
+export const geoLocationSchema = z.object({
+  latitude: z.number().min(-90).max(90),
+  longitude: z.number().min(-180).max(180),
+});
+
+export const aaGroupCreationSchema = z.object({
+  orderId: z.string(),
+  maxParticipants: z.number().min(2).max(50),
+  expirationHours: z.number().min(1).max(168), // Max 1 week
+});
+
+// Export types for new tables
+export type GeoRiskZone = typeof geoRiskZones.$inferSelect;
+export type InsertGeoRiskZone = z.infer<typeof insertGeoRiskZoneSchema>;
+export type WeatherAlert = typeof weatherAlerts.$inferSelect;
+export type InsertWeatherAlert = z.infer<typeof insertWeatherAlertSchema>;
+export type ContentViolation = typeof contentViolations.$inferSelect;
+export type InsertContentViolation = z.infer<typeof insertContentViolationSchema>;
+export type OrderGroup = typeof orderGroups.$inferSelect;
+export type InsertOrderGroup = z.infer<typeof insertOrderGroupSchema>;
+export type GroupParticipant = typeof groupParticipants.$inferSelect;
+export type InsertGroupParticipant = z.infer<typeof insertGroupParticipantSchema>;
