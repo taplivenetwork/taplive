@@ -153,6 +153,118 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Complete order and trigger real-time commission payout
+  app.post("/api/orders/:id/complete", async (req, res) => {
+    try {
+      const { id: orderId } = req.params;
+      const { providerId } = req.body; // Verify provider identity in real app
+      
+      // Get current order
+      const order = await storage.getOrderById(orderId);
+      if (!order) {
+        return res.status(404).json({
+          success: false,
+          message: "Order not found"
+        });
+      }
+
+      // Verify order can be completed
+      if (order.status === 'done') {
+        return res.status(400).json({
+          success: false,
+          message: "Order is already completed"
+        });
+      }
+
+      if (!order.isPaid) {
+        return res.status(400).json({
+          success: false,
+          message: "Order must be paid before completion"
+        });
+      }
+
+      if (order.isPayoutProcessed) {
+        return res.status(400).json({
+          success: false,
+          message: "Payout has already been processed for this order"
+        });
+      }
+
+      // Update order status to completed
+      const completedOrder = await storage.updateOrder(orderId, {
+        status: 'done',
+        updatedAt: new Date(),
+      });
+
+      if (!completedOrder) {
+        throw new Error('Failed to update order status');
+      }
+
+      // Find the payment for this order to trigger payout
+      const payments = await storage.getPaymentsByOrder(orderId);
+      const completedPayment = payments.find(p => p.status === 'completed');
+
+      let payout = null;
+      let commission = null;
+
+      if (completedPayment && completedOrder.providerId) {
+        // Calculate and create real-time payout
+        payout = await storage.calculateAndCreatePayout(orderId, completedPayment.id);
+        
+        if (payout) {
+          // Auto-approve and process payout immediately for real-time distribution
+          const processedPayout = await storage.updatePayout(payout.id, {
+            status: 'completed',
+            processedAt: new Date(),
+            externalPayoutId: `realtime_payout_${Date.now()}`,
+          });
+          
+          commission = calculateCommission(parseFloat(completedPayment.amount.toString()));
+          
+          // Create real-time commission transaction
+          await storage.createTransaction({
+            userId: completedOrder.providerId,
+            orderId: orderId,
+            paymentId: completedPayment.id,
+            payoutId: payout.id,
+            type: 'commission',
+            amount: commission.providerEarnings.toString(),
+            currency: completedPayment.currency,
+            description: `Real-time commission for completed order: ${completedOrder.title}`,
+            metadata: JSON.stringify({ 
+              commission, 
+              payoutId: payout.id,
+              completedAt: new Date(),
+              payoutMethod: 'real-time'
+            }),
+          });
+
+          payout = processedPayout;
+        }
+      }
+
+      res.json({
+        success: true,
+        data: {
+          order: completedOrder,
+          payout: payout,
+          commission: commission,
+          realTimePayoutProcessed: !!payout
+        },
+        message: payout 
+          ? `Order completed successfully! Provider earned $${commission?.providerEarnings.toFixed(2)} commission (paid instantly)`
+          : "Order completed successfully"
+      });
+
+    } catch (error) {
+      console.error('Error completing order:', error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to complete order"
+      });
+    }
+  });
+
   // Delete order
   app.delete("/api/orders/:id", async (req, res) => {
     try {
@@ -609,7 +721,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const payment = await storage.createPayment({
         orderId,
         payerId: req.body.payerId, // This would come from auth in real app
-        amount: paymentData.amount,
+        amount: paymentData.amount.toString(),
         currency: paymentData.currency,
         paymentMethod: paymentData.paymentMethod,
         paymentMetadata: JSON.stringify(paymentData.paymentMetadata || {}),

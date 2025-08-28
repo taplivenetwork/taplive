@@ -441,6 +441,24 @@ export class MemStorage implements IStorage {
     });
   }
 
+  // Check if order is ready for real-time payout
+  async isOrderReadyForRealTimePayout(orderId: string): Promise<boolean> {
+    const order = this.orders.get(orderId);
+    if (!order) return false;
+    
+    return !!(order.isPaid && !order.isPayoutProcessed && order.providerId);
+  }
+
+  // Get pending payout orders for a provider
+  async getPendingPayoutOrders(providerId: string): Promise<Order[]> {
+    return Array.from(this.orders.values()).filter(
+      order => order.providerId === providerId && 
+               order.isPaid && 
+               !order.isPayoutProcessed &&
+               order.status === 'done'
+    );
+  }
+
   async calculateAndCreatePayout(orderId: string, paymentId: string): Promise<Payout | undefined> {
     const order = this.orders.get(orderId);
     const payment = this.payments.get(paymentId);

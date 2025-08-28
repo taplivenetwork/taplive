@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Map } from "@/components/ui/map";
 import { OrderCard } from "@/components/order-card";
 import { CreateOrderModal } from "@/components/create-order-modal";
+import { DemoControls } from "@/components/demo-controls";
 import { TranslatedText } from "@/components/translated-text";
 import { api } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
@@ -216,6 +217,9 @@ export default function Home() {
       {/* Order Panel */}
       <aside className="w-full lg:w-96 border-l border-border p-6 bg-white">
         <div className="space-y-6">
+          {/* Demo Controls */}
+          <DemoControls />
+          
           {/* Tabs */}
           <Tabs defaultValue="available" className="w-full">
             <TabsList className="grid w-full grid-cols-2 bg-secondary">

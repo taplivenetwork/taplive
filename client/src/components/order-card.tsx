@@ -4,7 +4,7 @@ import { TranslatedText } from "@/components/translated-text";
 import { UserRating } from "@/components/user-rating";
 import { RatingModal } from "@/components/rating-modal";
 import { PaymentModal } from "@/components/payment-modal";
-import { MapPin, Clock, Users, DollarSign, Star, CreditCard } from "lucide-react";
+import { MapPin, Clock, Users, DollarSign, Star, CreditCard, CheckCircle } from "lucide-react";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
@@ -22,6 +22,7 @@ export function OrderCard({ order, onAccept, onJoin, showActions = true }: Order
   const isLive = order.status === 'live';
   const [ratingModalOpen, setRatingModalOpen] = useState(false);
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+  const [completing, setCompleting] = useState(false);
 
   // Fetch creator user info if available
   const { data: creatorData } = useQuery({
@@ -167,6 +168,15 @@ export function OrderCard({ order, onAccept, onJoin, showActions = true }: Order
                 </Button>
               )}
             </>
+          ) : (order.status === 'accepted') && order.isPaid && !completing ? (
+            <Button
+              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+              onClick={() => handleCompleteOrder()}
+              data-testid="button-complete-order"
+            >
+              <CheckCircle className="w-4 h-4 mr-1" />
+              <TranslatedText>Complete Order</TranslatedText>
+            </Button>
           ) : order.status === 'done' ? (
             <div className="flex gap-2 flex-1">
               <Button 
@@ -224,4 +234,33 @@ export function OrderCard({ order, onAccept, onJoin, showActions = true }: Order
       />
     </div>
   );
+
+  // Handle completing an order and triggering real-time commission payout
+  async function handleCompleteOrder() {
+    try {
+      setCompleting(true);
+      const response = await fetch(`/api/orders/${order.id}/complete`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ providerId: 'demo-provider-id' }),
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        if (result.data.realTimePayoutProcessed) {
+          alert(`Order completed! You earned $${result.data.commission.providerEarnings.toFixed(2)} commission (paid instantly)`);
+        } else {
+          alert('Order completed successfully!');
+        }
+        // Order list will refresh automatically via React Query
+      } else {
+        const error = await response.json();
+        alert(error.message || 'Failed to complete order');
+      }
+    } catch (error) {
+      alert('Failed to complete order');
+    } finally {
+      setCompleting(false);
+    }
+  }
 }
