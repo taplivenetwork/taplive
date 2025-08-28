@@ -1,5 +1,6 @@
 import { type User, type InsertUser, type Order, type InsertOrder, type Rating, type InsertRating,
-         type Payment, type InsertPayment, type Payout, type InsertPayout, type Transaction, type InsertTransaction } from "@shared/schema";
+         type Payment, type InsertPayment, type Payout, type InsertPayout, type Transaction, type InsertTransaction,
+         type Dispute, type InsertDispute, type OrderApproval, type InsertOrderApproval } from "@shared/schema";
 import { type ProviderRanking, rankProvidersForOrder, updateUserDispatchScore } from "@shared/dispatch";
 import { calculateCommission } from "@shared/payment";
 import { randomUUID } from "crypto";
@@ -55,6 +56,19 @@ export interface IStorage {
   // Commission and payout processing
   processOrderPayment(orderId: string, paymentId: string): Promise<void>;
   calculateAndCreatePayout(orderId: string, paymentId: string): Promise<Payout | undefined>;
+  
+  // Dispute operations
+  createDispute(dispute: InsertDispute): Promise<Dispute>;
+  getDisputeById(id: string): Promise<Dispute | undefined>;
+  updateDispute(id: string, updates: Partial<Dispute>): Promise<Dispute | undefined>;
+  getDisputesByOrder(orderId: string): Promise<Dispute[]>;
+  getDisputesByStatus(status: string): Promise<Dispute[]>;
+
+  // Order approval operations
+  createOrderApproval(approval: InsertOrderApproval): Promise<OrderApproval>;
+  getOrderApprovalById(id: string): Promise<OrderApproval | undefined>;
+  updateOrderApproval(id: string, updates: Partial<OrderApproval>): Promise<OrderApproval | undefined>;
+  getOrderApprovalByOrder(orderId: string): Promise<OrderApproval | undefined>;
 }
 
 export class MemStorage implements IStorage {
@@ -64,6 +78,8 @@ export class MemStorage implements IStorage {
   private payments: Map<string, Payment>;
   private payouts: Map<string, Payout>;
   private transactions: Map<string, Transaction>;
+  private disputes: Map<string, Dispute>;
+  private orderApprovals: Map<string, OrderApproval>;
 
   constructor() {
     this.users = new Map();
@@ -72,6 +88,8 @@ export class MemStorage implements IStorage {
     this.payments = new Map();
     this.payouts = new Map();
     this.transactions = new Map();
+    this.disputes = new Map();
+    this.orderApprovals = new Map();
     this.initializeTestData();
   }
 
@@ -457,6 +475,82 @@ export class MemStorage implements IStorage {
                !order.isPayoutProcessed &&
                order.status === 'done'
     );
+  }
+
+  // Dispute operations
+  async createDispute(dispute: InsertDispute): Promise<Dispute> {
+    const id = randomUUID();
+    const newDispute: Dispute = {
+      id,
+      ...dispute,
+      status: 'submitted',
+      evidence: dispute.evidence || null,
+      aiReviewResult: null,
+      humanReviewResult: null,
+      resolution: null,
+      resolvedAt: null,
+      reviewerNotes: null,
+      escalatedAt: null,
+      submittedAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.disputes.set(id, newDispute);
+    return newDispute;
+  }
+
+  async getDisputeById(id: string): Promise<Dispute | undefined> {
+    return this.disputes.get(id);
+  }
+
+  async updateDispute(id: string, updates: Partial<Dispute>): Promise<Dispute | undefined> {
+    const dispute = this.disputes.get(id);
+    if (!dispute) return undefined;
+    
+    const updatedDispute = { ...dispute, ...updates, updatedAt: new Date() };
+    this.disputes.set(id, updatedDispute);
+    return updatedDispute;
+  }
+
+  async getDisputesByOrder(orderId: string): Promise<Dispute[]> {
+    return Array.from(this.disputes.values()).filter(dispute => dispute.orderId === orderId);
+  }
+
+  async getDisputesByStatus(status: string): Promise<Dispute[]> {
+    return Array.from(this.disputes.values()).filter(dispute => dispute.status === status);
+  }
+
+  // Order approval operations
+  async createOrderApproval(approval: InsertOrderApproval): Promise<OrderApproval> {
+    const id = randomUUID();
+    const newApproval: OrderApproval = {
+      id,
+      ...approval,
+      status: 'pending',
+      deliveryNote: approval.deliveryNote || null,
+      customerRating: approval.customerRating || null,
+      customerFeedback: approval.customerFeedback || null,
+      approvedAt: approval.approvedAt || null,
+      requestedAt: new Date(),
+    };
+    this.orderApprovals.set(id, newApproval);
+    return newApproval;
+  }
+
+  async getOrderApprovalById(id: string): Promise<OrderApproval | undefined> {
+    return this.orderApprovals.get(id);
+  }
+
+  async updateOrderApproval(id: string, updates: Partial<OrderApproval>): Promise<OrderApproval | undefined> {
+    const approval = this.orderApprovals.get(id);
+    if (!approval) return undefined;
+    
+    const updatedApproval = { ...approval, ...updates };
+    this.orderApprovals.set(id, updatedApproval);
+    return updatedApproval;
+  }
+
+  async getOrderApprovalByOrder(orderId: string): Promise<OrderApproval | undefined> {
+    return Array.from(this.orderApprovals.values()).find(approval => approval.orderId === orderId);
   }
 
   async calculateAndCreatePayout(orderId: string, paymentId: string): Promise<Payout | undefined> {

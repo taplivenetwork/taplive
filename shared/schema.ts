@@ -3,12 +3,14 @@ import { pgTable, text, varchar, integer, timestamp, decimal, pgEnum, boolean } 
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-export const orderStatusEnum = pgEnum('order_status', ['pending', 'open', 'accepted', 'live', 'done', 'cancelled']);
+export const orderStatusEnum = pgEnum('order_status', ['pending', 'open', 'accepted', 'live', 'completed', 'awaiting_approval', 'disputed', 'under_review', 'done', 'cancelled']);
 export const orderTypeEnum = pgEnum('order_type', ['single', 'group']);
 export const paymentStatusEnum = pgEnum('payment_status', ['pending', 'processing', 'completed', 'failed', 'refunded']);
 export const paymentMethodEnum = pgEnum('payment_method', ['stripe', 'paypal', 'usdt_trc20', 'usdt_erc20', 'bitcoin', 'ethereum']);
 export const transactionTypeEnum = pgEnum('transaction_type', ['payment', 'payout', 'refund', 'commission']);
 export const currencyEnum = pgEnum('currency', ['USD', 'USDT', 'BTC', 'ETH']);
+export const disputeStatusEnum = pgEnum('dispute_status', ['submitted', 'ai_review', 'human_review', 'resolved_approved', 'resolved_rejected']);
+export const disputeTypeEnum = pgEnum('dispute_type', ['quality_issue', 'content_mismatch', 'technical_issue', 'service_incomplete', 'other']);
 
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -248,3 +250,74 @@ export type InsertTransaction = z.infer<typeof insertTransactionSchema>;
 export type Transaction = typeof transactions.$inferSelect;
 export type PaymentValidation = z.infer<typeof paymentValidationSchema>;
 export type CryptoPaymentValidation = z.infer<typeof cryptoPaymentSchema>;
+
+// Dispute handling table
+export const disputes = pgTable("disputes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  orderId: varchar("order_id").notNull().references(() => orders.id),
+  customerId: varchar("customer_id").notNull().references(() => users.id), // Customer who submitted dispute
+  providerId: varchar("provider_id").notNull().references(() => users.id), // Service provider
+  disputeType: disputeTypeEnum("dispute_type").notNull(),
+  status: disputeStatusEnum("status").notNull().default('submitted'),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  evidence: text("evidence").array(), // URLs to evidence files/images
+  aiReviewResult: text("ai_review_result"), // AI review decision and reasoning
+  humanReviewResult: text("human_review_result"), // Human review decision
+  resolution: text("resolution"), // Final resolution details
+  resolvedAt: timestamp("resolved_at"),
+  reviewerNotes: text("reviewer_notes"), // Internal notes from reviewer
+  escalatedAt: timestamp("escalated_at"), // When escalated to human review
+  submittedAt: timestamp("submitted_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Order approval requests
+export const orderApprovals = pgTable("order_approvals", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  orderId: varchar("order_id").notNull().references(() => orders.id),
+  customerId: varchar("customer_id").notNull().references(() => users.id),
+  providerId: varchar("provider_id").notNull().references(() => users.id),
+  status: text("status").notNull().default('pending'), // 'pending', 'approved', 'disputed'
+  deliveryNote: text("delivery_note"), // Provider's delivery note
+  customerRating: integer("customer_rating"), // 1-5 stars for satisfaction
+  customerFeedback: text("customer_feedback"), // Customer's feedback
+  approvedAt: timestamp("approved_at"),
+  requestedAt: timestamp("requested_at").defaultNow(),
+});
+
+// Insert schemas for new tables
+export const insertDisputeSchema = createInsertSchema(disputes).omit({
+  id: true,
+  submittedAt: true,
+  updatedAt: true,
+});
+
+export const insertOrderApprovalSchema = createInsertSchema(orderApprovals).omit({
+  id: true,
+  requestedAt: true,
+});
+
+// Validation schemas
+export const disputeSubmissionSchema = z.object({
+  orderId: z.string(),
+  disputeType: z.enum(['quality_issue', 'content_mismatch', 'technical_issue', 'service_incomplete', 'other']),
+  title: z.string().min(5, "Title must be at least 5 characters"),
+  description: z.string().min(20, "Description must be at least 20 characters"),
+  evidence: z.array(z.string().url()).optional(),
+});
+
+export const orderApprovalSchema = z.object({
+  orderId: z.string(),
+  deliveryNote: z.string().optional(),
+  customerRating: z.number().min(1).max(5).optional(),
+  customerFeedback: z.string().optional(),
+});
+
+// Export types
+export type InsertDispute = z.infer<typeof insertDisputeSchema>;
+export type Dispute = typeof disputes.$inferSelect;
+export type InsertOrderApproval = z.infer<typeof insertOrderApprovalSchema>;
+export type OrderApproval = typeof orderApprovals.$inferSelect;
+export type DisputeSubmission = z.infer<typeof disputeSubmissionSchema>;
+export type OrderApprovalValidation = z.infer<typeof orderApprovalSchema>;

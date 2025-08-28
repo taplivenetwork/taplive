@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertOrderSchema, ratingValidationSchema, paymentValidationSchema, cryptoPaymentSchema, type Order } from "@shared/schema";
+import { insertOrderSchema, ratingValidationSchema, paymentValidationSchema, cryptoPaymentSchema, disputeSubmissionSchema, type Order } from "@shared/schema";
 import { calculateCommission, PAYMENT_METHODS } from "@shared/payment";
 import { z } from "zod";
 
@@ -153,11 +153,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Complete order and trigger real-time commission payout
-  app.post("/api/orders/:id/complete", async (req, res) => {
+  // Submit order for customer approval (Provider completes service)
+  app.post("/api/orders/:id/submit-for-approval", async (req, res) => {
     try {
       const { id: orderId } = req.params;
-      const { providerId } = req.body; // Verify provider identity in real app
+      const { providerId, deliveryNote } = req.body;
       
       // Get current order
       const order = await storage.getOrderById(orderId);
@@ -168,74 +168,133 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Verify order can be completed
-      if (order.status === 'done') {
+      // Verify order can be submitted
+      if (!['accepted', 'live'].includes(order.status)) {
         return res.status(400).json({
           success: false,
-          message: "Order is already completed"
+          message: "Order must be accepted or live to submit for approval"
         });
       }
 
       if (!order.isPaid) {
         return res.status(400).json({
           success: false,
-          message: "Order must be paid before completion"
+          message: "Order must be paid before submission"
         });
       }
 
-      if (order.isPayoutProcessed) {
+      // Update order status to awaiting approval
+      const submittedOrder = await storage.updateOrder(orderId, {
+        status: 'awaiting_approval',
+        updatedAt: new Date(),
+      });
+
+      // Create approval request
+      await storage.createOrderApproval({
+        orderId: orderId,
+        customerId: order.creatorId!,
+        providerId: providerId,
+        deliveryNote: deliveryNote,
+      });
+
+      res.json({
+        success: true,
+        data: submittedOrder,
+        message: "Order submitted for customer approval"
+      });
+
+    } catch (error) {
+      console.error('Error submitting order for approval:', error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to submit order for approval"
+      });
+    }
+  });
+
+  // Customer approves order and triggers commission payout
+  app.post("/api/orders/:id/approve", async (req, res) => {
+    try {
+      const { id: orderId } = req.params;
+      const { customerId, customerRating, customerFeedback } = req.body;
+      
+      // Get current order
+      const order = await storage.getOrderById(orderId);
+      if (!order) {
+        return res.status(404).json({
+          success: false,
+          message: "Order not found"
+        });
+      }
+
+      // Verify order status
+      if (order.status !== 'awaiting_approval') {
         return res.status(400).json({
           success: false,
-          message: "Payout has already been processed for this order"
+          message: "Order is not awaiting approval"
         });
       }
 
-      // Update order status to completed
-      const completedOrder = await storage.updateOrder(orderId, {
+      // Get approval request
+      const approval = await storage.getOrderApprovalByOrder(orderId);
+      if (!approval) {
+        return res.status(404).json({
+          success: false,
+          message: "Approval request not found"
+        });
+      }
+
+      // Update approval status
+      await storage.updateOrderApproval(approval.id, {
+        status: 'approved',
+        customerRating,
+        customerFeedback,
+        approvedAt: new Date(),
+      });
+
+      // Update order status to done
+      const approvedOrder = await storage.updateOrder(orderId, {
         status: 'done',
         updatedAt: new Date(),
       });
 
-      if (!completedOrder) {
-        throw new Error('Failed to update order status');
-      }
-
-      // Find the payment for this order to trigger payout
+      // Process real-time commission payout
       const payments = await storage.getPaymentsByOrder(orderId);
       const completedPayment = payments.find(p => p.status === 'completed');
 
       let payout = null;
       let commission = null;
 
-      if (completedPayment && completedOrder.providerId) {
+      if (completedPayment && approvedOrder!.providerId) {
         // Calculate and create real-time payout
         payout = await storage.calculateAndCreatePayout(orderId, completedPayment.id);
         
         if (payout) {
-          // Auto-approve and process payout immediately for real-time distribution
+          // Auto-approve and process payout immediately
           const processedPayout = await storage.updatePayout(payout.id, {
             status: 'completed',
             processedAt: new Date(),
-            externalPayoutId: `realtime_payout_${Date.now()}`,
+            externalPayoutId: `approved_payout_${Date.now()}`,
           });
           
           commission = calculateCommission(parseFloat(completedPayment.amount.toString()));
           
-          // Create real-time commission transaction
+          // Create commission transaction
           await storage.createTransaction({
-            userId: completedOrder.providerId,
+            userId: approvedOrder!.providerId,
             orderId: orderId,
             paymentId: completedPayment.id,
             payoutId: payout.id,
             type: 'commission',
             amount: commission.providerEarnings.toString(),
             currency: completedPayment.currency,
-            description: `Real-time commission for completed order: ${completedOrder.title}`,
+            description: `Commission for approved order: ${approvedOrder!.title}`,
             metadata: JSON.stringify({ 
               commission, 
               payoutId: payout.id,
-              completedAt: new Date(),
-              payoutMethod: 'real-time'
+              approvedAt: new Date(),
+              customerRating,
+              payoutMethod: 'customer-approved'
             }),
           });
 
@@ -246,21 +305,94 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({
         success: true,
         data: {
-          order: completedOrder,
+          order: approvedOrder,
           payout: payout,
           commission: commission,
           realTimePayoutProcessed: !!payout
         },
         message: payout 
-          ? `Order completed successfully! Provider earned $${commission?.providerEarnings.toFixed(2)} commission (paid instantly)`
-          : "Order completed successfully"
+          ? `Order approved! Provider earned $${commission?.providerEarnings.toFixed(2)} commission (paid instantly)`
+          : "Order approved successfully"
       });
 
     } catch (error) {
-      console.error('Error completing order:', error);
+      console.error('Error approving order:', error);
       res.status(500).json({
         success: false,
-        message: "Failed to complete order"
+        message: "Failed to approve order"
+      });
+    }
+  });
+
+  // Customer disputes order
+  app.post("/api/orders/:id/dispute", async (req, res) => {
+    try {
+      const { id: orderId } = req.params;
+      const validation = disputeSubmissionSchema.safeParse(req.body);
+      
+      if (!validation.success) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid dispute data",
+          errors: validation.error.errors
+        });
+      }
+
+      const disputeData = validation.data;
+      
+      // Get current order
+      const order = await storage.getOrderById(orderId);
+      if (!order) {
+        return res.status(404).json({
+          success: false,
+          message: "Order not found"
+        });
+      }
+
+      // Verify order status
+      if (order.status !== 'awaiting_approval') {
+        return res.status(400).json({
+          success: false,
+          message: "Can only dispute orders awaiting approval"
+        });
+      }
+
+      // Create dispute
+      const dispute = await storage.createDispute({
+        orderId: orderId,
+        customerId: order.creatorId!,
+        providerId: order.providerId!,
+        disputeType: disputeData.disputeType,
+        title: disputeData.title,
+        description: disputeData.description,
+        evidence: disputeData.evidence || [],
+      });
+
+      // Update order status to disputed
+      await storage.updateOrder(orderId, {
+        status: 'disputed',
+        updatedAt: new Date(),
+      });
+
+      // Update approval request
+      const approval = await storage.getOrderApprovalByOrder(orderId);
+      if (approval) {
+        await storage.updateOrderApproval(approval.id, {
+          status: 'disputed',
+        });
+      }
+
+      res.json({
+        success: true,
+        data: dispute,
+        message: "Dispute submitted successfully. Our team will review it shortly."
+      });
+
+    } catch (error) {
+      console.error('Error creating dispute:', error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to submit dispute"
       });
     }
   });

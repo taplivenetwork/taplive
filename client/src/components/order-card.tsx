@@ -171,11 +171,39 @@ export function OrderCard({ order, onAccept, onJoin, showActions = true }: Order
           ) : (order.status === 'accepted') && order.isPaid && !completing ? (
             <Button
               className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
-              onClick={() => handleCompleteOrder()}
-              data-testid="button-complete-order"
+              onClick={() => handleSubmitForApproval()}
+              data-testid="button-submit-for-approval"
             >
               <CheckCircle className="w-4 h-4 mr-1" />
-              <TranslatedText>Complete Order</TranslatedText>
+              <TranslatedText>Submit for Approval</TranslatedText>
+            </Button>
+          ) : order.status === 'awaiting_approval' && order.creatorId === 'demo-customer-id' ? (
+            <div className="flex gap-2 flex-1">
+              <Button
+                className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                onClick={() => handleApproveOrder()}
+                data-testid="button-approve-order"
+              >
+                <CheckCircle className="w-4 h-4 mr-1" />
+                <TranslatedText>Approve</TranslatedText>
+              </Button>
+              <Button
+                variant="destructive"
+                className="flex-1"
+                onClick={() => handleDispute()}
+                data-testid="button-dispute-order"
+              >
+                <TranslatedText>Dispute</TranslatedText>
+              </Button>
+            </div>
+          ) : order.status === 'disputed' ? (
+            <Button 
+              variant="outline" 
+              className="flex-1" 
+              disabled
+              data-testid="button-order-disputed"
+            >
+              <TranslatedText>Under Review</TranslatedText>
             </Button>
           ) : order.status === 'done' ? (
             <div className="flex gap-2 flex-1">
@@ -235,32 +263,92 @@ export function OrderCard({ order, onAccept, onJoin, showActions = true }: Order
     </div>
   );
 
-  // Handle completing an order and triggering real-time commission payout
-  async function handleCompleteOrder() {
+  // Handle submitting order for customer approval
+  async function handleSubmitForApproval() {
     try {
       setCompleting(true);
-      const response = await fetch(`/api/orders/${order.id}/complete`, {
+      const response = await fetch(`/api/orders/${order.id}/submit-for-approval`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ providerId: 'demo-provider-id' }),
+        body: JSON.stringify({ 
+          providerId: 'demo-provider-id',
+          deliveryNote: 'Service completed as requested'
+        }),
+      });
+      
+      if (response.ok) {
+        alert('Order submitted for customer approval!');
+        // Order list will refresh automatically via React Query
+      } else {
+        const error = await response.json();
+        alert(error.message || 'Failed to submit order');
+      }
+    } catch (error) {
+      alert('Failed to submit order');
+    } finally {
+      setCompleting(false);
+    }
+  }
+
+  // Handle customer approving order
+  async function handleApproveOrder() {
+    try {
+      const response = await fetch(`/api/orders/${order.id}/approve`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          customerId: 'demo-customer-id',
+          customerRating: 5,
+          customerFeedback: 'Excellent service!'
+        }),
       });
       
       if (response.ok) {
         const result = await response.json();
         if (result.data.realTimePayoutProcessed) {
-          alert(`Order completed! You earned $${result.data.commission.providerEarnings.toFixed(2)} commission (paid instantly)`);
+          alert(`Order approved! Provider earned $${result.data.commission.providerEarnings.toFixed(2)} commission (paid instantly)`);
         } else {
-          alert('Order completed successfully!');
+          alert('Order approved successfully!');
         }
         // Order list will refresh automatically via React Query
       } else {
         const error = await response.json();
-        alert(error.message || 'Failed to complete order');
+        alert(error.message || 'Failed to approve order');
       }
     } catch (error) {
-      alert('Failed to complete order');
-    } finally {
-      setCompleting(false);
+      alert('Failed to approve order');
+    }
+  }
+
+  // Handle dispute submission
+  async function handleDispute() {
+    const reason = prompt('Please describe the issue with this order:');
+    if (!reason || reason.trim().length < 20) {
+      alert('Please provide a detailed description (at least 20 characters)');
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/orders/${order.id}/dispute`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          orderId: order.id,
+          disputeType: 'quality_issue',
+          title: 'Service Quality Issue',
+          description: reason
+        }),
+      });
+      
+      if (response.ok) {
+        alert('Dispute submitted successfully. Our team will review it shortly.');
+        // Order list will refresh automatically via React Query
+      } else {
+        const error = await response.json();
+        alert(error.message || 'Failed to submit dispute');
+      }
+    } catch (error) {
+      alert('Failed to submit dispute');
     }
   }
 }

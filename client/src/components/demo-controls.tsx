@@ -100,22 +100,41 @@ export function DemoControls() {
 
       await new Promise(resolve => setTimeout(resolve, 1000));
 
-      // Step 5: Complete order and trigger real-time payout
+      // Step 5: Submit for customer approval
       toast({
-        title: "Step 5: Completing Order",
-        description: "Service completed, triggering real-time commission payout...",
+        title: "Step 5: Submitting for Approval",
+        description: "Provider submitting completed service for customer approval...",
       });
 
-      const completeResponse = await fetch(`/api/orders/${order.data.id}/complete`, {
+      await fetch(`/api/orders/${order.data.id}/submit-for-approval`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           providerId: '890ed15c-d22b-4fde-a6f0-3b5096411d80',
+          deliveryNote: 'Demo service completed successfully'
         }),
       });
 
-      if (!completeResponse.ok) throw new Error('Failed to complete order');
-      const result = await completeResponse.json();
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // Step 6: Customer approves and triggers real-time payout
+      toast({
+        title: "Step 6: Customer Approval",
+        description: "Customer approving service, triggering real-time commission payout...",
+      });
+
+      const approveResponse = await fetch(`/api/orders/${order.data.id}/approve`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          customerId: 'demo-customer-id',
+          customerRating: 5,
+          customerFeedback: 'Excellent demo service!'
+        }),
+      });
+
+      if (!approveResponse.ok) throw new Error('Failed to approve order');
+      const result = await approveResponse.json();
 
       // Show success message
       toast({
@@ -152,7 +171,7 @@ export function DemoControls() {
       <CardContent>
         <div className="space-y-4">
           <p className="text-sm text-muted-foreground">
-            <TranslatedText>Test the complete flow: Order → Payment → Service Completion → Instant Commission Payout (90% to provider)</TranslatedText>
+            <TranslatedText>Test the complete flow: Order → Payment → Service Completion → Customer Approval → Instant Commission Payout (90% to provider)</TranslatedText>
           </p>
           
           <div className="flex flex-wrap gap-2 text-xs">
@@ -165,6 +184,10 @@ export function DemoControls() {
               <span><TranslatedText>90% Provider Share</TranslatedText></span>
             </div>
             <div className="flex items-center gap-1 px-2 py-1 bg-purple-100 dark:bg-purple-900/30 rounded">
+              <CheckCircle className="w-3 h-3" />
+              <span><TranslatedText>Customer Approval</TranslatedText></span>
+            </div>
+            <div className="flex items-center gap-1 px-2 py-1 bg-orange-100 dark:bg-orange-900/30 rounded">
               <CheckCircle className="w-3 h-3" />
               <span><TranslatedText>Real-Time Payout</TranslatedText></span>
             </div>
