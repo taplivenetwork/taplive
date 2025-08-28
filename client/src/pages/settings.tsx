@@ -82,8 +82,8 @@ export default function Settings() {
                 </Label>
                 <Textarea 
                   id="bio" 
-                  placeholder="Tell viewers about yourself..."
-                  defaultValue="Professional content creator specializing in travel and lifestyle streaming."
+                  placeholder={useTranslatedText('Tell viewers about yourself...')}
+                  defaultValue={useTranslatedText('Professional content creator specializing in travel and lifestyle streaming.')}
                   rows={3}
                 />
               </div>
@@ -265,11 +265,11 @@ export default function Settings() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="pst">Pacific Standard Time (PST)</SelectItem>
-                    <SelectItem value="mst">Mountain Standard Time (MST)</SelectItem>
-                    <SelectItem value="cst">Central Standard Time (CST)</SelectItem>
-                    <SelectItem value="est">Eastern Standard Time (EST)</SelectItem>
-                    <SelectItem value="utc">Coordinated Universal Time (UTC)</SelectItem>
+                    <SelectItem value="pst"><TranslatedText>Pacific Standard Time (PST)</TranslatedText></SelectItem>
+                    <SelectItem value="mst"><TranslatedText>Mountain Standard Time (MST)</TranslatedText></SelectItem>
+                    <SelectItem value="cst"><TranslatedText>Central Standard Time (CST)</TranslatedText></SelectItem>
+                    <SelectItem value="est"><TranslatedText>Eastern Standard Time (EST)</TranslatedText></SelectItem>
+                    <SelectItem value="utc"><TranslatedText>Coordinated Universal Time (UTC)</TranslatedText></SelectItem>
                   </SelectContent>
                 </Select>
               </div>
