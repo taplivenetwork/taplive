@@ -1,4 +1,4 @@
-import { Video, MapPin, List, Wallet, Settings, LogOut, User } from "lucide-react";
+import { Video, MapPin, List, Wallet, Settings, LogOut, User, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "wouter";
 import { LanguageSelector } from "@/components/language-selector";
@@ -13,6 +13,7 @@ export function Sidebar() {
     { name: "Discover", href: "/", icon: MapPin, current: location === "/" },
     { name: "My Orders", href: "/orders", icon: List, current: location === "/orders" },
     { name: "Live Streams", href: "/streams", icon: Video, current: location === "/streams" },
+    { name: "Smart Dispatch", href: "/dispatch", icon: TrendingUp, current: location === "/dispatch" },
     { name: "Earnings", href: "/earnings", icon: Wallet, current: location === "/earnings" },
     { name: "Settings", href: "/settings", icon: Settings, current: location === "/settings" },
   ];

@@ -1,4 +1,5 @@
 import { type User, type InsertUser, type Order, type InsertOrder, type Rating, type InsertRating } from "@shared/schema";
+import { type ProviderRanking, rankProvidersForOrder, updateUserDispatchScore } from "@shared/dispatch";
 import { randomUUID } from "crypto";
 
 export interface IStorage {
@@ -22,6 +23,13 @@ export interface IStorage {
   getRatingsByOrder(orderId: string): Promise<Rating[]>;
   getUserRatings(userId: string): Promise<Rating[]>;
   calculateUserStats(userId: string): Promise<void>;
+  
+  // Dispatch operations
+  getAvailableProviders(): Promise<User[]>;
+  getRankedProvidersForOrder(orderId: string): Promise<ProviderRanking[]>;
+  updateUserLocation(userId: string, latitude: number, longitude: number): Promise<User | undefined>;
+  updateUserNetworkMetrics(userId: string, networkSpeed: number, devicePerformance: number): Promise<User | undefined>;
+  calculateUserDispatchScore(userId: string): Promise<void>;
 }
 
 export class MemStorage implements IStorage {
@@ -52,6 +60,14 @@ export class MemStorage implements IStorage {
         completedOrders: 15,
         responseTime: 12,
         trustScore: "4.7",
+        // Dispatch fields
+        networkSpeed: "45.50",
+        devicePerformance: "85.00",
+        currentLatitude: "40.7580",
+        currentLongitude: "-73.9855",
+        availability: true,
+        lastActive: new Date(),
+        dispatchScore: "78.45",
         createdAt: new Date(),
       },
       {
@@ -67,6 +83,61 @@ export class MemStorage implements IStorage {
         completedOrders: 22,
         responseTime: 8,
         trustScore: "4.5",
+        // Dispatch fields
+        networkSpeed: "52.30",
+        devicePerformance: "92.00",
+        currentLatitude: "40.7614",
+        currentLongitude: "-73.9776",
+        availability: true,
+        lastActive: new Date(),
+        dispatchScore: "82.60",
+        createdAt: new Date(),
+      },
+      // Additional provider samples with different metrics
+      {
+        id: randomUUID(),
+        username: "alex_kim",
+        password: "hashed_password",
+        email: "alex@example.com",
+        name: "Alex Kim",
+        avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=32&h=32",
+        role: "provider",
+        rating: "4.9",
+        totalRatings: 35,
+        completedOrders: 45,
+        responseTime: 5,
+        trustScore: "4.8",
+        // Dispatch fields - high performance provider
+        networkSpeed: "75.20",
+        devicePerformance: "95.00",
+        currentLatitude: "40.7505",
+        currentLongitude: "-73.9934",
+        availability: true,
+        lastActive: new Date(),
+        dispatchScore: "88.20",
+        createdAt: new Date(),
+      },
+      {
+        id: randomUUID(),
+        username: "emma_wilson",
+        password: "hashed_password",
+        email: "emma@example.com",
+        name: "Emma Wilson",
+        avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b786?ixlib=rb-4.0.3&auto=format&fit=crop&w=32&h=32",
+        role: "provider",
+        rating: "4.2",
+        totalRatings: 12,
+        completedOrders: 8,
+        responseTime: 15,
+        trustScore: "4.1",
+        // Dispatch fields - lower performance provider
+        networkSpeed: "25.80",
+        devicePerformance: "65.00",
+        currentLatitude: "40.7830",
+        currentLongitude: "-73.9712",
+        availability: true,
+        lastActive: new Date(),
+        dispatchScore: "65.30",
         createdAt: new Date(),
       }
     ];
@@ -171,6 +242,14 @@ export class MemStorage implements IStorage {
       completedOrders: 0,
       responseTime: 0,
       trustScore: "0.00",
+      // Dispatch defaults
+      networkSpeed: "0.00",
+      devicePerformance: "0.00",
+      currentLatitude: null,
+      currentLongitude: null,
+      availability: true,
+      lastActive: new Date(),
+      dispatchScore: "0.00",
       createdAt: new Date()
     };
     this.users.set(id, user);
@@ -302,6 +381,65 @@ export class MemStorage implements IStorage {
       totalRatings: userRatings.length,
       completedOrders,
       trustScore: trustScore.toFixed(2),
+    });
+    
+    // Recalculate dispatch score
+    await this.calculateUserDispatchScore(userId);
+  }
+
+  // Dispatch operations implementation
+  async getAvailableProviders(): Promise<User[]> {
+    return Array.from(this.users.values()).filter(user => 
+      user.role === 'provider' && 
+      user.availability &&
+      user.currentLatitude &&
+      user.currentLongitude
+    );
+  }
+
+  async getRankedProvidersForOrder(orderId: string): Promise<ProviderRanking[]> {
+    const order = await this.getOrderById(orderId);
+    if (!order) return [];
+
+    const availableProviders = await this.getAvailableProviders();
+    return rankProvidersForOrder(order, availableProviders);
+  }
+
+  async updateUserLocation(userId: string, latitude: number, longitude: number): Promise<User | undefined> {
+    const updates = {
+      currentLatitude: latitude.toString(),
+      currentLongitude: longitude.toString(),
+      lastActive: new Date(),
+    };
+    
+    const updatedUser = await this.updateUser(userId, updates);
+    if (updatedUser) {
+      await this.calculateUserDispatchScore(userId);
+    }
+    return updatedUser;
+  }
+
+  async updateUserNetworkMetrics(userId: string, networkSpeed: number, devicePerformance: number): Promise<User | undefined> {
+    const updates = {
+      networkSpeed: networkSpeed.toString(),
+      devicePerformance: devicePerformance.toString(),
+      lastActive: new Date(),
+    };
+    
+    const updatedUser = await this.updateUser(userId, updates);
+    if (updatedUser) {
+      await this.calculateUserDispatchScore(userId);
+    }
+    return updatedUser;
+  }
+
+  async calculateUserDispatchScore(userId: string): Promise<void> {
+    const user = await this.getUser(userId);
+    if (!user) return;
+
+    const dispatchScore = updateUserDispatchScore(user);
+    await this.updateUser(userId, {
+      dispatchScore: dispatchScore.toString(),
     });
   }
 }

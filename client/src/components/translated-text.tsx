@@ -349,10 +349,25 @@ const translations: Record<string, Record<string, string>> = {
       'Submit Rating': '提交评分',
       'Submitting...': '提交中...',
       'Poor': '差',
-      'Fair': '一般',
+      'Fair': '一般', 
       'Good': '好',
       'Very Good': '很好',
-      'Excellent': '极好'
+      'Excellent': '极好',
+      
+      // Dispatch system translations
+      'Smart Dispatch': '智能派单',
+      'Dispatch Score': '派单评分',
+      'Smart Dispatch System': '智能派单系统',
+      'Algorithm Weights': '算法权重',
+      'Active Orders': '活跃订单',
+      'Available Providers': '可用服务商',
+      'Avg Dispatch Score': '平均派单评分',
+      'Provider Rankings': '服务商排名',
+      'Distance': '距离',
+      'Trust Score': '信任评分',
+      'Network Speed': '网络速度',
+      'Device Performance': '设备性能',
+      'Response Time': '响应时间'
     },
     'ja': {
       'Search by location or description...': '場所や説明で検索...',

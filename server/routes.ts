@@ -328,6 +328,231 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // DISPATCH ALGORITHM ENDPOINTS
+
+  // Get ranked providers for specific order
+  app.get("/api/orders/:id/providers", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const rankings = await storage.getRankedProvidersForOrder(id);
+
+      res.json({
+        success: true,
+        data: rankings,
+        message: `Found ${rankings.length} available providers`
+      });
+    } catch (error) {
+      console.error('Error getting ranked providers:', error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to get ranked providers"
+      });
+    }
+  });
+
+  // Get all available providers (sorted by dispatch score)
+  app.get("/api/providers", async (req, res) => {
+    try {
+      const providers = await storage.getAvailableProviders();
+      
+      // Sort by dispatch score descending
+      const sortedProviders = providers
+        .sort((a, b) => parseFloat(b.dispatchScore || '0') - parseFloat(a.dispatchScore || '0'))
+        .map(provider => {
+          // Remove password from response
+          const { password, ...safeProvider } = provider;
+          return safeProvider;
+        });
+
+      res.json({
+        success: true,
+        data: sortedProviders,
+        message: `Found ${sortedProviders.length} available providers`
+      });
+    } catch (error) {
+      console.error('Error getting available providers:', error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to get available providers"
+      });
+    }
+  });
+
+  // Update user location
+  app.post("/api/users/:id/location", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const validation = z.object({
+        latitude: z.number().min(-90).max(90),
+        longitude: z.number().min(-180).max(180),
+      }).safeParse(req.body);
+
+      if (!validation.success) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid location data",
+          errors: validation.error.errors
+        });
+      }
+
+      const { latitude, longitude } = validation.data;
+      const updatedUser = await storage.updateUserLocation(id, latitude, longitude);
+
+      if (!updatedUser) {
+        return res.status(404).json({
+          success: false,
+          message: "User not found"
+        });
+      }
+
+      res.json({
+        success: true,
+        data: {
+          latitude: updatedUser.currentLatitude,
+          longitude: updatedUser.currentLongitude,
+          dispatchScore: updatedUser.dispatchScore
+        },
+        message: "Location updated successfully"
+      });
+    } catch (error) {
+      console.error('Error updating user location:', error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to update location"
+      });
+    }
+  });
+
+  // Update user network metrics
+  app.post("/api/users/:id/network-metrics", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const validation = z.object({
+        networkSpeed: z.number().min(0).max(1000), // Max 1000 Mbps
+        devicePerformance: z.number().min(0).max(100), // 0-100 score
+      }).safeParse(req.body);
+
+      if (!validation.success) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid network metrics data",
+          errors: validation.error.errors
+        });
+      }
+
+      const { networkSpeed, devicePerformance } = validation.data;
+      const updatedUser = await storage.updateUserNetworkMetrics(id, networkSpeed, devicePerformance);
+
+      if (!updatedUser) {
+        return res.status(404).json({
+          success: false,
+          message: "User not found"
+        });
+      }
+
+      res.json({
+        success: true,
+        data: {
+          networkSpeed: updatedUser.networkSpeed,
+          devicePerformance: updatedUser.devicePerformance,
+          dispatchScore: updatedUser.dispatchScore
+        },
+        message: "Network metrics updated successfully"
+      });
+    } catch (error) {
+      console.error('Error updating network metrics:', error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to update network metrics"
+      });
+    }
+  });
+
+  // Toggle user availability
+  app.post("/api/users/:id/availability", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const validation = z.object({
+        availability: z.boolean(),
+      }).safeParse(req.body);
+
+      if (!validation.success) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid availability data",
+          errors: validation.error.errors
+        });
+      }
+
+      const { availability } = validation.data;
+      const updatedUser = await storage.updateUser(id, { 
+        availability,
+        lastActive: new Date()
+      });
+
+      if (!updatedUser) {
+        return res.status(404).json({
+          success: false,
+          message: "User not found"
+        });
+      }
+
+      res.json({
+        success: true,
+        data: {
+          availability: updatedUser.availability,
+          lastActive: updatedUser.lastActive
+        },
+        message: `User availability set to ${availability ? 'available' : 'unavailable'}`
+      });
+    } catch (error) {
+      console.error('Error updating availability:', error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to update availability"
+      });
+    }
+  });
+
+  // Get dispatch algorithm weights and explanation
+  app.get("/api/dispatch/algorithm", async (req, res) => {
+    try {
+      res.json({
+        success: true,
+        data: {
+          weights: {
+            distance: 35, // 35%
+            trustScore: 25, // 25%
+            networkSpeed: 20, // 20%
+            devicePerformance: 10, // 10%
+            responseTime: 10, // 10%
+          },
+          explanation: {
+            distance: "Proximity to order location - closer providers score higher",
+            trustScore: "User reputation based on ratings and completed orders",
+            networkSpeed: "Internet connection speed in Mbps - critical for streaming quality",
+            devicePerformance: "Device capability score (0-100) - affects stream quality",
+            responseTime: "Average response time to accept orders - faster response scores higher"
+          },
+          scoringRanges: {
+            distance: "0-50km optimal range, exponential decay beyond",
+            trustScore: "0-5.0 rating scale, normalized to 0-100",
+            networkSpeed: "5+ Mbps minimum, 50+ Mbps for perfect score",
+            devicePerformance: "0-100 scale directly mapped",
+            responseTime: "0-5 minutes optimal, exponential decay to 60 minutes"
+          }
+        },
+        message: "Dispatch algorithm configuration"
+      });
+    } catch (error) {
+      console.error('Error getting algorithm info:', error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to get algorithm information"
+      });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

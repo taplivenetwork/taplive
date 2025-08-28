@@ -19,6 +19,16 @@ export const users = pgTable("users", {
   completedOrders: integer("completed_orders").default(0), // Total completed orders
   responseTime: integer("avg_response_time").default(0), // Average response time in minutes
   trustScore: decimal("trust_score", { precision: 3, scale: 2 }).default('0.00'), // Overall trust score
+  
+  // Dispatch algorithm fields
+  networkSpeed: decimal("network_speed", { precision: 5, scale: 2 }).default('0.00'), // Mbps
+  devicePerformance: decimal("device_performance", { precision: 3, scale: 2 }).default('0.00'), // 0-100 score
+  currentLatitude: decimal("current_latitude", { precision: 10, scale: 7 }), // Current location
+  currentLongitude: decimal("current_longitude", { precision: 10, scale: 7 }), // Current location
+  availability: boolean("availability").default(true), // Available for orders
+  lastActive: timestamp("last_active").defaultNow(), // Last activity timestamp
+  dispatchScore: decimal("dispatch_score", { precision: 5, scale: 2 }).default('0.00'), // Overall dispatch ranking
+  
   createdAt: timestamp("created_at").defaultNow(),
 });
 
