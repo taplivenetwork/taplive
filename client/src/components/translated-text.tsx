@@ -5,11 +5,8 @@ interface TranslatedTextProps {
   className?: string;
 }
 
-export function TranslatedText({ children, className }: TranslatedTextProps) {
-  const { currentLanguage } = useTranslation();
-
-  // Simple mapping for common UI terms to avoid API calls entirely
-  const translations: Record<string, Record<string, string>> = {
+// Simple mapping for common UI terms to avoid API calls entirely
+const translations: Record<string, Record<string, string>> = {
     'zh': {
       // Basic UI
       'Search by location or description...': '搜索位置或描述...',
@@ -1281,61 +1278,16 @@ export function TranslatedText({ children, className }: TranslatedTextProps) {
     }
   };
 
+export function TranslatedText({ children, className }: TranslatedTextProps) {
+  const { currentLanguage } = useTranslation();
+  
   const translation = translations[currentLanguage]?.[children] || children;
   
   return <span className={className}>{translation}</span>;
 }
 
-// Hook to get translated text for form fields  
+// Hook to get translated text for form fields using the same translations object
 export function useTranslatedText(text: string): string {
   const { currentLanguage } = useTranslation();
-  
-  const translations = {
-    'en': {},
-    'zh': {},
-    'ja': {},
-    'es': {},
-    'ko': {},
-    'fr': {},
-    'de': {},
-    'hi': {}
-  };
-  
-  // Get the same translations object used by TranslatedText component
-  const allTranslations = {
-    en: {
-      'Tell viewers about yourself...': 'Tell viewers about yourself...',
-      'Professional content creator specializing in travel and lifestyle streaming.': 'Professional content creator specializing in travel and lifestyle streaming.'
-    },
-    zh: {
-      'Tell viewers about yourself...': '向观众介绍一下你自己...',
-      'Professional content creator specializing in travel and lifestyle streaming.': '专业内容创作者，专注于旅行和生活方式直播。'
-    },
-    ja: {
-      'Tell viewers about yourself...': '視聴者に自己紹介をしてください...',
-      'Professional content creator specializing in travel and lifestyle streaming.': '旅行とライフスタイルストリーミングを専門とするプロのコンテンツクリエイター。'
-    },
-    es: {
-      'Tell viewers about yourself...': 'Cuéntales a los espectadores sobre ti...',
-      'Professional content creator specializing in travel and lifestyle streaming.': 'Creador de contenido profesional especializado en transmisión de viajes y estilo de vida.'
-    },
-    ko: {
-      'Tell viewers about yourself...': '시청자들에게 자신을 소개해보세요...',
-      'Professional content creator specializing in travel and lifestyle streaming.': '여행과 라이프스타일 스트리밍을 전문으로 하는 프로 콘텐츠 크리에이터입니다.'
-    },
-    fr: {
-      'Tell viewers about yourself...': 'Parlez de vous aux spectateurs...',
-      'Professional content creator specializing in travel and lifestyle streaming.': 'Créateur de contenu professionnel spécialisé dans le streaming de voyage et de style de vie.'
-    },
-    de: {
-      'Tell viewers about yourself...': 'Erzählen Sie den Zuschauern von sich...',
-      'Professional content creator specializing in travel and lifestyle streaming.': 'Professioneller Content-Creator, spezialisiert auf Reise- und Lifestyle-Streaming.'
-    },
-    hi: {
-      'Tell viewers about yourself...': 'दर्शकों को अपने बारे में बताएं...',
-      'Professional content creator specializing in travel and lifestyle streaming.': 'यात्रा और जीवनशैली स्ट्रीमिंग में विशेषज्ञता रखने वाले पेशेवर सामग्री निर्माता।'
-    }
-  };
-  
-  return allTranslations[currentLanguage as keyof typeof allTranslations]?.[text as keyof typeof allTranslations.en] || text;
+  return translations[currentLanguage]?.[text] || text;
 }
