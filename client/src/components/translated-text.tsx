@@ -581,7 +581,16 @@ export function TranslatedText({ children, className }: TranslatedTextProps) {
       'No open orders': 'Nenhum pedido aberto',
       'No accepted orders': 'Nenhum pedido aceito',
       'No live streams': 'Nenhuma transmissão ao vivo',
-      'No completed orders': 'Nenhum pedido concluído'
+      'No completed orders': 'Nenhum pedido concluído',
+      'Central Park Concert Stream': 'Stream de Concerto no Central Park',
+      'Looking for someone to stream the outdoor concert happening at Central Park this evening': 'Procurando alguém para transmitir o concerto ao ar livre que acontece no Central Park esta noite',
+      'Central Park, NYC': 'Central Park, Nova York',
+      'Food Market Tour': 'Tour do Mercado de Alimentos',
+      'Want someone to stream a guided tour of Pike Place Market, showcasing local vendors and food': 'Quero alguém para transmitir um tour guiado do Pike Place Market, mostrando vendedores locais e comida',
+      'Pike Place Market, Seattle': 'Pike Place Market, Seattle',
+      'Beach Sunset Yoga': 'Yoga do Pôr do Sol na Praia',
+      'Stream a peaceful sunset yoga session at Santa Monica Beach for wellness enthusiasts': 'Transmitir uma sessão pacífica de yoga ao pôr do sol na Praia de Santa Monica para entusiastas do bem-estar',
+      'Santa Monica Beach, CA': 'Praia de Santa Monica, Califórnia'
     },
     'it': {
       'Search by location or description...': 'Cerca per posizione o descrizione...',
@@ -630,7 +639,16 @@ export function TranslatedText({ children, className }: TranslatedTextProps) {
       'No open orders': 'Nessun ordine aperto',
       'No accepted orders': 'Nessun ordine accettato',
       'No live streams': 'Nessun stream dal vivo',
-      'No completed orders': 'Nessun ordine completato'
+      'No completed orders': 'Nessun ordine completato',
+      'Central Park Concert Stream': 'Stream Concerto Central Park',
+      'Looking for someone to stream the outdoor concert happening at Central Park this evening': 'Cerco qualcuno per trasmettere il concerto all\'aperto che si svolge al Central Park stasera',
+      'Central Park, NYC': 'Central Park, New York',
+      'Food Market Tour': 'Tour del Mercato Alimentare',
+      'Want someone to stream a guided tour of Pike Place Market, showcasing local vendors and food': 'Voglio qualcuno per trasmettere un tour guidato del Pike Place Market, mostrando venditori locali e cibo',
+      'Pike Place Market, Seattle': 'Pike Place Market, Seattle',
+      'Beach Sunset Yoga': 'Yoga Tramonto in Spiaggia',
+      'Stream a peaceful sunset yoga session at Santa Monica Beach for wellness enthusiasts': 'Trasmetti una sessione di yoga pacifica al tramonto a Santa Monica Beach per gli appassionati di benessere',
+      'Santa Monica Beach, CA': 'Santa Monica Beach, California'
     },
     'ar': {
       'Search by location or description...': 'البحث حسب الموقع أو الوصف...',
@@ -679,7 +697,16 @@ export function TranslatedText({ children, className }: TranslatedTextProps) {
       'No open orders': 'لا توجد طلبات مفتوحة',
       'No accepted orders': 'لا توجد طلبات مقبولة',
       'No live streams': 'لا يوجد بث مباشر',
-      'No completed orders': 'لا توجد طلبات مكتملة'
+      'No completed orders': 'لا توجد طلبات مكتملة',
+      'Central Park Concert Stream': 'بث حفلة سنترال بارك',
+      'Looking for someone to stream the outdoor concert happening at Central Park this evening': 'أبحث عن شخص لبث الحفلة الموسيقية في الهواء الطلق التي تحدث في سنترال بارك هذا المساء',
+      'Central Park, NYC': 'سنترال بارك، نيويورك',
+      'Food Market Tour': 'جولة سوق الطعام',
+      'Want someone to stream a guided tour of Pike Place Market, showcasing local vendors and food': 'أريد شخصًا لبث جولة إرشادية في سوق بايك بليس، عرض البائعين المحليين والطعام',
+      'Pike Place Market, Seattle': 'سوق بايك بليس، سياتل',
+      'Beach Sunset Yoga': 'يوغا غروب الشاطئ',
+      'Stream a peaceful sunset yoga session at Santa Monica Beach for wellness enthusiasts': 'بث جلسة يوغا هادئة عند غروب الشمس في شاطئ سانتا مونيكا لعشاق العافية',
+      'Santa Monica Beach, CA': 'شاطئ سانتا مونيكا، كاليفورنيا'
     },
     'hi': {
       'Search by location or description...': 'स्थान या विवरण द्वारा खोजें...',
