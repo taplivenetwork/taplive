@@ -207,6 +207,7 @@ export function TranslatedText({ children, className }: TranslatedTextProps) {
       'Accepted': 'Aceptado',
       'participants': 'participantes',
       'min': 'min',
+      'Create Order': 'Crear pedido',
       'Live Streams': 'Transmisiones en Vivo',
       'Discover': 'Descubrir',
       'Orders': 'Pedidos',
