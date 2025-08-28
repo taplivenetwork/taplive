@@ -1437,7 +1437,20 @@ const translations: Record<string, Record<string, string>> = {
       'No open orders': 'कोई खुले ऑर्डर नहीं',
       'No accepted orders': 'कोई स्वीकृत ऑर्डर नहीं',
       'No live streams': 'कोई लाइव स्ट्रीम नहीं',
-      'No completed orders': 'कोई पूर्ण ऑर्डर नहीं'
+      'No completed orders': 'कोई पूर्ण ऑर्डर नहीं',
+      
+      // Settings page - Hindi translations
+      'Profile Settings': 'प्रोफ़ाइल सेटिंग्स',
+      'Update your personal information and profile details': 'अपनी व्यक्तिगत जानकारी और प्रोफ़ाइल विवरण को अपडेट करें',
+      'First Name': 'पहला नाम',
+      'Last Name': 'अंतिम नाम',
+      'Email': 'ईमेल',
+      'Bio': 'जीवनी',
+      'Tell viewers about yourself...': 'दर्शकों को अपने बारे में बताएं...',
+      'Professional content creator specializing in travel and lifestyle streaming.': 'यात्रा और जीवनशैली स्ट्रीमिंग में विशेषज्ञता रखने वाले पेशेवर सामग्री निर्माता।',
+      'Save Profile': 'प्रोफ़ाइल सेव करें',
+      'Streaming Settings': 'स्ट्रीमिंग सेटिंग्स',
+      'Configure your default streaming preferences': 'अपनी डिफ़ॉल्ट स्ट्रीमिंग प्राथमिकताएं कॉन्फ़िगर करें'
     }
   };
 
