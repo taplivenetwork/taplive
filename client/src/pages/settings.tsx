@@ -13,6 +13,21 @@ import { User, Bell, Shield, Globe, Camera, Save } from "lucide-react";
 export default function Settings() {
   const { currentLanguage, setCurrentLanguage } = useTranslation();
 
+  const handleSaveProfile = () => {
+    // TODO: Implement save profile functionality
+    console.log('Save profile clicked');
+  };
+
+  const handleChangePassword = () => {
+    // TODO: Implement change password functionality
+    console.log('Change password clicked');
+  };
+
+  const handleDeleteAccount = () => {
+    // TODO: Implement delete account functionality
+    console.log('Delete account clicked');
+  };
+
   return (
     <div className="flex-1 p-6">
       <div className="max-w-4xl mx-auto">
@@ -73,7 +88,7 @@ export default function Settings() {
                 />
               </div>
               
-              <Button className="w-full md:w-auto">
+              <Button className="w-full md:w-auto" onClick={handleSaveProfile}>
                 <Save className="w-4 h-4 mr-2" />
                 <TranslatedText>Save Profile</TranslatedText>
               </Button>
@@ -298,13 +313,13 @@ export default function Settings() {
               </div>
               
               <div className="space-y-2">
-                <Button variant="outline" className="w-full md:w-auto">
+                <Button variant="outline" className="w-full md:w-auto" onClick={handleChangePassword}>
                   <TranslatedText>Change Password</TranslatedText>
                 </Button>
               </div>
               
               <div className="space-y-2">
-                <Button variant="outline" className="w-full md:w-auto text-red-600 hover:text-red-700">
+                <Button variant="outline" className="w-full md:w-auto text-red-600 hover:text-red-700" onClick={handleDeleteAccount}>
                   <TranslatedText>Delete Account</TranslatedText>
                 </Button>
               </div>
