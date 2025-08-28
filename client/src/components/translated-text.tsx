@@ -1348,7 +1348,20 @@ const translations: Record<string, Record<string, string>> = {
       'Pike Place Market, Seattle': 'سوق بايك بليس، سياتل',
       'Beach Sunset Yoga': 'يوغا غروب الشاطئ',
       'Stream a peaceful sunset yoga session at Santa Monica Beach for wellness enthusiasts': 'بث جلسة يوغا هادئة عند غروب الشمس في شاطئ سانتا مونيكا لعشاق العافية',
-      'Santa Monica Beach, CA': 'شاطئ سانتا مونيكا، كاليفورنيا'
+      'Santa Monica Beach, CA': 'شاطئ سانتا مونيكا، كاليفورنيا',
+      
+      // Settings page - Arabic translations
+      'Profile Settings': 'إعدادات الملف الشخصي',
+      'Update your personal information and profile details': 'قم بتحديث معلوماتك الشخصية وتفاصيل ملفك الشخصي',
+      'First Name': 'الاسم الأول',
+      'Last Name': 'اسم العائلة',
+      'Email': 'البريد الإلكتروني',
+      'Bio': 'السيرة الذاتية',
+      'Tell viewers about yourself...': 'أخبر المشاهدين عن نفسك...',
+      'Professional content creator specializing in travel and lifestyle streaming.': 'منشئ محتوى محترف متخصص في البث المباشر للسفر ونمط الحياة.',
+      'Save Profile': 'حفظ الملف الشخصي',
+      'Streaming Settings': 'إعدادات البث',
+      'Configure your default streaming preferences': 'قم بتكوين تفضيلات البث الافتراضية الخاصة بك'
     },
     'hi': {
       'Search by location or description...': 'स्थान या विवरण द्वारा खोजें...',
