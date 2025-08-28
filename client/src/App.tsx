@@ -9,6 +9,8 @@ import { MobileNavigation } from "@/components/layout/mobile-nav";
 import Home from "@/pages/home";
 import Orders from "@/pages/orders";
 import Earnings from "@/pages/earnings";
+import Streams from "@/pages/streams";
+import Settings from "@/pages/settings";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -17,6 +19,8 @@ function Router() {
       <Route path="/" component={Home} />
       <Route path="/orders" component={Orders} />
       <Route path="/earnings" component={Earnings} />
+      <Route path="/streams" component={Streams} />
+      <Route path="/settings" component={Settings} />
       <Route component={NotFound} />
     </Switch>
   );
