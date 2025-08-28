@@ -108,6 +108,8 @@ export function TranslatedText({ children, className }: TranslatedTextProps) {
       'Last Name': '姓氏',
       'Email': '邮箱',
       'Bio': '个人简介',
+      'Tell viewers about yourself...': '向观众介绍一下你自己...',
+      'Professional content creator specializing in travel and lifestyle streaming.': '专业内容创作者，专注于旅行和生活方式直播。',
       'Save Profile': '保存资料',
       'Streaming Settings': '直播设置',
       'Configure your default streaming preferences': '配置您的默认直播偏好',
@@ -258,6 +260,8 @@ export function TranslatedText({ children, className }: TranslatedTextProps) {
       'Last Name': '姓',
       'Email': 'メール',
       'Bio': '自己紹介',
+      'Tell viewers about yourself...': '視聴者に自己紹介をしてください...',
+      'Professional content creator specializing in travel and lifestyle streaming.': '旅行とライフスタイルストリーミングを専門とするプロのコンテンツクリエイター。',
       'Save Profile': 'プロフィールを保存',
       'Streaming Settings': 'ストリーミング設定',
       'Configure your default streaming preferences': 'デフォルトのストリーミング設定を構成',
@@ -411,6 +415,8 @@ export function TranslatedText({ children, className }: TranslatedTextProps) {
       'Last Name': 'Apellido',
       'Email': 'Correo electrónico',
       'Bio': 'Biografía',
+      'Tell viewers about yourself...': 'Cuéntales a los espectadores sobre ti...',
+      'Professional content creator specializing in travel and lifestyle streaming.': 'Creador de contenido profesional especializado en transmisión de viajes y estilo de vida.',
       'Save Profile': 'Guardar Perfil',
       'Streaming Settings': 'Configuración de Transmisión',
       'Configure your default streaming preferences': 'Configura tus preferencias predeterminadas de transmisión',
@@ -564,6 +570,8 @@ export function TranslatedText({ children, className }: TranslatedTextProps) {
       'Last Name': '성',
       'Email': '이메일',
       'Bio': '자기소개',
+      'Tell viewers about yourself...': '시청자들에게 자신을 소개해보세요...',
+      'Professional content creator specializing in travel and lifestyle streaming.': '여행과 라이프스타일 스트리밍을 전문으로 하는 프로 콘텐츠 크리에이터입니다.',
       'Save Profile': '프로필 저장',
       'Streaming Settings': '스트리밍 설정',
       'Configure your default streaming preferences': '기본 스트리밍 설정 구성',
@@ -594,8 +602,6 @@ export function TranslatedText({ children, className }: TranslatedTextProps) {
       'Allow sharing your location during streams': '스트리밍 중 위치 공유 허용',
       'Change Password': '비밀번호 변경',
       'Delete Account': '계정 삭제',
-      'Tell viewers about yourself...': '시청자들에게 자신을 소개해보세요...',
-      'Professional content creator specializing in travel and lifestyle streaming.': '여행 및 라이프스타일 스트리밍 전문 콘텐츠 크리에이터.',
       
       // Time zones
       'America/New_York': '미국/뉴욕',
@@ -726,6 +732,8 @@ export function TranslatedText({ children, className }: TranslatedTextProps) {
       'Last Name': 'Nom',
       'Email': 'Email',
       'Bio': 'Biographie',
+      'Tell viewers about yourself...': 'Parlez de vous aux spectateurs...',
+      'Professional content creator specializing in travel and lifestyle streaming.': 'Créateur de contenu professionnel spécialisé dans le streaming de voyage et de style de vie.',
       'Save Profile': 'Sauvegarder le Profil',
       'Streaming Settings': 'Paramètres de Streaming',
       'Configure your default streaming preferences': 'Configurez vos préférences de streaming par défaut',
@@ -756,8 +764,6 @@ export function TranslatedText({ children, className }: TranslatedTextProps) {
       'Allow sharing your location during streams': 'Autorisez le partage de votre localisation pendant les streams',
       'Change Password': 'Changer le Mot de Passe',
       'Delete Account': 'Supprimer le Compte',
-      'Tell viewers about yourself...': 'Parlez de vous aux spectateurs...',
-      'Professional content creator specializing in travel and lifestyle streaming.': 'Créateur de contenu professionnel spécialisé dans le streaming de voyage et de style de vie.',
       
       // Time zones
       'America/New_York': 'Amérique/New York',
@@ -872,6 +878,8 @@ export function TranslatedText({ children, className }: TranslatedTextProps) {
       'Last Name': 'Nachname',
       'Email': 'E-Mail',
       'Bio': 'Biografie',
+      'Tell viewers about yourself...': 'Erzählen Sie den Zuschauern von sich...',
+      'Professional content creator specializing in travel and lifestyle streaming.': 'Professioneller Content-Creator, spezialisiert auf Reise- und Lifestyle-Streaming.',
       'Save Profile': 'Profil Speichern',
       'Streaming Settings': 'Streaming-Einstellungen',
       'Configure your default streaming preferences': 'Konfigurieren Sie Ihre Standard-Streaming-Einstellungen',
@@ -902,8 +910,6 @@ export function TranslatedText({ children, className }: TranslatedTextProps) {
       'Allow sharing your location during streams': 'Standort-Freigabe während Streams erlauben',
       'Change Password': 'Passwort Ändern',
       'Delete Account': 'Konto Löschen',
-      'Tell viewers about yourself...': 'Erzählen Sie den Zuschauern von sich...',
-      'Professional content creator specializing in travel and lifestyle streaming.': 'Professioneller Content-Ersteller, spezialisiert auf Reise- und Lifestyle-Streaming.',
       
       // Time zones
       'America/New_York': 'Amerika/New York',
@@ -1278,4 +1284,58 @@ export function TranslatedText({ children, className }: TranslatedTextProps) {
   const translation = translations[currentLanguage]?.[children] || children;
   
   return <span className={className}>{translation}</span>;
+}
+
+// Hook to get translated text for form fields  
+export function useTranslatedText(text: string): string {
+  const { currentLanguage } = useTranslation();
+  
+  const translations = {
+    'en': {},
+    'zh': {},
+    'ja': {},
+    'es': {},
+    'ko': {},
+    'fr': {},
+    'de': {},
+    'hi': {}
+  };
+  
+  // Get the same translations object used by TranslatedText component
+  const allTranslations = {
+    en: {
+      'Tell viewers about yourself...': 'Tell viewers about yourself...',
+      'Professional content creator specializing in travel and lifestyle streaming.': 'Professional content creator specializing in travel and lifestyle streaming.'
+    },
+    zh: {
+      'Tell viewers about yourself...': '向观众介绍一下你自己...',
+      'Professional content creator specializing in travel and lifestyle streaming.': '专业内容创作者，专注于旅行和生活方式直播。'
+    },
+    ja: {
+      'Tell viewers about yourself...': '視聴者に自己紹介をしてください...',
+      'Professional content creator specializing in travel and lifestyle streaming.': '旅行とライフスタイルストリーミングを専門とするプロのコンテンツクリエイター。'
+    },
+    es: {
+      'Tell viewers about yourself...': 'Cuéntales a los espectadores sobre ti...',
+      'Professional content creator specializing in travel and lifestyle streaming.': 'Creador de contenido profesional especializado en transmisión de viajes y estilo de vida.'
+    },
+    ko: {
+      'Tell viewers about yourself...': '시청자들에게 자신을 소개해보세요...',
+      'Professional content creator specializing in travel and lifestyle streaming.': '여행과 라이프스타일 스트리밍을 전문으로 하는 프로 콘텐츠 크리에이터입니다.'
+    },
+    fr: {
+      'Tell viewers about yourself...': 'Parlez de vous aux spectateurs...',
+      'Professional content creator specializing in travel and lifestyle streaming.': 'Créateur de contenu professionnel spécialisé dans le streaming de voyage et de style de vie.'
+    },
+    de: {
+      'Tell viewers about yourself...': 'Erzählen Sie den Zuschauern von sich...',
+      'Professional content creator specializing in travel and lifestyle streaming.': 'Professioneller Content-Creator, spezialisiert auf Reise- und Lifestyle-Streaming.'
+    },
+    hi: {
+      'Tell viewers about yourself...': 'दर्शकों को अपने बारे में बताएं...',
+      'Professional content creator specializing in travel and lifestyle streaming.': 'यात्रा और जीवनशैली स्ट्रीमिंग में विशेषज्ञता रखने वाले पेशेवर सामग्री निर्माता।'
+    }
+  };
+  
+  return allTranslations[currentLanguage as keyof typeof allTranslations]?.[text as keyof typeof allTranslations.en] || text;
 }
