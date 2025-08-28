@@ -82,8 +82,8 @@ export default function Settings() {
                 </Label>
                 <Textarea 
                   id="bio" 
-                  placeholder={useTranslatedText('Tell viewers about yourself...')}
-                  defaultValue={useTranslatedText('Professional content creator specializing in travel and lifestyle streaming.')}
+                  placeholder="Tell viewers about yourself..."
+                  defaultValue="Professional content creator specializing in travel and lifestyle streaming."
                   rows={3}
                 />
               </div>
