@@ -25,8 +25,8 @@ export function Sidebar() {
           <Video className="w-6 h-6 text-primary-foreground" />
         </div>
         <div>
-          <h1 className="text-xl font-bold text-foreground">TapLive</h1>
-          <p className="text-xs text-muted-foreground">MVP Platform</p>
+          <h1 className="text-xl font-bold text-foreground"><TranslatedText>TapLive</TranslatedText></h1>
+          <p className="text-xs text-muted-foreground"><TranslatedText>MVP Platform</TranslatedText></p>
         </div>
       </div>
 
@@ -58,7 +58,7 @@ export function Sidebar() {
       {/* Language Selector */}
       <div className="mt-6 pt-4 border-t border-border">
         <div className="mb-3">
-          <p className="text-xs font-medium text-muted-foreground mb-2">Language / 语言</p>
+          <p className="text-xs font-medium text-muted-foreground mb-2"><TranslatedText>Language / 语言</TranslatedText></p>
           <LanguageSelector 
             currentLanguage={currentLanguage}
             onLanguageChange={setCurrentLanguage}
@@ -74,7 +74,7 @@ export function Sidebar() {
             <User className="w-5 h-5 text-primary" />
           </div>
           <div className="flex-1">
-            <p className="text-sm font-medium" data-testid="user-name">Sarah Chen</p>
+            <p className="text-sm font-medium" data-testid="user-name"><TranslatedText>Sarah Chen</TranslatedText></p>
             <p className="text-xs text-muted-foreground" data-testid="user-role">
               <TranslatedText>Content Creator</TranslatedText>
             </p>
