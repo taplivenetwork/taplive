@@ -12,6 +12,7 @@ import Earnings from "@/pages/earnings";
 import Streams from "@/pages/streams";
 import Settings from "@/pages/settings";
 import { DispatchPage } from "@/pages/dispatch";
+import { Dashboard } from "@/pages/dashboard";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -22,6 +23,7 @@ function Router() {
       <Route path="/earnings" component={Earnings} />
       <Route path="/streams" component={Streams} />
       <Route path="/dispatch" component={DispatchPage} />
+      <Route path="/dashboard" component={Dashboard} />
       <Route path="/settings" component={Settings} />
       <Route component={NotFound} />
     </Switch>

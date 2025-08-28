@@ -5,6 +5,10 @@ import { z } from "zod";
 
 export const orderStatusEnum = pgEnum('order_status', ['pending', 'open', 'accepted', 'live', 'done', 'cancelled']);
 export const orderTypeEnum = pgEnum('order_type', ['single', 'group']);
+export const paymentStatusEnum = pgEnum('payment_status', ['pending', 'processing', 'completed', 'failed', 'refunded']);
+export const paymentMethodEnum = pgEnum('payment_method', ['stripe', 'paypal', 'usdt_trc20', 'usdt_erc20', 'bitcoin', 'ethereum']);
+export const transactionTypeEnum = pgEnum('transaction_type', ['payment', 'payout', 'refund', 'commission']);
+export const currencyEnum = pgEnum('currency', ['USD', 'USDT', 'BTC', 'ETH']);
 
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -29,6 +33,11 @@ export const users = pgTable("users", {
   lastActive: timestamp("last_active").defaultNow(), // Last activity timestamp
   dispatchScore: decimal("dispatch_score", { precision: 5, scale: 2 }).default('0.00'), // Overall dispatch ranking
   
+  // Financial fields
+  totalEarnings: decimal("total_earnings", { precision: 12, scale: 2 }).default('0.00'), // Total lifetime earnings
+  walletAddress: text("wallet_address"), // Crypto wallet address for payouts
+  preferredPaymentMethod: paymentMethodEnum("preferred_payment_method"), // Preferred payout method
+  
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -42,6 +51,9 @@ export const orders = pgTable("orders", {
   longitude: decimal("longitude", { precision: 10, scale: 7 }).notNull(),
   address: text("address"),
   price: decimal("price", { precision: 10, scale: 2 }).notNull(),
+  currency: currencyEnum("currency").notNull().default('USD'),
+  platformFee: decimal("platform_fee", { precision: 5, scale: 2 }).default('10.00'), // Percentage (default 10%)
+  providerEarnings: decimal("provider_earnings", { precision: 10, scale: 2 }).default('0.00'), // Calculated provider earnings
   maxParticipants: integer("max_participants"),
   currentParticipants: integer("current_participants").default(1),
   scheduledAt: timestamp("scheduled_at").notNull(),
@@ -52,6 +64,11 @@ export const orders = pgTable("orders", {
   providerId: varchar("provider_id").references(() => users.id),
   tags: text("tags").array(),
   category: text("category").notNull(),
+  
+  // Payment status
+  isPaid: boolean("is_paid").default(false),
+  isPayoutProcessed: boolean("is_payout_processed").default(false),
+  
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -64,6 +81,75 @@ export const ratings = pgTable("ratings", {
   rating: integer("rating").notNull(), // 1-5 stars
   comment: text("comment"),
   reviewType: text("review_type").notNull(), // 'creator_to_provider' or 'provider_to_creator'
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Payment Processing Tables
+export const payments = pgTable("payments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  orderId: varchar("order_id").notNull().references(() => orders.id),
+  payerId: varchar("payer_id").notNull().references(() => users.id), // Who is paying
+  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+  currency: currencyEnum("currency").notNull(),
+  paymentMethod: paymentMethodEnum("payment_method").notNull(),
+  status: paymentStatusEnum("status").notNull().default('pending'),
+  
+  // External payment provider data
+  externalPaymentId: text("external_payment_id"), // Stripe/PayPal payment ID
+  externalTransactionHash: text("external_transaction_hash"), // Crypto transaction hash
+  paymentGatewayResponse: text("payment_gateway_response"), // JSON response from gateway
+  
+  // Metadata
+  paymentMetadata: text("payment_metadata"), // JSON metadata
+  failureReason: text("failure_reason"), // Reason for failed payments
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const payouts = pgTable("payouts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  orderId: varchar("order_id").notNull().references(() => orders.id),
+  paymentId: varchar("payment_id").notNull().references(() => payments.id),
+  recipientId: varchar("recipient_id").notNull().references(() => users.id), // Provider receiving payout
+  
+  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(), // Provider's earnings (90%)
+  platformFee: decimal("platform_fee", { precision: 10, scale: 2 }).notNull(), // Platform's fee (10%)
+  currency: currencyEnum("currency").notNull(),
+  payoutMethod: paymentMethodEnum("payout_method").notNull(),
+  status: paymentStatusEnum("status").notNull().default('pending'),
+  
+  // Payout destination
+  recipientWallet: text("recipient_wallet"), // Crypto wallet or payment account
+  
+  // External payout data
+  externalPayoutId: text("external_payout_id"), // Stripe/PayPal payout ID
+  externalTransactionHash: text("external_transaction_hash"), // Crypto transaction hash
+  payoutGatewayResponse: text("payout_gateway_response"), // JSON response from gateway
+  
+  // Metadata
+  payoutMetadata: text("payout_metadata"), // JSON metadata
+  failureReason: text("failure_reason"), // Reason for failed payouts
+  
+  processedAt: timestamp("processed_at"), // When payout was processed
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const transactions = pgTable("transactions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  orderId: varchar("order_id").references(() => orders.id), // Optional, some transactions might not be order-related
+  paymentId: varchar("payment_id").references(() => payments.id), // Link to payment
+  payoutId: varchar("payout_id").references(() => payouts.id), // Link to payout
+  
+  type: transactionTypeEnum("type").notNull(),
+  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+  currency: currencyEnum("currency").notNull(),
+  
+  description: text("description").notNull(), // Human readable description
+  metadata: text("metadata"), // JSON metadata
+  
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -91,12 +177,58 @@ export const insertRatingSchema = createInsertSchema(ratings).omit({
   createdAt: true,
 });
 
+export const insertPaymentSchema = createInsertSchema(payments).omit({
+  id: true,
+  status: true,
+  createdAt: true,
+  updatedAt: true,
+  externalPaymentId: true,
+  externalTransactionHash: true,
+  paymentGatewayResponse: true,
+  failureReason: true,
+});
+
+export const insertPayoutSchema = createInsertSchema(payouts).omit({
+  id: true,
+  status: true,
+  externalPayoutId: true,
+  externalTransactionHash: true,
+  payoutGatewayResponse: true,
+  failureReason: true,
+  processedAt: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertTransactionSchema = createInsertSchema(transactions).omit({
+  id: true,
+  createdAt: true,
+});
+
 export const ratingValidationSchema = z.object({
   orderId: z.string(),
   revieweeId: z.string(),
   rating: z.number().min(1).max(5),
   comment: z.string().optional(),
   reviewType: z.enum(['creator_to_provider', 'provider_to_creator']),
+});
+
+// Payment validation schemas
+export const paymentValidationSchema = z.object({
+  orderId: z.string(),
+  amount: z.number().positive(),
+  currency: z.enum(['USD', 'USDT', 'BTC', 'ETH']),
+  paymentMethod: z.enum(['stripe', 'paypal', 'usdt_trc20', 'usdt_erc20', 'bitcoin', 'ethereum']),
+  paymentMetadata: z.object({}).optional(),
+});
+
+export const cryptoPaymentSchema = z.object({
+  orderId: z.string(),
+  amount: z.number().positive(),
+  currency: z.enum(['USDT', 'BTC', 'ETH']),
+  paymentMethod: z.enum(['usdt_trc20', 'usdt_erc20', 'bitcoin', 'ethereum']),
+  senderWallet: z.string(),
+  transactionHash: z.string(),
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -106,3 +238,13 @@ export type Order = typeof orders.$inferSelect;
 export type InsertRating = z.infer<typeof insertRatingSchema>;
 export type Rating = typeof ratings.$inferSelect;
 export type RatingValidation = z.infer<typeof ratingValidationSchema>;
+
+// Payment types
+export type InsertPayment = z.infer<typeof insertPaymentSchema>;
+export type Payment = typeof payments.$inferSelect;
+export type InsertPayout = z.infer<typeof insertPayoutSchema>;
+export type Payout = typeof payouts.$inferSelect;
+export type InsertTransaction = z.infer<typeof insertTransactionSchema>;
+export type Transaction = typeof transactions.$inferSelect;
+export type PaymentValidation = z.infer<typeof paymentValidationSchema>;
+export type CryptoPaymentValidation = z.infer<typeof cryptoPaymentSchema>;

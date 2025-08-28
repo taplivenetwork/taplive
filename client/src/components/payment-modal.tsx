@@ -1,0 +1,415 @@
+import { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { TranslatedText } from "@/components/translated-text";
+import { useToast } from "@/hooks/use-toast";
+import { CreditCard, Smartphone, Bitcoin, DollarSign, Loader2, CheckCircle, AlertCircle } from "lucide-react";
+import type { Order } from "@shared/schema";
+
+interface PaymentModalProps {
+  order: Order;
+  isOpen: boolean;
+  onClose: () => void;
+  onSuccess?: () => void;
+}
+
+interface PaymentMethod {
+  id: string;
+  name: string;
+  type: 'fiat' | 'crypto';
+  icon: string;
+  description: string;
+  currencies: string[];
+}
+
+export function PaymentModal({ order, isOpen, onClose, onSuccess }: PaymentModalProps) {
+  const [selectedMethod, setSelectedMethod] = useState<string>('');
+  const [paymentStep, setPaymentStep] = useState<'select' | 'details' | 'processing' | 'success'>('select');
+  const [cryptoHash, setCryptoHash] = useState('');
+  const [senderWallet, setSenderWallet] = useState('');
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  // Fetch available payment methods
+  const { data: paymentMethods } = useQuery({
+    queryKey: ['/api/payment/methods'],
+    queryFn: () => fetch('/api/payment/methods').then(res => res.json()),
+  });
+
+  // Fetch commission preview
+  const { data: commissionData } = useQuery({
+    queryKey: [`/api/payment/commission/${order.price}`],
+    queryFn: () => fetch(`/api/payment/commission/${order.price}`).then(res => res.json()),
+    enabled: !!order.price,
+  });
+
+  // Create payment mutation
+  const createPaymentMutation = useMutation({
+    mutationFn: async (paymentData: any) => {
+      const response = await fetch(`/api/orders/${order.id}/payment`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(paymentData),
+      });
+      if (!response.ok) throw new Error('Failed to create payment');
+      return response.json();
+    },
+    onSuccess: (data) => {
+      const selectedMethodData = methods?.find(m => m.id === selectedMethod);
+      if (selectedMethodData?.type === 'crypto') {
+        setPaymentStep('details');
+      } else {
+        // For fiat payments, simulate immediate completion
+        setTimeout(() => completeFiatPayment(data.data.id), 1000);
+        setPaymentStep('processing');
+      }
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Payment Error",
+        description: error.message || "Failed to create payment",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Process crypto payment mutation
+  const processCryptoMutation = useMutation({
+    mutationFn: async ({ paymentId, cryptoData }: any) => {
+      const response = await fetch(`/api/payments/${paymentId}/crypto`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(cryptoData),
+      });
+      if (!response.ok) throw new Error('Failed to process crypto payment');
+      return response.json();
+    },
+    onSuccess: () => {
+      setPaymentStep('processing');
+      // Check payment status after a delay
+      setTimeout(() => checkPaymentStatus(), 3000);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Crypto Payment Error",
+        description: error.message || "Failed to process crypto payment",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Complete fiat payment
+  const completeFiatPayment = async (paymentId: string) => {
+    try {
+      const response = await fetch(`/api/payments/${paymentId}/complete`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          externalPaymentId: `demo_${Date.now()}`,
+          gateway: selectedMethod,
+        }),
+      });
+      
+      if (response.ok) {
+        setPaymentStep('success');
+        queryClient.invalidateQueries({ queryKey: ['/api/orders'] });
+        onSuccess?.();
+      } else {
+        throw new Error('Payment failed');
+      }
+    } catch (error) {
+      toast({
+        title: "Payment Failed",
+        description: "Payment could not be completed",
+        variant: "destructive",
+      });
+      setPaymentStep('select');
+    }
+  };
+
+  // Check payment status
+  const checkPaymentStatus = async () => {
+    // This would check the actual payment status in a real app
+    setPaymentStep('success');
+    queryClient.invalidateQueries({ queryKey: ['/api/orders'] });
+    onSuccess?.();
+  };
+
+  const methods: PaymentMethod[] = paymentMethods?.data ? Object.entries(paymentMethods.data).map(([key, value]: [string, any]) => ({
+    id: key.toLowerCase(),
+    name: value.name,
+    type: value.type,
+    icon: value.icon,
+    description: value.description,
+    currencies: value.currencies,
+  })) : [];
+
+  const commission = commissionData?.data;
+  const selectedMethodData = methods.find(m => m.id === selectedMethod);
+
+  const handleCreatePayment = () => {
+    if (!selectedMethod) return;
+
+    const paymentData = {
+      orderId: order.id,
+      amount: parseFloat(order.price.toString()),
+      currency: order.currency,
+      paymentMethod: selectedMethod,
+      payerId: 'demo-user-id', // This would come from auth
+    };
+
+    createPaymentMutation.mutate(paymentData);
+  };
+
+  const handleCryptoPayment = () => {
+    if (!cryptoHash || !senderWallet) {
+      toast({
+        title: "Missing Information",
+        description: "Please provide transaction hash and sender wallet address",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const cryptoData = {
+      orderId: order.id,
+      amount: parseFloat(order.price.toString()),
+      currency: order.currency,
+      paymentMethod: selectedMethod,
+      senderWallet,
+      transactionHash: cryptoHash,
+    };
+
+    processCryptoMutation.mutate({
+      paymentId: 'demo-payment-id', // This would be stored from create payment response
+      cryptoData,
+    });
+  };
+
+  const resetModal = () => {
+    setPaymentStep('select');
+    setSelectedMethod('');
+    setCryptoHash('');
+    setSenderWallet('');
+  };
+
+  const handleClose = () => {
+    resetModal();
+    onClose();
+  };
+
+  const getMethodIcon = (method: PaymentMethod) => {
+    switch (method.type) {
+      case 'fiat':
+        return <CreditCard className="w-5 h-5" />;
+      case 'crypto':
+        return <Bitcoin className="w-5 h-5" />;
+      default:
+        return <DollarSign className="w-5 h-5" />;
+    }
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={handleClose}>
+      <DialogContent className="max-w-2xl" data-testid="payment-modal">
+        <DialogHeader>
+          <DialogTitle className="text-xl font-bold">
+            <TranslatedText>Complete Payment</TranslatedText>
+          </DialogTitle>
+        </DialogHeader>
+
+        {/* Order Summary */}
+        <Card className="border-primary/20">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm text-muted-foreground">
+              <TranslatedText>Order Summary</TranslatedText>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <div className="flex justify-between items-center">
+              <span className="font-medium">{order.title}</span>
+              <Badge variant="outline">{order.type}</Badge>
+            </div>
+            <div className="flex justify-between text-sm text-muted-foreground">
+              <span><TranslatedText>Duration</TranslatedText></span>
+              <span>{order.duration} <TranslatedText>minutes</TranslatedText></span>
+            </div>
+            {commission && (
+              <div className="space-y-1 pt-2 border-t">
+                <div className="flex justify-between">
+                  <span><TranslatedText>Service Fee</TranslatedText></span>
+                  <span>${order.price}</span>
+                </div>
+                <div className="flex justify-between text-sm text-muted-foreground">
+                  <span><TranslatedText>Platform Fee</TranslatedText> ({commission.platformFeePercentage}%)</span>
+                  <span>${commission.platformFee.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-sm text-muted-foreground">
+                  <span><TranslatedText>Provider Earnings</TranslatedText> ({100 - commission.platformFeePercentage}%)</span>
+                  <span>${commission.providerEarnings.toFixed(2)}</span>
+                </div>
+              </div>
+            )}
+            <Separator />
+            <div className="flex justify-between font-bold text-lg">
+              <span><TranslatedText>Total</TranslatedText></span>
+              <span>${order.price} {order.currency}</span>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Payment Steps */}
+        {paymentStep === 'select' && (
+          <div className="space-y-4">
+            <div>
+              <Label className="text-base font-medium">
+                <TranslatedText>Choose Payment Method</TranslatedText>
+              </Label>
+              <p className="text-sm text-muted-foreground mt-1">
+                <TranslatedText>Select your preferred payment option</TranslatedText>
+              </p>
+            </div>
+
+            <div className="grid gap-3">
+              {methods.map((method) => (
+                <Card
+                  key={method.id}
+                  className={`cursor-pointer transition-all ${
+                    selectedMethod === method.id
+                      ? 'border-primary bg-primary/5'
+                      : 'hover:border-primary/50'
+                  }`}
+                  onClick={() => setSelectedMethod(method.id)}
+                  data-testid={`payment-method-${method.id}`}
+                >
+                  <CardContent className="flex items-center p-4">
+                    <div className="flex items-center gap-3 flex-1">
+                      {getMethodIcon(method)}
+                      <div>
+                        <div className="font-medium">{method.name}</div>
+                        <div className="text-sm text-muted-foreground">{method.description}</div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <Badge variant={method.type === 'crypto' ? 'secondary' : 'outline'}>
+                        {method.type === 'crypto' ? <TranslatedText>Crypto</TranslatedText> : <TranslatedText>Fiat</TranslatedText>}
+                      </Badge>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            <div className="flex gap-3 pt-4">
+              <Button variant="outline" onClick={handleClose} className="flex-1">
+                <TranslatedText>Cancel</TranslatedText>
+              </Button>
+              <Button
+                onClick={handleCreatePayment}
+                disabled={!selectedMethod || createPaymentMutation.isPending}
+                className="flex-1"
+                data-testid="proceed-payment"
+              >
+                {createPaymentMutation.isPending ? (
+                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                ) : null}
+                <TranslatedText>Proceed to Payment</TranslatedText>
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {paymentStep === 'details' && selectedMethodData?.type === 'crypto' && (
+          <div className="space-y-4">
+            <Alert>
+              <Smartphone className="h-4 w-4" />
+              <AlertDescription>
+                <TranslatedText>Please complete the transaction using your crypto wallet, then provide the details below.</TranslatedText>
+              </AlertDescription>
+            </Alert>
+
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="sender-wallet">
+                  <TranslatedText>Sender Wallet Address</TranslatedText>
+                </Label>
+                <Input
+                  id="sender-wallet"
+                  value={senderWallet}
+                  onChange={(e) => setSenderWallet(e.target.value)}
+                  placeholder="Your wallet address..."
+                  data-testid="input-sender-wallet"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="crypto-hash">
+                  <TranslatedText>Transaction Hash</TranslatedText>
+                </Label>
+                <Input
+                  id="crypto-hash"
+                  value={cryptoHash}
+                  onChange={(e) => setCryptoHash(e.target.value)}
+                  placeholder="0x..."
+                  data-testid="input-transaction-hash"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-3 pt-4">
+              <Button variant="outline" onClick={() => setPaymentStep('select')} className="flex-1">
+                <TranslatedText>Back</TranslatedText>
+              </Button>
+              <Button
+                onClick={handleCryptoPayment}
+                disabled={!cryptoHash || !senderWallet || processCryptoMutation.isPending}
+                className="flex-1"
+                data-testid="submit-crypto-payment"
+              >
+                {processCryptoMutation.isPending ? (
+                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                ) : null}
+                <TranslatedText>Verify Transaction</TranslatedText>
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {paymentStep === 'processing' && (
+          <div className="text-center py-8">
+            <Loader2 className="w-12 h-12 animate-spin mx-auto mb-4 text-primary" />
+            <h3 className="font-semibold mb-2">
+              <TranslatedText>Processing Payment</TranslatedText>
+            </h3>
+            <p className="text-muted-foreground">
+              <TranslatedText>Please wait while we verify your payment...</TranslatedText>
+            </p>
+          </div>
+        )}
+
+        {paymentStep === 'success' && (
+          <div className="text-center py-8">
+            <CheckCircle className="w-12 h-12 mx-auto mb-4 text-green-500" />
+            <h3 className="font-semibold mb-2">
+              <TranslatedText>Payment Successful!</TranslatedText>
+            </h3>
+            <p className="text-muted-foreground mb-6">
+              <TranslatedText>Your payment has been processed and the provider will receive their payout automatically.</TranslatedText>
+            </p>
+            <Button onClick={handleClose} className="w-full" data-testid="payment-success-close">
+              <TranslatedText>Close</TranslatedText>
+            </Button>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}

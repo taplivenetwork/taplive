@@ -3,7 +3,8 @@ import { Badge } from "@/components/ui/badge";
 import { TranslatedText } from "@/components/translated-text";
 import { UserRating } from "@/components/user-rating";
 import { RatingModal } from "@/components/rating-modal";
-import { MapPin, Clock, Users, DollarSign, Star } from "lucide-react";
+import { PaymentModal } from "@/components/payment-modal";
+import { MapPin, Clock, Users, DollarSign, Star, CreditCard } from "lucide-react";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
@@ -20,6 +21,7 @@ export function OrderCard({ order, onAccept, onJoin, showActions = true }: Order
   const scheduledDate = new Date(order.scheduledAt);
   const isLive = order.status === 'live';
   const [ratingModalOpen, setRatingModalOpen] = useState(false);
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
 
   // Fetch creator user info if available
   const { data: creatorData } = useQuery({
@@ -122,10 +124,15 @@ export function OrderCard({ order, onAccept, onJoin, showActions = true }: Order
         <div className="text-right">
           <div className="flex items-center gap-1 text-lg font-bold text-primary" data-testid="order-price">
             <DollarSign className="w-4 h-4" />
-            {order.price}
+            {order.price} {order.currency}
           </div>
           <div className="text-xs text-muted-foreground">
             <TranslatedText>{order.type === 'group' ? 'Total Pool' : 'Price'}</TranslatedText>
+            {order.isPaid && (
+              <span className="ml-2 text-green-600 font-medium">
+                <TranslatedText>• Paid</TranslatedText>
+              </span>
+            )}
           </div>
         </div>
       </div>
@@ -141,13 +148,25 @@ export function OrderCard({ order, onAccept, onJoin, showActions = true }: Order
               <TranslatedText>Join Stream</TranslatedText>
             </Button>
           ) : order.status === 'open' || order.status === 'pending' ? (
-            <Button 
-              className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90" 
-              onClick={() => onAccept?.(order.id)}
-              data-testid="button-accept-order"
-            >
-              <TranslatedText>Accept Order</TranslatedText>
-            </Button>
+            <>
+              <Button 
+                className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90" 
+                onClick={() => onAccept?.(order.id)}
+                data-testid="button-accept-order"
+              >
+                <TranslatedText>Accept Order</TranslatedText>
+              </Button>
+              {!order.isPaid && (
+                <Button
+                  className="bg-green-600 hover:bg-green-700 text-white"
+                  onClick={() => setPaymentModalOpen(true)}
+                  data-testid="button-pay-order"
+                >
+                  <CreditCard className="w-4 h-4 mr-1" />
+                  <TranslatedText>Pay</TranslatedText>
+                </Button>
+              )}
+            </>
           ) : order.status === 'done' ? (
             <div className="flex gap-2 flex-1">
               <Button 
@@ -192,6 +211,17 @@ export function OrderCard({ order, onAccept, onJoin, showActions = true }: Order
           revieweeName={creator.name}
         />
       )}
+      
+      {/* Payment Modal */}
+      <PaymentModal
+        order={order}
+        isOpen={paymentModalOpen}
+        onClose={() => setPaymentModalOpen(false)}
+        onSuccess={() => {
+          setPaymentModalOpen(false);
+          // Order list will refresh automatically via React Query
+        }}
+      />
     </div>
   );
 }

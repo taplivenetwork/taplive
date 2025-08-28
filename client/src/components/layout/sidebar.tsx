@@ -1,4 +1,4 @@
-import { Video, MapPin, List, Wallet, Settings, LogOut, User, TrendingUp } from "lucide-react";
+import { Video, MapPin, List, Wallet, Settings, LogOut, User, TrendingUp, BarChart3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "wouter";
 import { LanguageSelector } from "@/components/language-selector";
@@ -11,6 +11,7 @@ export function Sidebar() {
 
   const navigation = [
     { name: "Discover", href: "/", icon: MapPin, current: location === "/" },
+    { name: "Dashboard", href: "/dashboard", icon: BarChart3, current: location === "/dashboard" },
     { name: "My Orders", href: "/orders", icon: List, current: location === "/orders" },
     { name: "Live Streams", href: "/streams", icon: Video, current: location === "/streams" },
     { name: "Smart Dispatch", href: "/dispatch", icon: TrendingUp, current: location === "/dispatch" },

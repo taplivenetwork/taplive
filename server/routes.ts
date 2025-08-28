@@ -1,7 +1,8 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertOrderSchema, ratingValidationSchema, type Order } from "@shared/schema";
+import { insertOrderSchema, ratingValidationSchema, paymentValidationSchema, cryptoPaymentSchema, type Order } from "@shared/schema";
+import { calculateCommission, PAYMENT_METHODS } from "@shared/payment";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -549,6 +550,321 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({
         success: false,
         message: "Failed to get algorithm information"
+      });
+    }
+  });
+
+  // PAYMENT SYSTEM ENDPOINTS
+
+  // Get available payment methods
+  app.get("/api/payment/methods", async (req, res) => {
+    try {
+      res.json({
+        success: true,
+        data: PAYMENT_METHODS,
+        message: "Available payment methods"
+      });
+    } catch (error) {
+      console.error('Error getting payment methods:', error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to get payment methods"
+      });
+    }
+  });
+
+  // Create payment for order
+  app.post("/api/orders/:id/payment", async (req, res) => {
+    try {
+      const { id: orderId } = req.params;
+      const validation = paymentValidationSchema.safeParse(req.body);
+
+      if (!validation.success) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid payment data",
+          errors: validation.error.errors
+        });
+      }
+
+      const paymentData = validation.data;
+      
+      // Verify order exists and is not already paid
+      const order = await storage.getOrderById(orderId);
+      if (!order) {
+        return res.status(404).json({
+          success: false,
+          message: "Order not found"
+        });
+      }
+
+      if (order.isPaid) {
+        return res.status(400).json({
+          success: false,
+          message: "Order is already paid"
+        });
+      }
+
+      // Create payment record
+      const payment = await storage.createPayment({
+        orderId,
+        payerId: req.body.payerId, // This would come from auth in real app
+        amount: paymentData.amount,
+        currency: paymentData.currency,
+        paymentMethod: paymentData.paymentMethod,
+        paymentMetadata: JSON.stringify(paymentData.paymentMetadata || {}),
+      });
+
+      res.status(201).json({
+        success: true,
+        data: payment,
+        message: "Payment created successfully"
+      });
+    } catch (error) {
+      console.error('Error creating payment:', error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to create payment"
+      });
+    }
+  });
+
+  // Process crypto payment
+  app.post("/api/payments/:id/crypto", async (req, res) => {
+    try {
+      const { id: paymentId } = req.params;
+      const validation = cryptoPaymentSchema.safeParse(req.body);
+
+      if (!validation.success) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid crypto payment data",
+          errors: validation.error.errors
+        });
+      }
+
+      const cryptoData = validation.data;
+      
+      // Get payment record
+      const payment = await storage.getPaymentById(paymentId);
+      if (!payment) {
+        return res.status(404).json({
+          success: false,
+          message: "Payment not found"
+        });
+      }
+
+      // Update payment with crypto transaction details
+      const updatedPayment = await storage.updatePayment(paymentId, {
+        status: 'processing',
+        externalTransactionHash: cryptoData.transactionHash,
+        paymentGatewayResponse: JSON.stringify({
+          senderWallet: cryptoData.senderWallet,
+          transactionHash: cryptoData.transactionHash,
+          submittedAt: new Date()
+        }),
+      });
+
+      // In a real app, here we would verify the transaction on blockchain
+      // For MVP, we'll simulate verification after a short delay
+      setTimeout(async () => {
+        try {
+          // Simulate blockchain verification success
+          await storage.updatePayment(paymentId, {
+            status: 'completed',
+          });
+          
+          // Process order payment and create payout
+          await storage.processOrderPayment(payment.orderId, paymentId);
+          const order = await storage.getOrderById(payment.orderId);
+          
+          if (order && order.providerId) {
+            await storage.calculateAndCreatePayout(payment.orderId, paymentId);
+          }
+        } catch (error) {
+          console.error('Error processing crypto payment:', error);
+          await storage.updatePayment(paymentId, {
+            status: 'failed',
+            failureReason: 'Blockchain verification failed',
+          });
+        }
+      }, 2000); // 2 second delay to simulate verification
+
+      res.json({
+        success: true,
+        data: updatedPayment,
+        message: "Crypto payment submitted for verification"
+      });
+    } catch (error) {
+      console.error('Error processing crypto payment:', error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to process crypto payment"
+      });
+    }
+  });
+
+  // Complete fiat payment (webhook simulation)
+  app.post("/api/payments/:id/complete", async (req, res) => {
+    try {
+      const { id: paymentId } = req.params;
+      
+      const payment = await storage.getPaymentById(paymentId);
+      if (!payment) {
+        return res.status(404).json({
+          success: false,
+          message: "Payment not found"
+        });
+      }
+
+      // Update payment status to completed
+      const updatedPayment = await storage.updatePayment(paymentId, {
+        status: 'completed',
+        externalPaymentId: req.body.externalPaymentId || `stripe_${Date.now()}`,
+        paymentGatewayResponse: JSON.stringify(req.body),
+      });
+
+      // Process order payment and create automatic payout
+      await storage.processOrderPayment(payment.orderId, paymentId);
+      const order = await storage.getOrderById(payment.orderId);
+      
+      let payout = null;
+      if (order && order.providerId) {
+        payout = await storage.calculateAndCreatePayout(payment.orderId, paymentId);
+        
+        // Auto-approve payout for MVP (in real app, this might have approval workflow)
+        if (payout) {
+          await storage.updatePayout(payout.id, {
+            status: 'completed',
+            processedAt: new Date(),
+            externalPayoutId: `payout_${Date.now()}`,
+          });
+        }
+      }
+
+      res.json({
+        success: true,
+        data: {
+          payment: updatedPayment,
+          payout: payout,
+          commission: calculateCommission(parseFloat(payment.amount.toString()))
+        },
+        message: "Payment completed and payout processed"
+      });
+    } catch (error) {
+      console.error('Error completing payment:', error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to complete payment"
+      });
+    }
+  });
+
+  // Get payment status
+  app.get("/api/payments/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const payment = await storage.getPaymentById(id);
+      
+      if (!payment) {
+        return res.status(404).json({
+          success: false,
+          message: "Payment not found"
+        });
+      }
+
+      res.json({
+        success: true,
+        data: payment,
+        message: "Payment retrieved successfully"
+      });
+    } catch (error) {
+      console.error('Error getting payment:', error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to get payment"
+      });
+    }
+  });
+
+  // Get user transactions
+  app.get("/api/users/:id/transactions", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { type } = req.query;
+      
+      let transactions = await storage.getTransactionsByUser(id);
+      
+      if (type && typeof type === 'string') {
+        transactions = transactions.filter(t => t.type === type);
+      }
+      
+      res.json({
+        success: true,
+        data: transactions.sort((a, b) => 
+          new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime()
+        ),
+        message: `Found ${transactions.length} transactions`
+      });
+    } catch (error) {
+      console.error('Error getting user transactions:', error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to get user transactions"
+      });
+    }
+  });
+
+  // Get user payouts
+  app.get("/api/users/:id/payouts", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const payouts = await storage.getPayoutsByUser(id);
+      
+      res.json({
+        success: true,
+        data: payouts.sort((a, b) => 
+          new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime()
+        ),
+        message: `Found ${payouts.length} payouts`
+      });
+    } catch (error) {
+      console.error('Error getting user payouts:', error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to get user payouts"
+      });
+    }
+  });
+
+  // Calculate commission preview
+  app.get("/api/payment/commission/:amount", async (req, res) => {
+    try {
+      const { amount } = req.params;
+      const { platformFee } = req.query;
+      
+      const totalAmount = parseFloat(amount);
+      const feePercentage = platformFee ? parseFloat(platformFee as string) : 10;
+      
+      if (isNaN(totalAmount) || totalAmount <= 0) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid amount"
+        });
+      }
+      
+      const commission = calculateCommission(totalAmount, feePercentage);
+      
+      res.json({
+        success: true,
+        data: commission,
+        message: "Commission calculated successfully"
+      });
+    } catch (error) {
+      console.error('Error calculating commission:', error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to calculate commission"
       });
     }
   });

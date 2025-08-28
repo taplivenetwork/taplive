@@ -1,5 +1,7 @@
-import { type User, type InsertUser, type Order, type InsertOrder, type Rating, type InsertRating } from "@shared/schema";
+import { type User, type InsertUser, type Order, type InsertOrder, type Rating, type InsertRating,
+         type Payment, type InsertPayment, type Payout, type InsertPayout, type Transaction, type InsertTransaction } from "@shared/schema";
 import { type ProviderRanking, rankProvidersForOrder, updateUserDispatchScore } from "@shared/dispatch";
+import { calculateCommission } from "@shared/payment";
 import { randomUUID } from "crypto";
 
 export interface IStorage {
@@ -30,17 +32,46 @@ export interface IStorage {
   updateUserLocation(userId: string, latitude: number, longitude: number): Promise<User | undefined>;
   updateUserNetworkMetrics(userId: string, networkSpeed: number, devicePerformance: number): Promise<User | undefined>;
   calculateUserDispatchScore(userId: string): Promise<void>;
+  
+  // Payment operations
+  createPayment(payment: InsertPayment): Promise<Payment>;
+  getPaymentById(id: string): Promise<Payment | undefined>;
+  updatePayment(id: string, updates: Partial<Payment>): Promise<Payment | undefined>;
+  getPaymentsByOrder(orderId: string): Promise<Payment[]>;
+  getPaymentsByUser(userId: string): Promise<Payment[]>;
+  
+  // Payout operations
+  createPayout(payout: InsertPayout): Promise<Payout>;
+  getPayoutById(id: string): Promise<Payout | undefined>;
+  updatePayout(id: string, updates: Partial<Payout>): Promise<Payout | undefined>;
+  getPayoutsByOrder(orderId: string): Promise<Payout[]>;
+  getPayoutsByUser(userId: string): Promise<Payout[]>;
+  
+  // Transaction operations
+  createTransaction(transaction: InsertTransaction): Promise<Transaction>;
+  getTransactionsByUser(userId: string): Promise<Transaction[]>;
+  getTransactionsByOrder(orderId: string): Promise<Transaction[]>;
+  
+  // Commission and payout processing
+  processOrderPayment(orderId: string, paymentId: string): Promise<void>;
+  calculateAndCreatePayout(orderId: string, paymentId: string): Promise<Payout | undefined>;
 }
 
 export class MemStorage implements IStorage {
   private users: Map<string, User>;
   private orders: Map<string, Order>;
   private ratings: Map<string, Rating>;
+  private payments: Map<string, Payment>;
+  private payouts: Map<string, Payout>;
+  private transactions: Map<string, Transaction>;
 
   constructor() {
     this.users = new Map();
     this.orders = new Map();
     this.ratings = new Map();
+    this.payments = new Map();
+    this.payouts = new Map();
+    this.transactions = new Map();
     this.initializeTestData();
   }
 
@@ -68,6 +99,10 @@ export class MemStorage implements IStorage {
         availability: true,
         lastActive: new Date(),
         dispatchScore: "78.45",
+        // Financial fields
+        totalEarnings: "0.00",
+        walletAddress: null,
+        preferredPaymentMethod: null,
         createdAt: new Date(),
       },
       {
@@ -91,6 +126,10 @@ export class MemStorage implements IStorage {
         availability: true,
         lastActive: new Date(),
         dispatchScore: "82.60",
+        // Financial fields
+        totalEarnings: "0.00",
+        walletAddress: null,
+        preferredPaymentMethod: null,
         createdAt: new Date(),
       },
       // Additional provider samples with different metrics
@@ -115,6 +154,10 @@ export class MemStorage implements IStorage {
         availability: true,
         lastActive: new Date(),
         dispatchScore: "88.20",
+        // Financial fields
+        totalEarnings: "0.00",
+        walletAddress: null,
+        preferredPaymentMethod: null,
         createdAt: new Date(),
       },
       {
@@ -138,6 +181,10 @@ export class MemStorage implements IStorage {
         availability: true,
         lastActive: new Date(),
         dispatchScore: "65.30",
+        // Financial fields
+        totalEarnings: "0.00",
+        walletAddress: null,
+        preferredPaymentMethod: null,
         createdAt: new Date(),
       }
     ];
@@ -156,6 +203,9 @@ export class MemStorage implements IStorage {
         longitude: "-73.9851",
         address: "Central Park, NYC",
         price: "45.00",
+        currency: "USD" as const,
+        platformFee: "10.00",
+        providerEarnings: "0.00",
         maxParticipants: 5,
         currentParticipants: 3,
         scheduledAt: new Date(Date.now() + 2 * 60 * 60 * 1000),
@@ -163,6 +213,8 @@ export class MemStorage implements IStorage {
         creatorId: sampleUsers[0].id,
         category: "music",
         tags: ["concert", "music", "central-park"],
+        isPaid: false,
+        isPayoutProcessed: false,
         createdAt: new Date(),
         updatedAt: new Date(),
         liveUrl: null,
@@ -179,6 +231,9 @@ export class MemStorage implements IStorage {
         longitude: "-122.3331",
         address: "Pike Place Market, Seattle",
         price: "30.00",
+        currency: "USD" as const,
+        platformFee: "10.00",
+        providerEarnings: "0.00",
         maxParticipants: null,
         currentParticipants: 1,
         scheduledAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
@@ -186,6 +241,8 @@ export class MemStorage implements IStorage {
         creatorId: sampleUsers[0].id,
         category: "food",
         tags: ["food", "market", "seattle"],
+        isPaid: false,
+        isPayoutProcessed: false,
         createdAt: new Date(),
         updatedAt: new Date(),
         liveUrl: null,
@@ -202,6 +259,9 @@ export class MemStorage implements IStorage {
         longitude: "-118.4912",
         address: "Santa Monica Beach, CA",
         price: "60.00",
+        currency: "USD" as const,
+        platformFee: "10.00",
+        providerEarnings: "0.00",
         maxParticipants: 6,
         currentParticipants: 2,
         scheduledAt: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
@@ -209,6 +269,8 @@ export class MemStorage implements IStorage {
         creatorId: sampleUsers[0].id,
         category: "fitness",
         tags: ["yoga", "sunset", "beach"],
+        isPaid: false,
+        isPayoutProcessed: false,
         createdAt: new Date(),
         updatedAt: new Date(),
         liveUrl: null,
@@ -218,6 +280,226 @@ export class MemStorage implements IStorage {
     ];
 
     sampleOrders.forEach(order => this.orders.set(order.id, order));
+  }
+
+  // Payment operations implementation
+  async createPayment(insertPayment: InsertPayment): Promise<Payment> {
+    const id = randomUUID();
+    const now = new Date();
+    const payment: Payment = {
+      id,
+      ...insertPayment,
+      paymentMetadata: insertPayment.paymentMetadata || null,
+      status: 'pending',
+      externalPaymentId: null,
+      externalTransactionHash: null,
+      paymentGatewayResponse: null,
+      failureReason: null,
+      createdAt: now,
+      updatedAt: now,
+    };
+    this.payments.set(id, payment);
+    return payment;
+  }
+
+  async getPaymentById(id: string): Promise<Payment | undefined> {
+    return this.payments.get(id);
+  }
+
+  async updatePayment(id: string, updates: Partial<Payment>): Promise<Payment | undefined> {
+    const payment = this.payments.get(id);
+    if (!payment) return undefined;
+    
+    const updatedPayment = {
+      ...payment,
+      ...updates,
+      updatedAt: new Date(),
+    };
+    this.payments.set(id, updatedPayment);
+    return updatedPayment;
+  }
+
+  async getPaymentsByOrder(orderId: string): Promise<Payment[]> {
+    return Array.from(this.payments.values()).filter(
+      payment => payment.orderId === orderId
+    );
+  }
+
+  async getPaymentsByUser(userId: string): Promise<Payment[]> {
+    return Array.from(this.payments.values()).filter(
+      payment => payment.payerId === userId
+    );
+  }
+
+  // Payout operations implementation
+  async createPayout(insertPayout: InsertPayout): Promise<Payout> {
+    const id = randomUUID();
+    const now = new Date();
+    const payout: Payout = {
+      id,
+      ...insertPayout,
+      recipientWallet: insertPayout.recipientWallet || null,
+      payoutMetadata: insertPayout.payoutMetadata || null,
+      status: 'pending',
+      externalPayoutId: null,
+      externalTransactionHash: null,
+      payoutGatewayResponse: null,
+      failureReason: null,
+      processedAt: null,
+      createdAt: now,
+      updatedAt: now,
+    };
+    this.payouts.set(id, payout);
+    return payout;
+  }
+
+  async getPayoutById(id: string): Promise<Payout | undefined> {
+    return this.payouts.get(id);
+  }
+
+  async updatePayout(id: string, updates: Partial<Payout>): Promise<Payout | undefined> {
+    const payout = this.payouts.get(id);
+    if (!payout) return undefined;
+    
+    const updatedPayout = {
+      ...payout,
+      ...updates,
+      updatedAt: new Date(),
+    };
+    this.payouts.set(id, updatedPayout);
+    return updatedPayout;
+  }
+
+  async getPayoutsByOrder(orderId: string): Promise<Payout[]> {
+    return Array.from(this.payouts.values()).filter(
+      payout => payout.orderId === orderId
+    );
+  }
+
+  async getPayoutsByUser(userId: string): Promise<Payout[]> {
+    return Array.from(this.payouts.values()).filter(
+      payout => payout.recipientId === userId
+    );
+  }
+
+  // Transaction operations implementation
+  async createTransaction(insertTransaction: InsertTransaction): Promise<Transaction> {
+    const id = randomUUID();
+    const transaction: Transaction = {
+      id,
+      ...insertTransaction,
+      orderId: insertTransaction.orderId || null,
+      paymentId: insertTransaction.paymentId || null,
+      payoutId: insertTransaction.payoutId || null,
+      metadata: insertTransaction.metadata || null,
+      createdAt: new Date(),
+    };
+    this.transactions.set(id, transaction);
+    return transaction;
+  }
+
+  async getTransactionsByUser(userId: string): Promise<Transaction[]> {
+    return Array.from(this.transactions.values()).filter(
+      transaction => transaction.userId === userId
+    );
+  }
+
+  async getTransactionsByOrder(orderId: string): Promise<Transaction[]> {
+    return Array.from(this.transactions.values()).filter(
+      transaction => transaction.orderId === orderId
+    );
+  }
+
+  // Commission and payout processing
+  async processOrderPayment(orderId: string, paymentId: string): Promise<void> {
+    const order = this.orders.get(orderId);
+    const payment = this.payments.get(paymentId);
+    
+    if (!order || !payment) {
+      throw new Error('Order or payment not found');
+    }
+
+    // Update order as paid
+    const updatedOrder = {
+      ...order,
+      isPaid: true,
+      updatedAt: new Date(),
+    };
+    this.orders.set(orderId, updatedOrder);
+
+    // Create transaction record for customer payment
+    await this.createTransaction({
+      userId: payment.payerId,
+      orderId: orderId,
+      paymentId: paymentId,
+      payoutId: null,
+      type: 'payment',
+      amount: payment.amount,
+      currency: payment.currency,
+      description: `Payment for order: ${order.title}`,
+      metadata: JSON.stringify({ orderId, paymentId }),
+    });
+  }
+
+  async calculateAndCreatePayout(orderId: string, paymentId: string): Promise<Payout | undefined> {
+    const order = this.orders.get(orderId);
+    const payment = this.payments.get(paymentId);
+    
+    if (!order || !payment || !order.providerId) {
+      return undefined;
+    }
+
+    // Calculate commission (10% platform fee, 90% to provider)
+    const commission = calculateCommission(parseFloat(payment.amount.toString()));
+    
+    // Create payout record
+    const payout = await this.createPayout({
+      orderId: orderId,
+      paymentId: paymentId,
+      recipientId: order.providerId,
+      amount: commission.providerEarnings.toString(),
+      platformFee: commission.platformFee.toString(),
+      currency: payment.currency,
+      payoutMethod: 'stripe', // Default, would be based on user preference
+      recipientWallet: null,
+      payoutMetadata: JSON.stringify({ commission }),
+    });
+
+    // Update order with calculated provider earnings
+    const updatedOrder = {
+      ...order,
+      providerEarnings: commission.providerEarnings.toString(),
+      isPayoutProcessed: true,
+      updatedAt: new Date(),
+    };
+    this.orders.set(orderId, updatedOrder);
+
+    // Create transaction record for provider payout
+    await this.createTransaction({
+      userId: order.providerId,
+      orderId: orderId,
+      paymentId: paymentId,
+      payoutId: payout.id,
+      type: 'payout',
+      amount: commission.providerEarnings.toString(),
+      currency: payment.currency,
+      description: `Payout for completed order: ${order.title}`,
+      metadata: JSON.stringify({ commission, payoutId: payout.id }),
+    });
+
+    // Update provider's total earnings
+    const provider = this.users.get(order.providerId);
+    if (provider) {
+      const currentEarnings = parseFloat(provider.totalEarnings || '0');
+      const newEarnings = currentEarnings + commission.providerEarnings;
+      const updatedProvider = {
+        ...provider,
+        totalEarnings: newEarnings.toFixed(2),
+      };
+      this.users.set(order.providerId, updatedProvider);
+    }
+
+    return payout;
   }
 
   async getUser(id: string): Promise<User | undefined> {
@@ -250,6 +532,10 @@ export class MemStorage implements IStorage {
       availability: true,
       lastActive: new Date(),
       dispatchScore: "0.00",
+      // Financial defaults
+      totalEarnings: "0.00",
+      walletAddress: null,
+      preferredPaymentMethod: null,
       createdAt: new Date()
     };
     this.users.set(id, user);
@@ -284,6 +570,11 @@ export class MemStorage implements IStorage {
       address: insertOrder.address || null,
       maxParticipants: insertOrder.maxParticipants || null,
       currentParticipants: 1,
+      currency: 'USD',
+      platformFee: '10.00',
+      providerEarnings: '0.00',
+      isPaid: false,
+      isPayoutProcessed: false,
       createdAt: new Date(),
       updatedAt: new Date(),
       liveUrl: null,
