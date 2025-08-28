@@ -85,8 +85,10 @@ export default function Settings() {
                 <Textarea 
                   id="bio" 
                   placeholder={placeholderText}
-                  defaultValue={bioText}
+                  value={bioText}
+                  onChange={() => {}} // Read-only for demo purposes
                   rows={3}
+                  key={currentLanguage} // Force re-render when language changes
                 />
               </div>
               

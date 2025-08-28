@@ -1452,8 +1452,6 @@ export function TranslatedText({ children, className }: TranslatedTextProps) {
 // Hook to get translated text for form fields using the same translations object
 export function useTranslatedText(text: string): string {
   const { currentLanguage } = useTranslation();
-  console.log('useTranslatedText - currentLanguage:', currentLanguage, 'text:', text);
   const translation = translations[currentLanguage]?.[text] || text;
-  console.log('useTranslatedText - translation result:', translation);
   return translation;
 }
