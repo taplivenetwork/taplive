@@ -8,6 +8,7 @@ import { Sidebar } from "@/components/layout/sidebar";
 import { MobileNavigation } from "@/components/layout/mobile-nav";
 import Home from "@/pages/home";
 import Orders from "@/pages/orders";
+import Earnings from "@/pages/earnings";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -15,6 +16,7 @@ function Router() {
     <Switch>
       <Route path="/" component={Home} />
       <Route path="/orders" component={Orders} />
+      <Route path="/earnings" component={Earnings} />
       <Route component={NotFound} />
     </Switch>
   );
