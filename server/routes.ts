@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertOrderSchema, type Order } from "@shared/schema";
+import { insertOrderSchema, ratingValidationSchema, type Order } from "@shared/schema";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -174,6 +174,156 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({
         success: false,
         message: "Failed to delete order"
+      });
+    }
+  });
+
+  // Get user by ID (for displaying user profiles with ratings)
+  app.get("/api/users/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const user = await storage.getUser(id);
+      
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          message: "User not found"
+        });
+      }
+
+      // Don't expose password
+      const { password, ...userWithoutPassword } = user;
+
+      res.json({
+        success: true,
+        data: userWithoutPassword
+      });
+    } catch (error) {
+      console.error('Error fetching user:', error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to fetch user"
+      });
+    }
+  });
+
+  // Create a rating
+  app.post("/api/ratings", async (req, res) => {
+    try {
+      const validation = ratingValidationSchema.safeParse(req.body);
+      
+      if (!validation.success) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid rating data",
+          errors: validation.error.errors
+        });
+      }
+
+      const ratingData = validation.data;
+      
+      // Check if order exists and is completed
+      const order = await storage.getOrderById(ratingData.orderId);
+      if (!order) {
+        return res.status(404).json({
+          success: false,
+          message: "Order not found"
+        });
+      }
+
+      if (order.status !== 'done') {
+        return res.status(400).json({
+          success: false,
+          message: "Can only rate completed orders"
+        });
+      }
+
+      // Check if user already rated this order
+      const existingRatings = await storage.getRatingsByOrder(ratingData.orderId);
+      const alreadyRated = existingRatings.some(rating => 
+        rating.reviewerId === req.body.reviewerId && 
+        rating.reviewType === ratingData.reviewType
+      );
+
+      if (alreadyRated) {
+        return res.status(400).json({
+          success: false,
+          message: "You have already rated this order"
+        });
+      }
+
+      const rating = await storage.createRating({
+        ...ratingData,
+        reviewerId: req.body.reviewerId, // This would come from auth in real app
+      });
+
+      res.status(201).json({
+        success: true,
+        data: rating,
+        message: "Rating created successfully"
+      });
+    } catch (error) {
+      console.error('Error creating rating:', error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to create rating"
+      });
+    }
+  });
+
+  // Get ratings for a specific order
+  app.get("/api/orders/:id/ratings", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const ratings = await storage.getRatingsByOrder(id);
+
+      res.json({
+        success: true,
+        data: ratings
+      });
+    } catch (error) {
+      console.error('Error fetching order ratings:', error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to fetch ratings"
+      });
+    }
+  });
+
+  // Get ratings received by a user
+  app.get("/api/users/:id/ratings", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const ratings = await storage.getUserRatings(id);
+
+      res.json({
+        success: true,
+        data: ratings
+      });
+    } catch (error) {
+      console.error('Error fetching user ratings:', error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to fetch user ratings"
+      });
+    }
+  });
+
+  // Recalculate user stats (admin/debug endpoint)
+  app.post("/api/users/:id/recalculate-stats", async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.calculateUserStats(id);
+
+      res.json({
+        success: true,
+        message: "User stats recalculated successfully"
+      });
+    } catch (error) {
+      console.error('Error recalculating user stats:', error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to recalculate user stats"
       });
     }
   });

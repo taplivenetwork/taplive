@@ -14,6 +14,11 @@ export const users = pgTable("users", {
   name: text("name").notNull(),
   avatar: text("avatar"),
   role: text("role").default('user'),
+  rating: decimal("rating", { precision: 3, scale: 2 }).default('0.00'), // Average rating (0.00-5.00)
+  totalRatings: integer("total_ratings").default(0), // Total number of ratings received
+  completedOrders: integer("completed_orders").default(0), // Total completed orders
+  responseTime: integer("avg_response_time").default(0), // Average response time in minutes
+  trustScore: decimal("trust_score", { precision: 3, scale: 2 }).default('0.00'), // Overall trust score
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -41,6 +46,17 @@ export const orders = pgTable("orders", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+export const ratings = pgTable("ratings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  orderId: varchar("order_id").notNull().references(() => orders.id),
+  reviewerId: varchar("reviewer_id").notNull().references(() => users.id), // Who gave the rating
+  revieweeId: varchar("reviewee_id").notNull().references(() => users.id), // Who received the rating
+  rating: integer("rating").notNull(), // 1-5 stars
+  comment: text("comment"),
+  reviewType: text("review_type").notNull(), // 'creator_to_provider' or 'provider_to_creator'
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
@@ -60,7 +76,23 @@ export const insertOrderSchema = createInsertSchema(orders).omit({
   providerId: true,
 });
 
+export const insertRatingSchema = createInsertSchema(ratings).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const ratingValidationSchema = z.object({
+  orderId: z.string(),
+  revieweeId: z.string(),
+  rating: z.number().min(1).max(5),
+  comment: z.string().optional(),
+  reviewType: z.enum(['creator_to_provider', 'provider_to_creator']),
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type InsertOrder = z.infer<typeof insertOrderSchema>;
 export type Order = typeof orders.$inferSelect;
+export type InsertRating = z.infer<typeof insertRatingSchema>;
+export type Rating = typeof ratings.$inferSelect;
+export type RatingValidation = z.infer<typeof ratingValidationSchema>;

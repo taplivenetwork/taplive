@@ -1,10 +1,11 @@
-import { type User, type InsertUser, type Order, type InsertOrder } from "@shared/schema";
+import { type User, type InsertUser, type Order, type InsertOrder, type Rating, type InsertRating } from "@shared/schema";
 import { randomUUID } from "crypto";
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  updateUser(id: string, updates: Partial<User>): Promise<User | undefined>;
   
   // Order operations
   getAllOrders(): Promise<Order[]>;
@@ -14,15 +15,24 @@ export interface IStorage {
   deleteOrder(id: string): Promise<boolean>;
   getOrdersByStatus(status: string): Promise<Order[]>;
   getOrdersByLocation(lat: number, lng: number, radiusKm: number): Promise<Order[]>;
+  
+  // Rating operations
+  createRating(rating: InsertRating): Promise<Rating>;
+  getRatingsByUser(userId: string): Promise<Rating[]>;
+  getRatingsByOrder(orderId: string): Promise<Rating[]>;
+  getUserRatings(userId: string): Promise<Rating[]>;
+  calculateUserStats(userId: string): Promise<void>;
 }
 
 export class MemStorage implements IStorage {
   private users: Map<string, User>;
   private orders: Map<string, Order>;
+  private ratings: Map<string, Rating>;
 
   constructor() {
     this.users = new Map();
     this.orders = new Map();
+    this.ratings = new Map();
     this.initializeTestData();
   }
 
@@ -37,6 +47,11 @@ export class MemStorage implements IStorage {
         name: "Sarah Chen",
         avatar: "https://pixabay.com/get/g21614bd3823a762ba03923929667a272b114dcafc0552a50f5d76427db7aee6d3ea1b14f612df2bf94afc17baa7e901cc9feeb0e3a4826d0b0706dab24266a26_1280.jpg",
         role: "creator",
+        rating: "4.8",
+        totalRatings: 24,
+        completedOrders: 15,
+        responseTime: 12,
+        trustScore: "4.7",
         createdAt: new Date(),
       },
       {
@@ -47,6 +62,11 @@ export class MemStorage implements IStorage {
         name: "Mike Rodriguez",
         avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=32&h=32",
         role: "provider",
+        rating: "4.6",
+        totalRatings: 18,
+        completedOrders: 22,
+        responseTime: 8,
+        trustScore: "4.5",
         createdAt: new Date(),
       }
     ];
@@ -146,10 +166,24 @@ export class MemStorage implements IStorage {
       id, 
       role: 'user',
       avatar: insertUser.avatar || null,
+      rating: "0.00",
+      totalRatings: 0,
+      completedOrders: 0,
+      responseTime: 0,
+      trustScore: "0.00",
       createdAt: new Date()
     };
     this.users.set(id, user);
     return user;
+  }
+
+  async updateUser(id: string, updates: Partial<User>): Promise<User | undefined> {
+    const user = this.users.get(id);
+    if (!user) return undefined;
+    
+    const updatedUser = { ...user, ...updates };
+    this.users.set(id, updatedUser);
+    return updatedUser;
   }
 
   async getAllOrders(): Promise<Order[]> {
@@ -176,6 +210,8 @@ export class MemStorage implements IStorage {
       liveUrl: null,
       replayUrl: null,
       providerId: null,
+      creatorId: insertOrder.creatorId || null,
+      tags: insertOrder.tags || null,
     };
     this.orders.set(id, order);
     return order;
@@ -206,6 +242,66 @@ export class MemStorage implements IStorage {
       const lngDiff = Math.abs(orderLng - lng);
       const roughDistance = Math.sqrt(latDiff * latDiff + lngDiff * lngDiff) * 111; // Rough km conversion
       return roughDistance <= radiusKm;
+    });
+  }
+
+  // Rating operations
+  async createRating(insertRating: InsertRating): Promise<Rating> {
+    const id = randomUUID();
+    const rating: Rating = {
+      ...insertRating,
+      id,
+      comment: insertRating.comment || null,
+      createdAt: new Date(),
+    };
+    this.ratings.set(id, rating);
+    
+    // Automatically update user stats after rating creation
+    await this.calculateUserStats(insertRating.revieweeId);
+    
+    return rating;
+  }
+
+  async getRatingsByUser(userId: string): Promise<Rating[]> {
+    return Array.from(this.ratings.values()).filter(rating => 
+      rating.reviewerId === userId
+    );
+  }
+
+  async getRatingsByOrder(orderId: string): Promise<Rating[]> {
+    return Array.from(this.ratings.values()).filter(rating => 
+      rating.orderId === orderId
+    );
+  }
+
+  async getUserRatings(userId: string): Promise<Rating[]> {
+    return Array.from(this.ratings.values()).filter(rating => 
+      rating.revieweeId === userId
+    );
+  }
+
+  async calculateUserStats(userId: string): Promise<void> {
+    const userRatings = await this.getUserRatings(userId);
+    const user = await this.getUser(userId);
+    
+    if (!user || userRatings.length === 0) return;
+
+    // Calculate average rating
+    const avgRating = userRatings.reduce((sum, rating) => sum + rating.rating, 0) / userRatings.length;
+    
+    // Calculate completed orders (orders that have ratings)
+    const completedOrderIds = new Set(userRatings.map(r => r.orderId));
+    const completedOrders = completedOrderIds.size;
+    
+    // Simple trust score calculation (can be enhanced with more factors)
+    const trustScore = Math.min(5.0, avgRating * (1 + Math.log10(userRatings.length + 1) / 10));
+    
+    // Update user stats
+    await this.updateUser(userId, {
+      rating: avgRating.toFixed(2),
+      totalRatings: userRatings.length,
+      completedOrders,
+      trustScore: trustScore.toFixed(2),
     });
   }
 }

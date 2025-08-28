@@ -331,7 +331,28 @@ const translations: Record<string, Record<string, string>> = {
       'Beautiful sunset view from Marin': '马林县美丽的日落景观',
       'San Francisco, CA': '加利福尼亚州旧金山',
       'Central Park Concert': '中央公园音乐会',
-      'Live jazz performance in the park': '公园里的现场爵士乐表演'
+      'Live jazz performance in the park': '公园里的现场爵士乐表演',
+      
+      // Rating system translations
+      'reviews': '评价',
+      'completed': '已完成',
+      'Highly Trusted': '高度信任',
+      'Trusted': '值得信任',
+      'Reliable': '可靠',
+      'Developing': '发展中',
+      'New User': '新用户',
+      'Rate': '评价',
+      'Rate Your Experience': '为您的体验评分',
+      'Rating': '评分',
+      'Share your experience (optional)': '分享您的体验（可选）',
+      'Cancel': '取消',
+      'Submit Rating': '提交评分',
+      'Submitting...': '提交中...',
+      'Poor': '差',
+      'Fair': '一般',
+      'Good': '好',
+      'Very Good': '很好',
+      'Excellent': '极好'
     },
     'ja': {
       'Search by location or description...': '場所や説明で検索...',
