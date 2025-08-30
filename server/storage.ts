@@ -3,7 +3,8 @@ import { type User, type InsertUser, type Order, type InsertOrder, type Rating, 
          type Dispute, type InsertDispute, type OrderApproval, type InsertOrderApproval,
          type GeoRiskZone, type InsertGeoRiskZone, type WeatherAlert, type InsertWeatherAlert,
          type ContentViolation, type InsertContentViolation, type OrderGroup, type InsertOrderGroup,
-         type GroupParticipant, type InsertGroupParticipant } from "@shared/schema";
+         type GroupParticipant, type InsertGroupParticipant, type Geofence, type InsertGeofence,
+         type TimezoneRule, type InsertTimezoneRule, type LocationTimezone, type InsertLocationTimezone } from "@shared/schema";
 import { type ProviderRanking, rankProvidersForOrder, updateUserDispatchScore } from "@shared/dispatch";
 import { calculateCommission } from "@shared/payment";
 import { randomUUID } from "crypto";
@@ -98,6 +99,26 @@ export interface IStorage {
   addGroupParticipant(participant: InsertGroupParticipant): Promise<GroupParticipant>;
   getGroupParticipants(groupId: string): Promise<GroupParticipant[]>;
   updateGroupParticipant(id: string, updates: Partial<GroupParticipant>): Promise<GroupParticipant | undefined>;
+
+  // Geofence operations
+  createGeofence(geofence: InsertGeofence): Promise<Geofence>;
+  getGeofences(): Promise<Geofence[]>;
+  getActiveGeofences(): Promise<Geofence[]>;
+  updateGeofence(id: string, updates: Partial<Geofence>): Promise<Geofence | undefined>;
+  deleteGeofence(id: string): Promise<boolean>;
+  checkPointInGeofences(latitude: number, longitude: number): Promise<any[]>;
+
+  // Timezone rule operations
+  createTimezoneRule(rule: InsertTimezoneRule): Promise<TimezoneRule>;
+  getTimezoneRules(): Promise<TimezoneRule[]>;
+  getActiveTimezoneRules(): Promise<TimezoneRule[]>;
+  updateTimezoneRule(id: string, updates: Partial<TimezoneRule>): Promise<TimezoneRule | undefined>;
+  deleteTimezoneRule(id: string): Promise<boolean>;
+
+  // Location timezone operations
+  createLocationTimezone(locationTz: InsertLocationTimezone): Promise<LocationTimezone>;
+  getLocationTimezoneByOrder(orderId: string): Promise<LocationTimezone | undefined>;
+  updateLocationTimezone(id: string, updates: Partial<LocationTimezone>): Promise<LocationTimezone | undefined>;
 }
 
 export class MemStorage implements IStorage {
@@ -114,6 +135,9 @@ export class MemStorage implements IStorage {
   private contentViolations: Map<string, ContentViolation>;
   private orderGroups: Map<string, OrderGroup>;
   private groupParticipants: Map<string, GroupParticipant>;
+  private geofences: Map<string, Geofence>;
+  private timezoneRules: Map<string, TimezoneRule>;
+  private locationTimezones: Map<string, LocationTimezone>;
 
   constructor() {
     this.users = new Map();
@@ -129,6 +153,9 @@ export class MemStorage implements IStorage {
     this.contentViolations = new Map();
     this.orderGroups = new Map();
     this.groupParticipants = new Map();
+    this.geofences = new Map();
+    this.timezoneRules = new Map();
+    this.locationTimezones = new Map();
     this.initializeTestData();
   }
 
@@ -1012,6 +1039,114 @@ export class MemStorage implements IStorage {
     const updatedParticipant = { ...participant, ...updates };
     this.groupParticipants.set(id, updatedParticipant);
     return updatedParticipant;
+  }
+
+  // Geofence operations
+  async createGeofence(geofence: InsertGeofence): Promise<Geofence> {
+    const id = randomUUID();
+    const newGeofence: Geofence = {
+      id,
+      ...geofence,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.geofences.set(id, newGeofence);
+    return newGeofence;
+  }
+
+  async getGeofences(): Promise<Geofence[]> {
+    return Array.from(this.geofences.values());
+  }
+
+  async getActiveGeofences(): Promise<Geofence[]> {
+    return Array.from(this.geofences.values()).filter(gf => gf.isActive);
+  }
+
+  async updateGeofence(id: string, updates: Partial<Geofence>): Promise<Geofence | undefined> {
+    const geofence = this.geofences.get(id);
+    if (!geofence) return undefined;
+    
+    const updatedGeofence = { ...geofence, ...updates, updatedAt: new Date() };
+    this.geofences.set(id, updatedGeofence);
+    return updatedGeofence;
+  }
+
+  async deleteGeofence(id: string): Promise<boolean> {
+    return this.geofences.delete(id);
+  }
+
+  async checkPointInGeofences(latitude: number, longitude: number): Promise<any[]> {
+    const { checkLocationWithTimezone } = await import("@shared/geofence-timezone");
+    const activeGeofences = await this.getActiveGeofences();
+    const activeTimezoneRules = await this.getActiveTimezoneRules();
+    
+    const result = checkLocationWithTimezone(
+      latitude, 
+      longitude, 
+      activeGeofences, 
+      activeTimezoneRules
+    );
+    
+    return result.geofenceResults;
+  }
+
+  // Timezone rule operations
+  async createTimezoneRule(rule: InsertTimezoneRule): Promise<TimezoneRule> {
+    const id = randomUUID();
+    const newRule: TimezoneRule = {
+      id,
+      ...rule,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.timezoneRules.set(id, newRule);
+    return newRule;
+  }
+
+  async getTimezoneRules(): Promise<TimezoneRule[]> {
+    return Array.from(this.timezoneRules.values());
+  }
+
+  async getActiveTimezoneRules(): Promise<TimezoneRule[]> {
+    return Array.from(this.timezoneRules.values()).filter(rule => rule.isActive);
+  }
+
+  async updateTimezoneRule(id: string, updates: Partial<TimezoneRule>): Promise<TimezoneRule | undefined> {
+    const rule = this.timezoneRules.get(id);
+    if (!rule) return undefined;
+    
+    const updatedRule = { ...rule, ...updates, updatedAt: new Date() };
+    this.timezoneRules.set(id, updatedRule);
+    return updatedRule;
+  }
+
+  async deleteTimezoneRule(id: string): Promise<boolean> {
+    return this.timezoneRules.delete(id);
+  }
+
+  // Location timezone operations
+  async createLocationTimezone(locationTz: InsertLocationTimezone): Promise<LocationTimezone> {
+    const id = randomUUID();
+    const newLocationTz: LocationTimezone = {
+      id,
+      ...locationTz,
+      createdAt: new Date(),
+    };
+    this.locationTimezones.set(id, newLocationTz);
+    return newLocationTz;
+  }
+
+  async getLocationTimezoneByOrder(orderId: string): Promise<LocationTimezone | undefined> {
+    return Array.from(this.locationTimezones.values()).find(lt => lt.orderId === orderId);
+  }
+
+  async updateLocationTimezone(id: string, updates: Partial<LocationTimezone>): Promise<LocationTimezone | undefined> {
+    const locationTz = this.locationTimezones.get(id);
+    if (!locationTz) return undefined;
+    
+    const updatedLocationTz = { ...locationTz, ...updates };
+    this.locationTimezones.set(id, updatedLocationTz);
+    return updatedLocationTz;
   }
 }
 

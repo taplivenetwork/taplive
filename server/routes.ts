@@ -110,7 +110,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
+      // Geofencing and timezone validation
+      const { checkLocationWithTimezone } = await import("@shared/geofence-timezone");
+      const activeGeofences = await storage.getActiveGeofences();
+      const activeTimezoneRules = await storage.getActiveTimezoneRules();
+      
+      const locationValidation = checkLocationWithTimezone(
+        parseFloat(orderData.latitude),
+        parseFloat(orderData.longitude),
+        activeGeofences,
+        activeTimezoneRules,
+        new Date(orderData.scheduledAt)
+      );
+
+      if (locationValidation.finalDecision === 'block') {
+        return res.status(400).json({
+          success: false,
+          message: "此位置被地理围栏限制，无法创建订单",
+          data: { 
+            geofenceCheck: locationValidation,
+            messages: locationValidation.messages
+          }
+        });
+      }
+
+      if (locationValidation.finalDecision === 'restrict_time') {
+        return res.status(400).json({
+          success: false,
+          message: `计划时间不允许在此位置创建订单: ${locationValidation.messages.join(', ')}`,
+          data: { 
+            geofenceCheck: locationValidation,
+            timezone: locationValidation.timezoneInfo,
+            messages: locationValidation.messages
+          }
+        });
+      }
+
       const order = await storage.createOrder(orderData);
+
+      // Store timezone information for this order
+      if (locationValidation.timezoneInfo) {
+        await storage.createLocationTimezone({
+          orderId: order.id,
+          detectedTimezone: locationValidation.timezoneInfo.timezone,
+          localTime: new Date(locationValidation.timezoneInfo.localTime),
+          utcOffset: locationValidation.timezoneInfo.utcOffset,
+          isDst: locationValidation.timezoneInfo.isDst,
+          timeRestrictionApplied: !locationValidation.timezoneInfo.isAllowedTime
+        });
+      }
 
       res.status(201).json({
         success: true,
@@ -1216,7 +1264,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const orderId = req.params.id;
       const groupData = aaGroupCreationSchema.parse(req.body);
       
-      const order = await storage.getOrder(orderId);
+      const order = await storage.getOrderById(orderId);
       if (!order) {
         return res.status(404).json({
           success: false,
@@ -1361,6 +1409,148 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({
         success: false,
         message: error instanceof Error ? error.message : "Failed to get weather alerts"
+      });
+    }
+  });
+
+  // Geofencing endpoints
+  app.get("/api/geofences", async (req, res) => {
+    try {
+      const geofences = await storage.getGeofences();
+      res.json({
+        success: true,
+        data: geofences
+      });
+    } catch (error) {
+      console.error("Error fetching geofences:", error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to fetch geofences"
+      });
+    }
+  });
+
+  app.post("/api/geofences", async (req, res) => {
+    try {
+      const { geofenceCreationSchema } = await import("@shared/schema");
+      const geofenceData = geofenceCreationSchema.parse(req.body);
+      
+      // Convert coordinates to JSON string
+      const coordinatesJson = JSON.stringify(geofenceData.coordinates);
+      const timeRestrictionsJson = geofenceData.timeRestrictions ? 
+        JSON.stringify(geofenceData.timeRestrictions) : null;
+
+      const geofence = await storage.createGeofence({
+        name: geofenceData.name,
+        description: geofenceData.description || null,
+        type: geofenceData.type,
+        coordinates: coordinatesJson,
+        action: geofenceData.action,
+        priority: geofenceData.priority,
+        timeRestrictions: timeRestrictionsJson
+      });
+
+      res.json({
+        success: true,
+        data: geofence
+      });
+    } catch (error) {
+      console.error("Error creating geofence:", error);
+      res.status(400).json({
+        success: false,
+        message: error instanceof Error ? error.message : "Failed to create geofence"
+      });
+    }
+  });
+
+  // Location timezone check endpoint
+  app.post("/api/check-location", async (req, res) => {
+    try {
+      const { timezoneCheckSchema } = await import("@shared/schema");
+      const { checkLocationWithTimezone } = await import("@shared/geofence-timezone");
+      
+      const { latitude, longitude, timestamp } = timezoneCheckSchema.parse(req.body);
+      
+      const activeGeofences = await storage.getActiveGeofences();
+      const activeTimezoneRules = await storage.getActiveTimezoneRules();
+      
+      const checkTime = timestamp ? new Date(timestamp) : new Date();
+      const result = checkLocationWithTimezone(
+        latitude,
+        longitude,
+        activeGeofences,
+        activeTimezoneRules,
+        checkTime
+      );
+
+      res.json({
+        success: true,
+        data: {
+          location: { latitude, longitude },
+          timestamp: checkTime.toISOString(),
+          timezone: result.timezoneInfo,
+          geofences: result.geofenceResults,
+          decision: result.finalDecision,
+          messages: result.messages,
+          isAllowed: result.finalDecision === 'allow',
+          hasTimeRestrictions: result.finalDecision === 'restrict_time'
+        }
+      });
+    } catch (error) {
+      console.error("Error checking location:", error);
+      res.status(400).json({
+        success: false,
+        message: error instanceof Error ? error.message : "Failed to check location"
+      });
+    }
+  });
+
+  // Initialize default geofences and timezone rules
+  app.post("/api/initialize-geofences", async (req, res) => {
+    try {
+      const { DEFAULT_GEOFENCES, DEFAULT_TIMEZONE_RULES } = await import("@shared/geofence-timezone");
+      
+      const createdGeofences = [];
+      const createdRules = [];
+      
+      // Create default geofences
+      for (const gf of DEFAULT_GEOFENCES) {
+        const geofence = await storage.createGeofence({
+          name: gf.name,
+          description: gf.description,
+          type: gf.type,
+          coordinates: gf.coordinates,
+          action: gf.action,
+          priority: gf.priority,
+          timeRestrictions: gf.timeRestrictions || null
+        });
+        createdGeofences.push(geofence);
+      }
+      
+      // Create default timezone rules
+      for (const rule of DEFAULT_TIMEZONE_RULES) {
+        const tzRule = await storage.createTimezoneRule({
+          region: rule.region,
+          timezone: rule.timezone,
+          allowedHours: rule.allowedHours,
+          restrictedDays: rule.restrictedDays
+        });
+        createdRules.push(tzRule);
+      }
+
+      res.json({
+        success: true,
+        data: {
+          geofences: createdGeofences,
+          timezoneRules: createdRules
+        },
+        message: "Default geofences and timezone rules initialized"
+      });
+    } catch (error) {
+      console.error("Error initializing defaults:", error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to initialize defaults"
       });
     }
   });

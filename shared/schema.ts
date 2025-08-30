@@ -419,6 +419,45 @@ export const groupParticipants = pgTable("group_participants", {
   joinedAt: timestamp("joined_at").defaultNow(),
 });
 
+// Geofence Management
+export const geofences = pgTable("geofences", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
+  type: varchar("type", { length: 50 }).notNull(), // 'polygon', 'circle', 'rectangle'
+  coordinates: text("coordinates").notNull(), // JSON string of coordinates
+  action: varchar("action", { length: 50 }).notNull(), // 'block', 'warn', 'allow', 'restrict_time'
+  isActive: boolean("is_active").default(true),
+  priority: integer("priority").default(0), // Higher priority rules take precedence
+  timeRestrictions: text("time_restrictions"), // JSON string of time-based rules
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Timezone Rules Management
+export const timezoneRules = pgTable("timezone_rules", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  region: varchar("region", { length: 255 }).notNull(), // Country/region code
+  timezone: varchar("timezone", { length: 100 }).notNull(), // IANA timezone identifier
+  allowedHours: text("allowed_hours").notNull(), // JSON string of allowed hours [start, end]
+  restrictedDays: text("restricted_days"), // JSON string of restricted day indices (0=Sunday)
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Location Timezone Detection
+export const locationTimezone = pgTable("location_timezone", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  orderId: varchar("order_id").notNull().references(() => orders.id),
+  detectedTimezone: varchar("detected_timezone", { length: 100 }).notNull(),
+  localTime: timestamp("local_time").notNull(),
+  utcOffset: integer("utc_offset").notNull(), // Offset in minutes
+  isDst: boolean("is_dst").default(false), // Daylight saving time
+  timeRestrictionApplied: boolean("time_restriction_applied").default(false),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 // Insert schemas for new tables
 export const insertGeoRiskZoneSchema = createInsertSchema(geoRiskZones).omit({
   id: true,
@@ -446,6 +485,23 @@ export const insertGroupParticipantSchema = createInsertSchema(groupParticipants
   joinedAt: true,
 });
 
+export const insertGeofenceSchema = createInsertSchema(geofences).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertTimezoneRuleSchema = createInsertSchema(timezoneRules).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertLocationTimezoneSchema = createInsertSchema(locationTimezone).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Validation schemas
 export const geoLocationSchema = z.object({
   latitude: z.number().min(-90).max(90),
@@ -456,6 +512,33 @@ export const aaGroupCreationSchema = z.object({
   orderId: z.string(),
   maxParticipants: z.number().min(2).max(50),
   expirationHours: z.number().min(1).max(168), // Max 1 week
+});
+
+export const geofenceCreationSchema = z.object({
+  name: z.string().min(1),
+  description: z.string().optional(),
+  type: z.enum(['polygon', 'circle', 'rectangle']),
+  coordinates: z.union([
+    z.array(z.object({ lat: z.number(), lng: z.number() })), // polygon
+    z.object({ center: z.object({ lat: z.number(), lng: z.number() }), radius: z.number() }), // circle
+    z.object({ 
+      topLeft: z.object({ lat: z.number(), lng: z.number() }),
+      bottomRight: z.object({ lat: z.number(), lng: z.number() })
+    }) // rectangle
+  ]),
+  action: z.enum(['block', 'warn', 'allow', 'restrict_time']),
+  priority: z.number().default(0),
+  timeRestrictions: z.object({
+    allowedHours: z.array(z.object({ start: z.number(), end: z.number() })).optional(),
+    restrictedDays: z.array(z.number().min(0).max(6)).optional(),
+    timezone: z.string().optional(),
+  }).optional(),
+});
+
+export const timezoneCheckSchema = z.object({
+  latitude: z.number().min(-90).max(90),
+  longitude: z.number().min(-180).max(180),
+  timestamp: z.string().optional(),
 });
 
 // Export types for new tables
@@ -469,3 +552,9 @@ export type OrderGroup = typeof orderGroups.$inferSelect;
 export type InsertOrderGroup = z.infer<typeof insertOrderGroupSchema>;
 export type GroupParticipant = typeof groupParticipants.$inferSelect;
 export type InsertGroupParticipant = z.infer<typeof insertGroupParticipantSchema>;
+export type Geofence = typeof geofences.$inferSelect;
+export type InsertGeofence = z.infer<typeof insertGeofenceSchema>;
+export type TimezoneRule = typeof timezoneRules.$inferSelect;
+export type InsertTimezoneRule = z.infer<typeof insertTimezoneRuleSchema>;
+export type LocationTimezone = typeof locationTimezone.$inferSelect;
+export type InsertLocationTimezone = z.infer<typeof insertLocationTimezoneSchema>;

@@ -3,7 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { MapPin, AlertTriangle, Shield, Zap, Cloud } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { MapPin, AlertTriangle, Shield, Zap, Cloud, Clock, Globe, Fence } from "lucide-react";
 import { TranslatedText } from "./translated-text";
 
 interface LocationRisk {
@@ -27,10 +28,40 @@ interface WeatherAlert {
   endTime?: string;
 }
 
+interface GeofenceResult {
+  isInside: boolean;
+  geofenceId?: string;
+  geofenceName?: string;
+  action: 'block' | 'warn' | 'allow' | 'restrict_time';
+  priority: number;
+  message?: string;
+}
+
+interface TimezoneInfo {
+  timezone: string;
+  utcOffset: number;
+  isDst: boolean;
+  localTime: Date;
+  isAllowedTime: boolean;
+  restrictionReason?: string;
+}
+
+interface LocationCheckResult {
+  location: { latitude: number; longitude: number };
+  timestamp: string;
+  timezone: TimezoneInfo;
+  geofences: GeofenceResult[];
+  decision: 'allow' | 'block' | 'warn' | 'restrict_time';
+  messages: string[];
+  isAllowed: boolean;
+  hasTimeRestrictions: boolean;
+}
+
 export function GeoSafetyPanel() {
   const [location, setLocation] = useState({ latitude: 0, longitude: 0 });
   const [locationRisk, setLocationRisk] = useState<LocationRisk | null>(null);
   const [weatherAlerts, setWeatherAlerts] = useState<WeatherAlert[]>([]);
+  const [locationCheck, setLocationCheck] = useState<LocationCheckResult | null>(null);
   const [checking, setChecking] = useState(false);
 
   const getCurrentLocation = () => {
@@ -63,15 +94,32 @@ export function GeoSafetyPanel() {
 
   const checkLocationSafety = async (coords: { latitude: number; longitude: number }) => {
     try {
-      const response = await fetch('/api/orders/check-location', {
+      // Check traditional location risk
+      const riskResponse = await fetch('/api/orders/check-location', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(coords)
       });
 
-      if (response.ok) {
-        const result = await response.json();
-        setLocationRisk(result.data);
+      if (riskResponse.ok) {
+        const riskResult = await riskResponse.json();
+        setLocationRisk(riskResult.data);
+      }
+
+      // Check geofencing and timezone
+      const geofenceResponse = await fetch('/api/check-location', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          latitude: coords.latitude,
+          longitude: coords.longitude,
+          timestamp: new Date().toISOString()
+        })
+      });
+
+      if (geofenceResponse.ok) {
+        const geofenceResult = await geofenceResponse.json();
+        setLocationCheck(geofenceResult.data);
       }
     } catch (error) {
       console.error('Failed to check location safety:', error);
@@ -202,6 +250,80 @@ export function GeoSafetyPanel() {
           )}
         </div>
 
+        {/* Geofence and Timezone Check */}
+        {locationCheck && (
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <Fence className="w-4 h-4" />
+              <span className="font-medium">
+                <TranslatedText>地理围栏与时区检查</TranslatedText>
+              </span>
+              <Badge variant={locationCheck.isAllowed ? 'default' : 'destructive'}>
+                {locationCheck.isAllowed ? '允许' : '受限'}
+              </Badge>
+            </div>
+
+            {locationCheck.messages.length > 0 && (
+              <Alert>
+                <AlertTriangle className="h-4 w-4" />
+                <AlertDescription>
+                  <div className="space-y-1">
+                    {locationCheck.messages.map((msg, idx) => (
+                      <div key={idx} className="text-sm">• {msg}</div>
+                    ))}
+                  </div>
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {/* Timezone Info */}
+            {locationCheck.timezone && (
+              <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
+                <div className="flex items-center gap-2 mb-2">
+                  <Globe className="w-4 h-4 text-blue-600" />
+                  <span className="font-medium text-blue-800 dark:text-blue-300">时区信息</span>
+                </div>
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div>
+                    <span className="text-muted-foreground">时区:</span>
+                    <div className="font-medium">{locationCheck.timezone.timezone}</div>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">UTC偏移:</span>
+                    <div className="font-medium">
+                      {locationCheck.timezone.utcOffset > 0 ? '+' : ''}{Math.floor(locationCheck.timezone.utcOffset / 60)}h
+                    </div>
+                  </div>
+                </div>
+                {!locationCheck.timezone.isAllowedTime && (
+                  <div className="mt-2 text-orange-700 dark:text-orange-300 text-sm">
+                    <Clock className="w-4 h-4 inline mr-1" />
+                    {locationCheck.timezone.restrictionReason}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Active Geofences */}
+            {locationCheck.geofences.length > 0 && (
+              <div className="space-y-2">
+                <div className="text-sm font-medium text-muted-foreground">活跃地理围栏:</div>
+                {locationCheck.geofences.map((geofence, idx) => (
+                  <div key={idx} className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-800 rounded">
+                    <div>
+                      <div className="font-medium text-sm">{geofence.geofenceName}</div>
+                      <div className="text-xs text-muted-foreground">优先级: {geofence.priority}</div>
+                    </div>
+                    <Badge variant={geofence.action === 'block' ? 'destructive' : 'secondary'}>
+                      {geofence.action}
+                    </Badge>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Weather Alerts */}
         <div className="space-y-3">
           <div className="flex items-center justify-between">
@@ -259,6 +381,8 @@ export function GeoSafetyPanel() {
             <div>• <TranslatedText>天气灾害预警系统</TranslatedText></div>
             <div>• <TranslatedText>内容和语音安全监控</TranslatedText></div>
             <div>• <TranslatedText>违法活动关键词检测</TranslatedText></div>
+            <div>• <TranslatedText>地理围栏边界检测</TranslatedText></div>
+            <div>• <TranslatedText>全球时区自动识别</TranslatedText></div>
           </div>
         </div>
       </CardContent>
