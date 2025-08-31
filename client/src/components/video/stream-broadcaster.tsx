@@ -166,8 +166,26 @@ export function StreamBroadcaster({ orderId, onStreamStart, onStreamEnd }: Strea
         console.log('✅ Video element srcObject set');
         
         // Add video element event listeners
-        videoRef.current.addEventListener('pause', () => {
+        videoRef.current.addEventListener('pause', (e) => {
           console.warn('⏸️ Video element paused');
+          console.warn('Pause event details:', {
+            target: e.target?.tagName,
+            currentTime: videoRef.current?.currentTime,
+            duration: videoRef.current?.duration,
+            paused: videoRef.current?.paused,
+            ended: videoRef.current?.ended,
+            stackTrace: new Error().stack
+          });
+          
+          // Try to resume immediately
+          setTimeout(() => {
+            if (videoRef.current && videoRef.current.paused && !videoRef.current.ended) {
+              console.log('🔄 Attempting to resume paused video');
+              videoRef.current.play().catch(err => {
+                console.error('❌ Failed to resume video:', err);
+              });
+            }
+          }, 100);
         });
         
         videoRef.current.addEventListener('ended', () => {
@@ -194,10 +212,42 @@ export function StreamBroadcaster({ orderId, onStreamStart, onStreamEnd }: Strea
                 paused: videoRef.current.paused,
                 ended: videoRef.current.ended,
                 readyState: videoRef.current.readyState,
-                srcObject: videoRef.current.srcObject ? 'present' : 'null'
+                srcObject: videoRef.current.srcObject ? 'present' : 'null',
+                currentTime: videoRef.current.currentTime,
+                duration: videoRef.current.duration,
+                muted: videoRef.current.muted,
+                autoplay: videoRef.current.autoplay
               });
             }
           }, 1000);
+          
+          // Continue checking every 3 seconds
+          const statusInterval = setInterval(() => {
+            if (videoRef.current) {
+              const isPlayingNow = !videoRef.current.paused && !videoRef.current.ended;
+              if (!isPlayingNow) {
+                console.warn('⚠️ Video stopped playing. Attempting restart...');
+                console.warn('Current state:', {
+                  paused: videoRef.current.paused,
+                  ended: videoRef.current.ended,
+                  currentTime: videoRef.current.currentTime,
+                  readyState: videoRef.current.readyState
+                });
+                
+                // Try to restart
+                if (videoRef.current.srcObject) {
+                  videoRef.current.play().catch(err => {
+                    console.error('❌ Auto-restart failed:', err);
+                  });
+                }
+              }
+            }
+          }, 3000);
+          
+          // Store interval to clean up later
+          if (videoRef.current) {
+            (videoRef.current as any).__statusInterval = statusInterval;
+          }
           
         } catch (playError) {
           console.error('❌ Video play error:', playError);
