@@ -14,6 +14,7 @@ import Settings from "@/pages/settings";
 import { DispatchPage } from "@/pages/dispatch";
 import { Dashboard } from "@/pages/dashboard";
 import SafetyPage from "@/pages/safety";
+import Payment from "@/pages/payment";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -26,6 +27,7 @@ function Router() {
       <Route path="/dispatch" component={DispatchPage} />
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/safety" component={SafetyPage} />
+      <Route path="/payment/:orderId" component={Payment} />
       <Route path="/settings" component={Settings} />
       <Route component={NotFound} />
     </Switch>

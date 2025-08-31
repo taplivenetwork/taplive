@@ -1,11 +1,20 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import Stripe from "stripe";
 import { storage } from "./storage";
 import { insertOrderSchema, ratingValidationSchema, paymentValidationSchema, cryptoPaymentSchema, disputeSubmissionSchema, geoLocationSchema, aaGroupCreationSchema, type Order } from "@shared/schema";
 import { calculateCommission, PAYMENT_METHODS } from "@shared/payment";
 import { assessGeoRisk, checkContentViolations, checkVoiceContent, formatRiskLevel } from "@shared/geo-safety";
 import { validateAAGroupCreation, getAAGroupStatus, calculateSplitAmount, getAAGroupExpirationTime } from "@shared/aa-group";
 import { z } from "zod";
+
+// Initialize Stripe
+if (!process.env.STRIPE_SECRET_KEY) {
+  throw new Error('Missing required Stripe secret: STRIPE_SECRET_KEY');
+}
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+  apiVersion: "2025-08-27.basil",
+});
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Health check endpoint
@@ -1163,7 +1172,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  const httpServer = createServer(app);
   // Geographic safety routes
   app.post("/api/orders/check-location", async (req, res) => {
     try {
@@ -1555,5 +1563,176 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  return httpServer;
+  // Payment endpoints for MVP
+  
+  // Create payment intent for order
+  app.post("/api/orders/:id/payment", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const order = await storage.getOrderById(id);
+      
+      if (!order) {
+        return res.status(404).json({
+          success: false,
+          message: "Order not found"
+        });
+      }
+
+      if (order.isPaid) {
+        return res.status(400).json({
+          success: false,
+          message: "Order is already paid"
+        });
+      }
+
+      // Create Stripe payment intent
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: Math.round(parseFloat(order.price) * 100), // Convert to cents
+        currency: order.currency.toLowerCase(),
+        metadata: {
+          orderId: order.id,
+          orderTitle: order.title,
+          creatorId: order.creatorId || ''
+        }
+      });
+
+      // Create payment record
+      const payment = await storage.createPayment({
+        orderId: order.id,
+        payerId: req.body.payerId || order.creatorId || '', // Assuming authenticated user
+        amount: order.price,
+        currency: order.currency,
+        paymentMethod: 'stripe',
+        paymentMetadata: JSON.stringify({
+          clientSecret: paymentIntent.client_secret,
+          externalPaymentId: paymentIntent.id
+        })
+      });
+
+      res.json({
+        success: true,
+        data: {
+          clientSecret: paymentIntent.client_secret,
+          paymentId: payment.id
+        }
+      });
+    } catch (error) {
+      console.error('Error creating payment:', error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to create payment"
+      });
+    }
+  });
+
+  // Webhook endpoint for Stripe payment status updates
+  app.post("/api/webhooks/stripe", async (req, res) => {
+    try {
+      const sig = req.headers['stripe-signature'];
+      let event;
+
+      try {
+        event = stripe.webhooks.constructEvent(req.body, sig as string, process.env.STRIPE_WEBHOOK_SECRET || '');
+      } catch (err) {
+        console.error('Webhook signature verification failed:', err);
+        return res.status(400).send('Webhook signature verification failed');
+      }
+
+      // Handle the event
+      switch (event.type) {
+        case 'payment_intent.succeeded':
+          const paymentIntent = event.data.object;
+          const orderId = paymentIntent.metadata.orderId;
+          
+          if (orderId) {
+            // Update payment status
+            const payments = await storage.getPaymentsByOrder(orderId);
+            const payment = payments.find(p => p.externalPaymentId === paymentIntent.id);
+            
+            if (payment) {
+              await storage.updatePayment(payment.id, {
+                status: 'completed'
+              });
+              
+              // Update order payment status
+              await storage.updateOrder(orderId, {
+                isPaid: true,
+                status: 'accepted' // Move order to next status
+              });
+              
+              // Process commission and create payout
+              await storage.processOrderPayment(orderId, payment.id);
+            }
+          }
+          break;
+
+        case 'payment_intent.payment_failed':
+          const failedPayment = event.data.object;
+          const failedOrderId = failedPayment.metadata.orderId;
+          
+          if (failedOrderId) {
+            const payments = await storage.getPaymentsByOrder(failedOrderId);
+            const payment = payments.find(p => p.externalPaymentId === failedPayment.id);
+            
+            if (payment) {
+              await storage.updatePayment(payment.id, {
+                status: 'failed',
+                failureReason: failedPayment.last_payment_error?.message || 'Payment failed'
+              });
+            }
+          }
+          break;
+
+        default:
+          console.log(`Unhandled event type ${event.type}`);
+      }
+
+      res.json({ received: true });
+    } catch (error) {
+      console.error('Webhook error:', error);
+      res.status(500).json({
+        success: false,
+        message: "Webhook processing failed"
+      });
+    }
+  });
+
+  // Get payment status for an order
+  app.get("/api/orders/:id/payment-status", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const payments = await storage.getPaymentsByOrder(id);
+      const order = await storage.getOrderById(id);
+      
+      if (!order) {
+        return res.status(404).json({
+          success: false,
+          message: "Order not found"
+        });
+      }
+
+      res.json({
+        success: true,
+        data: {
+          isPaid: order.isPaid,
+          payments: payments.map(p => ({
+            id: p.id,
+            amount: p.amount,
+            currency: p.currency,
+            status: p.status,
+            paymentMethod: p.paymentMethod,
+            createdAt: p.createdAt
+          }))
+        }
+      });
+    } catch (error) {
+      console.error('Error fetching payment status:', error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to fetch payment status"
+      });
+    }
+  });
+
+  return createServer(app);
 }
