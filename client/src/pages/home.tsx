@@ -267,15 +267,21 @@ export default function Home() {
                 <Button
                   size="sm"
                   variant={viewMode === 'cards' ? 'default' : 'outline'}
-                  onClick={() => setViewMode('cards')}
+                  onClick={() => {
+                    console.log('切换到列表模式');
+                    setViewMode('cards');
+                  }}
                   data-testid="button-card-view"
                 >
-                  📱 卡片视图
+                  🎬 单个直播
                 </Button>
                 <Button
                   size="sm"
                   variant={viewMode === 'grid' ? 'default' : 'outline'}
-                  onClick={() => setViewMode('grid')}
+                  onClick={() => {
+                    console.log('切换到多屏模式');
+                    setViewMode('grid');
+                  }}
                   className={viewMode === 'grid' ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700' : ''}
                   data-testid="button-grid-view"
                 >
