@@ -139,8 +139,23 @@ export function StreamBroadcaster({ orderId, onStreamStart, onStreamEnd }: Strea
         console.log(`Track ${index}: ${track.kind}, enabled: ${track.enabled}, readyState: ${track.readyState}`);
         
         track.addEventListener('ended', () => {
-          console.error(`Track ${track.kind} ended unexpectedly!`);
+          console.error(`❌ Track ${track.kind} ended unexpectedly!`);
+          console.error('Track details:', {
+            id: track.id,
+            kind: track.kind,
+            enabled: track.enabled,
+            readyState: track.readyState,
+            muted: track.muted
+          });
           setError(`${track.kind} track ended unexpectedly. Please restart the stream.`);
+        });
+
+        track.addEventListener('mute', () => {
+          console.warn(`⚠️ Track ${track.kind} was muted`);
+        });
+
+        track.addEventListener('unmute', () => {
+          console.log(`🔊 Track ${track.kind} was unmuted`);
         });
       });
 
@@ -148,14 +163,44 @@ export function StreamBroadcaster({ orderId, onStreamStart, onStreamEnd }: Strea
       
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
-        console.log('Video element srcObject set');
+        console.log('✅ Video element srcObject set');
+        
+        // Add video element event listeners
+        videoRef.current.addEventListener('pause', () => {
+          console.warn('⏸️ Video element paused');
+        });
+        
+        videoRef.current.addEventListener('ended', () => {
+          console.error('❌ Video element ended');
+        });
+        
+        videoRef.current.addEventListener('emptied', () => {
+          console.error('❌ Video element emptied (srcObject removed)');
+        });
+        
+        videoRef.current.addEventListener('abort', () => {
+          console.error('❌ Video element aborted');
+        });
         
         // Force video play
         try {
           await videoRef.current.play();
-          console.log('Video element playing successfully');
+          console.log('✅ Video element playing successfully');
+          
+          // Check status after a short delay
+          setTimeout(() => {
+            if (videoRef.current) {
+              console.log('🔍 Video status check:', {
+                paused: videoRef.current.paused,
+                ended: videoRef.current.ended,
+                readyState: videoRef.current.readyState,
+                srcObject: videoRef.current.srcObject ? 'present' : 'null'
+              });
+            }
+          }, 1000);
+          
         } catch (playError) {
-          console.error('Video play error:', playError);
+          console.error('❌ Video play error:', playError);
         }
       }
 
