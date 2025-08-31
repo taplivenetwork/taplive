@@ -186,12 +186,12 @@
   }
 }
 
-@keyframes circuit-flow {
+@keyframes world-map-flow {
   0% {
-    background-position: 0% 0%;
+    background-position: 0 center;
   }
   100% {
-    background-position: 100% 100%;
+    background-position: -2000px center;
   }
 }
 
@@ -374,13 +374,13 @@
   animation: neon-pulse 2s ease-in-out infinite alternate;
 }
 
-/* Circuit pattern background */
+/* 动态世界地图背景 - 替换原网格效果 */
 .circuit-bg {
-  background-image: 
-    linear-gradient(90deg, hsl(266, 85%, 58%, 0.1) 1px, transparent 1px),
-    linear-gradient(180deg, hsl(187, 85%, 53%, 0.1) 1px, transparent 1px);
-  background-size: 20px 20px;
-  animation: circuit-flow 10s linear infinite;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 2000 400'%3E%3Cg fill='none' stroke='hsl(266, 85%, 58%)' stroke-width='1.2' opacity='0.4'%3E%3C!-- 北美洲轮廓 --%3E%3Cpath d='M200,120 C220,110 250,115 280,125 C310,135 340,130 370,140 C400,150 430,145 460,155 C490,165 520,160 550,170 C580,180 610,175 640,185 L620,200 L580,190 L540,195 L500,185 L460,190 L420,180 L380,185 L340,175 L300,180 L260,170 L220,175 L200,160 Z'/%3E%3C!-- 南美洲 --%3E%3Cpath d='M350,220 C380,210 400,215 420,225 C440,235 450,255 445,280 C440,305 435,330 420,350 C405,340 390,325 385,300 C380,275 375,250 350,240 Z'/%3E%3C!-- 欧洲 --%3E%3Cpath d='M700,100 C720,90 745,95 770,105 C795,115 820,110 845,120 L840,140 L815,145 L790,140 L765,145 L740,135 L715,140 L700,120 Z'/%3E%3C!-- 非洲 --%3E%3Cpath d='M750,160 C780,150 810,155 840,165 C870,175 885,200 890,225 C895,250 885,275 870,295 C855,315 825,320 795,310 C765,300 750,275 745,250 C740,225 745,200 750,180 Z'/%3E%3C!-- 亚洲 --%3E%3Cpath d='M950,80 C1000,70 1050,75 1100,85 C1150,95 1200,90 1250,100 C1300,110 1350,105 1400,115 L1390,135 L1340,140 L1290,135 L1240,140 L1190,130 L1140,135 L1090,125 L1040,130 L990,120 L950,100 Z'/%3E%3C!-- 澳洲 --%3E%3Cpath d='M1300,250 C1330,240 1360,245 1390,255 C1420,265 1440,280 1435,300 C1430,285 1405,275 1375,280 C1345,285 1315,275 1300,265 Z'/%3E%3C/g%3E%3Cg fill='none' stroke='hsl(187, 85%, 53%)' stroke-width='0.8' opacity='0.3'%3E%3C!-- 连接线网络效果 --%3E%3Cline x1='300' y1='150' x2='750' y2='120' stroke-dasharray='3,3'/%3E%3Cline x1='750' y1='180' x2='1100' y2='110' stroke-dasharray='3,3'/%3E%3Cline x1='400' y1='280' x2='800' y2='200' stroke-dasharray='3,3'/%3E%3Cline x1='1200' y1='130' x2='1350' y2='270' stroke-dasharray='3,3'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: 2000px 400px;
+  background-repeat: repeat-x;
+  background-position: 0 center;
+  animation: world-map-flow 60s linear infinite;
 }
 
 /* Holographic effect */
