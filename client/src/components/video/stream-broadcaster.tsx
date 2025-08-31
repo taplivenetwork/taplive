@@ -77,19 +77,7 @@ export function StreamBroadcaster({ orderId, onStreamStart, onStreamEnd }: Strea
     };
   }, [orderId]); // Only depend on orderId
 
-  // Separate useEffect to handle cleanup
-  useEffect(() => {
-    return () => {
-      if (stream) {
-        console.log('Cleaning up stream...');
-        stream.getTracks().forEach(track => track.stop());
-      }
-      if (peer) {
-        console.log('Destroying peer...');
-        peer.destroy();
-      }
-    };
-  }, [stream, peer]);
+  // Don't auto-cleanup stream on state changes - only manual cleanup
 
   const initiateConnection = (websocket: WebSocket, mediaStream: MediaStream) => {
     try {
