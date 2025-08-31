@@ -251,17 +251,37 @@ export default function Home() {
             </TabsContent>
 
             <TabsContent value="nearby" className="mt-6">
-              <div className="grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
-                {/* Show nearby streams - orders that can be accepted */}
-                {filteredOrders.filter(order => order.status === 'open' || order.status === 'pending').slice(0, 6).map((order) => (
-                  <LiveStreamCard
-                    key={order.id}
-                    stream={order}
-                    onAccept={handleAcceptOrder}
-                    isPending={true}
-                  />
-                ))}
-              </div>
+              {(() => {
+                const availableOrders = orders.filter(order => order.status === 'open' || order.status === 'pending');
+                return availableOrders.length > 0 ? (
+                  <div className="grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
+                    {availableOrders.slice(0, 6).map((order) => (
+                      <LiveStreamCard
+                        key={order.id}
+                        stream={order}
+                        onAccept={handleAcceptOrder}
+                        isPending={true}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <div className="w-16 h-16 mx-auto mb-4 bg-muted rounded-full flex items-center justify-center">
+                      <MapPin className="w-8 h-8 text-muted-foreground" />
+                    </div>
+                    <h3 className="text-lg font-medium text-foreground mb-2">
+                      <TranslatedText>No Available Orders</TranslatedText>
+                    </h3>
+                    <p className="text-muted-foreground mb-4">
+                      <TranslatedText>Create a new order to get started!</TranslatedText>
+                    </p>
+                    <Button onClick={() => setCreateModalOpen(true)}>
+                      <Plus className="w-4 h-4 mr-2" />
+                      <TranslatedText>Create Order</TranslatedText>
+                    </Button>
+                  </div>
+                );
+              })()}
             </TabsContent>
           </Tabs>
         </main>
