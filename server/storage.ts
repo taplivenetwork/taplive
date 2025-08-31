@@ -7,7 +7,7 @@ import { type User, type InsertUser, type Order, type InsertOrder, type Rating, 
          type TimezoneRule, type InsertTimezoneRule, type LocationTimezone, type InsertLocationTimezone,
          users, orders, ratings, payments, payouts, transactions, disputes, orderApprovals,
          geoRiskZones, weatherAlerts, contentViolations, orderGroups, groupParticipants,
-         geofences, timezoneRules, locationTimezones } from "@shared/schema";
+         geofences, timezoneRules, locationTimezone } from "@shared/schema";
 import { type ProviderRanking, rankProvidersForOrder, updateUserDispatchScore } from "@shared/dispatch";
 import { calculateCommission } from "@shared/payment";
 import { randomUUID } from "crypto";
