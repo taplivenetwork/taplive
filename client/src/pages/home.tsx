@@ -1,13 +1,14 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Plus } from "lucide-react";
+import { Plus, Search, Filter, Play, Users, MapPin, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Map } from "@/components/ui/map";
+import { Card, CardContent } from "@/components/ui/card";
 import { OrderCard } from "@/components/order-card";
+import { LiveStreamCard } from "@/components/live-stream-card";
 import { CreateOrderModal } from "@/components/create-order-modal";
 import { DemoControls } from "@/components/demo-controls";
 import { TranslatedText } from "@/components/translated-text";
@@ -126,21 +127,31 @@ export default function Home() {
   }
 
   return (
-    <div className="flex-1 flex flex-col lg:flex-row">
-      {/* Map Section */}
-      <div className="flex-1 p-6">
-        {/* Header */}
-        <header className="flex flex-col sm:flex-row sm:items-center justify-between mb-6">
-          <div>
-            <h2 className="text-2xl font-bold text-foreground">
-              <TranslatedText>Discover Live Streams</TranslatedText>
-            </h2>
+    <div className="flex-1 flex flex-col">
+      {/* Header with Search and Quick Actions */}
+      <header className="p-4 lg:p-6 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex-1">
+            <h1 className="text-2xl lg:text-3xl font-bold text-foreground mb-2">
+              <TranslatedText>Live Streaming Hub</TranslatedText>
+            </h1>
             <p className="text-muted-foreground">
-              <TranslatedText>Find and create location-based streaming experiences</TranslatedText>
+              <TranslatedText>Discover amazing live content from around the world</TranslatedText>
             </p>
           </div>
-          <div className="flex items-center gap-3 mt-4 sm:mt-0">
-            {/* Health Status */}
+          
+          {/* Search and Actions */}
+          <div className="flex items-center gap-3">
+            <div className="relative flex-1 lg:w-80">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+              <Input
+                placeholder="Search live streams..."
+                className="pl-10 pr-4"
+                value={searchFilter}
+                onChange={(e) => setSearchFilter(e.target.value)}
+                data-testid="input-search-streams"
+              />
+            </div>
             <Badge 
               className={`${
                 healthStatus === "connected" 
@@ -152,214 +163,228 @@ export default function Home() {
               <div className={`w-2 h-2 rounded-full animate-pulse mr-2 ${
                 healthStatus === "connected" ? "bg-green-400" : "bg-red-400"
               }`} />
-              <span>
+              <span className="hidden sm:inline">
                 <TranslatedText>
-                  {healthStatus === "connected" ? "API Connected" : "API Disconnected"}
+                  {healthStatus === "connected" ? "Live" : "Offline"}
                 </TranslatedText>
               </span>
             </Badge>
-            <Button 
-              className="bg-primary text-primary-foreground hover:bg-primary/90" 
-              onClick={() => setCreateModalOpen(true)}
-              data-testid="button-create-order"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              <TranslatedText>Create Order</TranslatedText>
-            </Button>
           </div>
-        </header>
-
-        {/* Map Container */}
-        <div className="solid-card rounded-xl p-1 mb-6">
-          <Map 
-            orders={orders} 
-            onLocationSelect={(lat, lng) => setSelectedLocation({ lat, lng })}
-            center={mapCenter}
-          />
         </div>
+      </header>
 
-        {/* Active Streams */}
-        <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-foreground">
-            <TranslatedText>Active Streams Nearby</TranslatedText>
-          </h3>
-          
-          {isLoading ? (
-            <div className="space-y-4">
-              {[1, 2].map((i) => (
-                <div key={i} className="solid-card rounded-xl p-4 animate-pulse">
-                  <div className="h-4 bg-muted rounded w-3/4 mb-2"></div>
-                  <div className="h-3 bg-muted rounded w-1/2"></div>
-                </div>
-              ))}
-            </div>
-          ) : activeStreams.length > 0 ? (
-            <div className="space-y-4">
-              {activeStreams.map((stream) => (
-                <OrderCard
-                  key={stream.id}
-                  order={stream}
-                  onJoin={handleJoinStream}
-                  showActions={true}
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="solid-card rounded-xl p-8 text-center">
-              <p className="text-muted-foreground">
-                <TranslatedText>No active streams nearby at the moment</TranslatedText>
-              </p>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Order Panel */}
-      <aside className="w-full lg:w-96 border-l border-border p-6 bg-white">
-        <div className="space-y-6">
-          {/* Demo Controls */}
-          <DemoControls />
-          
-          {/* Tabs */}
-          <Tabs defaultValue="available" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 bg-secondary">
-              <TabsTrigger value="available" data-testid="tab-available">
-                <TranslatedText>Available Orders</TranslatedText>
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col lg:flex-row">
+        {/* Live Streams Main Area */}
+        <main className="flex-1 p-4 lg:p-6">
+          {/* Filter Tabs */}
+          <Tabs defaultValue="live" className="mb-6">
+            <TabsList className="grid w-full grid-cols-3 lg:w-fit lg:grid-cols-3 bg-secondary">
+              <TabsTrigger value="live" data-testid="tab-live-streams">
+                <Play className="w-4 h-4 mr-2" />
+                <TranslatedText>Live Now</TranslatedText>
               </TabsTrigger>
-              <TabsTrigger value="my-orders" data-testid="tab-my-orders">
-                <TranslatedText>My Orders</TranslatedText>
+              <TabsTrigger value="trending" data-testid="tab-trending">
+                <Users className="w-4 h-4 mr-2" />
+                <TranslatedText>Trending</TranslatedText>
+              </TabsTrigger>
+              <TabsTrigger value="nearby" data-testid="tab-nearby">
+                <MapPin className="w-4 h-4 mr-2" />
+                <TranslatedText>Nearby</TranslatedText>
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="available" className="space-y-4">
-              {/* Filters */}
-              <div className="space-y-3">
-                <Input
-                  placeholder={
-                    currentLanguage === 'zh' ? "搜索位置或描述..." :
-                    currentLanguage === 'ja' ? "場所や説明で検索..." :
-                    currentLanguage === 'es' ? "Buscar por ubicación o descripción..." :
-                    currentLanguage === 'ko' ? "위치 또는 설명으로 검색..." :
-                    currentLanguage === 'fr' ? "Rechercher par lieu ou description..." :
-                    currentLanguage === 'de' ? "Nach Ort oder Beschreibung suchen..." :
-                    currentLanguage === 'ru' ? "Поиск по местоположению или описанию..." :
-                    currentLanguage === 'pt' ? "Pesquisar por localização ou descrição..." :
-                    currentLanguage === 'it' ? "Cerca per posizione o descrizione..." :
-                    currentLanguage === 'ar' ? "البحث حسب الموقع أو الوصف..." :
-                    currentLanguage === 'hi' ? "स्थान या विवरण द्वारा खोजें..." :
-                    "Search by location or description..."}
-                  value={searchFilter}
-                  onChange={(e) => setSearchFilter(e.target.value)}
-                  data-testid="input-search"
-                />
-                <div className="flex gap-2">
-                  <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                    <SelectTrigger data-testid="select-category-filter">
-                      <SelectValue placeholder={
-                        currentLanguage === 'zh' ? "所有类别" :
-                        currentLanguage === 'ja' ? "すべてのカテゴリ" :
-                        currentLanguage === 'es' ? "Todas las categorías" :
-                        currentLanguage === 'ko' ? "모든 카테고리" :
-                        currentLanguage === 'fr' ? "Toutes les catégories" :
-                        currentLanguage === 'de' ? "Alle Kategorien" :
-                        currentLanguage === 'ru' ? "Все категории" :
-                        currentLanguage === 'pt' ? "Todas as categorias" :
-                        currentLanguage === 'it' ? "Tutte le categorie" :
-                        currentLanguage === 'ar' ? "جميع الفئات" :
-                        currentLanguage === 'hi' ? "सभी श्रेणियां" :
-                        "All Categories"} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all"><TranslatedText>All Categories</TranslatedText></SelectItem>
-                      <SelectItem value="music"><TranslatedText>Music</TranslatedText></SelectItem>
-                      <SelectItem value="food"><TranslatedText>Food</TranslatedText></SelectItem>
-                      <SelectItem value="travel"><TranslatedText>Travel</TranslatedText></SelectItem>
-                      <SelectItem value="events"><TranslatedText>Events</TranslatedText></SelectItem>
-                      <SelectItem value="fitness"><TranslatedText>Fitness</TranslatedText></SelectItem>
-                      <SelectItem value="education"><TranslatedText>Education</TranslatedText></SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Select value={priceFilter} onValueChange={setPriceFilter}>
-                    <SelectTrigger data-testid="select-price-filter">
-                      <SelectValue placeholder={
-                        currentLanguage === 'zh' ? "任何价格" :
-                        currentLanguage === 'ja' ? "任意の価格" :
-                        currentLanguage === 'es' ? "Cualquier precio" :
-                        currentLanguage === 'ko' ? "모든 가격" :
-                        currentLanguage === 'fr' ? "Tous les prix" :
-                        currentLanguage === 'de' ? "Jeder Preis" :
-                        currentLanguage === 'ru' ? "Любая цена" :
-                        currentLanguage === 'pt' ? "Qualquer preço" :
-                        currentLanguage === 'it' ? "Qualsiasi prezzo" :
-                        currentLanguage === 'ar' ? "أي سعر" :
-                        currentLanguage === 'hi' ? "कोई भी कीमत" :
-                        "Any Price"} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all"><TranslatedText>Any Price</TranslatedText></SelectItem>
-                      <SelectItem value="10-25">$10-25</SelectItem>
-                      <SelectItem value="25-50">$25-50</SelectItem>
-                      <SelectItem value="50+">$50+</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              {/* Orders List */}
-              <div className="space-y-4">
-                <h3 className="font-semibold text-foreground">
-                  <TranslatedText>Streaming Requests</TranslatedText>
-                </h3>
-                
-                {isLoading ? (
-                  <div className="space-y-4">
-                    {[1, 2, 3].map((i) => (
-                      <div key={i} className="solid-card rounded-xl p-4 animate-pulse">
+            {/* Live Streams Grid */}
+            <TabsContent value="live" className="mt-6">
+              {isLoading ? (
+                <div className="grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
+                  {[1, 2, 3, 4, 5, 6].map((i) => (
+                    <Card key={i} className="overflow-hidden animate-pulse">
+                      <div className="aspect-video bg-muted"></div>
+                      <CardContent className="p-4">
                         <div className="h-4 bg-muted rounded w-3/4 mb-2"></div>
-                        <div className="h-3 bg-muted rounded w-1/2 mb-2"></div>
-                        <div className="h-3 bg-muted rounded w-2/3"></div>
-                      </div>
-                    ))}
+                        <div className="h-3 bg-muted rounded w-1/2"></div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              ) : activeStreams.length > 0 ? (
+                <div className="grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
+                  {activeStreams.map((stream) => (
+                    <LiveStreamCard
+                      key={stream.id}
+                      stream={stream}
+                      onJoin={handleJoinStream}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <div className="w-16 h-16 mx-auto mb-4 bg-muted rounded-full flex items-center justify-center">
+                    <Play className="w-8 h-8 text-muted-foreground" />
                   </div>
-                ) : filteredOrders.length > 0 ? (
-                  <div className="space-y-4">
-                    {filteredOrders.map((order) => (
-                      <OrderCard
-                        key={order.id}
-                        order={order}
-                        onAccept={handleAcceptOrder}
-                        onJoin={handleJoinStream}
-                        showActions={true}
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <div className="solid-card rounded-xl p-8 text-center">
-                    <p className="text-muted-foreground">
-                      <TranslatedText>No orders match your filters</TranslatedText>
-                    </p>
-                  </div>
-                )}
+                  <h3 className="text-lg font-medium text-foreground mb-2">
+                    <TranslatedText>No Live Streams</TranslatedText>
+                  </h3>
+                  <p className="text-muted-foreground mb-4">
+                    <TranslatedText>Be the first to start streaming in your area!</TranslatedText>
+                  </p>
+                  <Button onClick={() => setCreateModalOpen(true)}>
+                    <Plus className="w-4 h-4 mr-2" />
+                    <TranslatedText>Create First Stream</TranslatedText>
+                  </Button>
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="trending" className="mt-6">
+              <div className="grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
+                {/* Show trending streams */}
+                {filteredOrders.slice(0, 6).map((order) => (
+                  <LiveStreamCard
+                    key={order.id}
+                    stream={order}
+                    onJoin={handleJoinStream}
+                  />
+                ))}
               </div>
             </TabsContent>
 
-            <TabsContent value="my-orders" className="space-y-4">
-              <div className="solid-card rounded-xl p-8 text-center">
-                <p className="text-muted-foreground">
-                  <TranslatedText>You haven't created any orders yet</TranslatedText>
-                </p>
-                <Button 
-                  className="mt-4" 
-                  onClick={() => setCreateModalOpen(true)}
-                  data-testid="button-create-first-order"
-                >
-                  <TranslatedText>Create Your First Order</TranslatedText>
-                </Button>
+            <TabsContent value="nearby" className="mt-6">
+              <div className="grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
+                {/* Show nearby streams */}
+                {filteredOrders.filter(order => order.status === 'pending').slice(0, 6).map((order) => (
+                  <LiveStreamCard
+                    key={order.id}
+                    stream={order}
+                    onAccept={handleAcceptOrder}
+                    isPending={true}
+                  />
+                ))}
               </div>
             </TabsContent>
           </Tabs>
-        </div>
-      </aside>
+        </main>
+
+        {/* Sidebar - Create Stream & Quick Actions */}
+        <aside className="w-full lg:w-80 xl:w-96 border-l border-border bg-card/50 backdrop-blur">
+          <div className="p-4 lg:p-6 space-y-6">
+            {/* Quick Create */}
+            <div className="space-y-4">
+              <h3 className="font-semibold text-foreground flex items-center gap-2">
+                <Plus className="w-5 h-5" />
+                <TranslatedText>Start Streaming</TranslatedText>
+              </h3>
+              <Button 
+                size="lg"
+                className="w-full bg-gradient-to-r from-primary to-primary/80 text-primary-foreground hover:from-primary/90 hover:to-primary/70" 
+                onClick={() => setCreateModalOpen(true)}
+                data-testid="button-create-stream"
+              >
+                <Plus className="w-5 h-5 mr-2" />
+                <TranslatedText>Create Live Stream</TranslatedText>
+              </Button>
+              <p className="text-xs text-muted-foreground text-center">
+                <TranslatedText>Request live content from your location</TranslatedText>
+              </p>
+            </div>
+
+            {/* Demo Controls */}
+            <DemoControls />
+
+            {/* Quick Filters */}
+            <div className="space-y-4">
+              <h3 className="font-semibold text-foreground flex items-center gap-2">
+                <Filter className="w-5 h-5" />
+                <TranslatedText>Quick Filters</TranslatedText>
+              </h3>
+              
+              <div className="space-y-3">
+                <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                  <SelectTrigger data-testid="select-category-filter">
+                    <SelectValue placeholder="All Categories" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all"><TranslatedText>All Categories</TranslatedText></SelectItem>
+                    <SelectItem value="music"><TranslatedText>Music</TranslatedText></SelectItem>
+                    <SelectItem value="food"><TranslatedText>Food</TranslatedText></SelectItem>
+                    <SelectItem value="travel"><TranslatedText>Travel</TranslatedText></SelectItem>
+                    <SelectItem value="events"><TranslatedText>Events</TranslatedText></SelectItem>
+                    <SelectItem value="fitness"><TranslatedText>Fitness</TranslatedText></SelectItem>
+                    <SelectItem value="education"><TranslatedText>Education</TranslatedText></SelectItem>
+                  </SelectContent>
+                </Select>
+                
+                <Select value={priceFilter} onValueChange={setPriceFilter}>
+                  <SelectTrigger data-testid="select-price-filter">
+                    <SelectValue placeholder="Any Price" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all"><TranslatedText>Any Price</TranslatedText></SelectItem>
+                    <SelectItem value="10-25">$10-25</SelectItem>
+                    <SelectItem value="25-50">$25-50</SelectItem>
+                    <SelectItem value="50+">$50+</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Recent Requests */}
+            <div className="space-y-4">
+              <h3 className="font-semibold text-foreground flex items-center gap-2">
+                <Clock className="w-5 h-5" />
+                <TranslatedText>Recent Requests</TranslatedText>
+              </h3>
+              
+              {isLoading ? (
+                <div className="space-y-3">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="bg-muted rounded-lg p-3 animate-pulse">
+                      <div className="h-3 bg-muted-foreground/20 rounded w-3/4 mb-2"></div>
+                      <div className="h-2 bg-muted-foreground/20 rounded w-1/2"></div>
+                    </div>
+                  ))}
+                </div>
+              ) : filteredOrders.length > 0 ? (
+                <div className="space-y-3 max-h-96 overflow-y-auto">
+                  {filteredOrders.slice(0, 5).map((order) => (
+                    <Card key={order.id} className="p-3 hover:bg-accent/50 transition-colors cursor-pointer">
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <Badge variant="secondary" className="text-xs">
+                            {order.category || 'General'}
+                          </Badge>
+                          <span className="text-sm font-medium text-primary">
+                            ${order.price}
+                          </span>
+                        </div>
+                        <h4 className="font-medium text-sm line-clamp-1">
+                          {order.title}
+                        </h4>
+                        <p className="text-xs text-muted-foreground line-clamp-2">
+                          {order.address}
+                        </p>
+                        <Button size="sm" className="w-full" onClick={() => handleAcceptOrder(order.id)}>
+                          <TranslatedText>Accept Request</TranslatedText>
+                        </Button>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-6">
+                  <p className="text-sm text-muted-foreground mb-3">
+                    <TranslatedText>No active requests</TranslatedText>
+                  </p>
+                  <Button size="sm" variant="outline" onClick={() => setCreateModalOpen(true)}>
+                    <TranslatedText>Create First Request</TranslatedText>
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
+        </aside>
+      </div>
 
       {/* Create Order Modal */}
       <CreateOrderModal

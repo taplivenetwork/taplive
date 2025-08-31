@@ -1,17 +1,51 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { OrderCard } from "@/components/order-card";
+import { LiveStreamCard } from "@/components/live-stream-card";
 import { TranslatedText } from "@/components/translated-text";
 import { api } from "@/lib/api";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Search, Filter, Calendar, TrendingUp, Plus } from "lucide-react";
 import type { Order } from "@shared/schema";
 
 export default function Orders() {
+  const [searchFilter, setSearchFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [sortBy, setSortBy] = useState("recent");
+  
   const { data: ordersResponse, isLoading } = useQuery({
     queryKey: ['/api/orders'],
     queryFn: () => api.orders.getAll(),
   });
 
   const orders = ordersResponse?.data || [];
+  
+  // Filter and sort orders
+  const filteredOrders = orders.filter((order: Order) => {
+    const matchesSearch = !searchFilter || 
+      order.title.toLowerCase().includes(searchFilter.toLowerCase()) ||
+      order.description.toLowerCase().includes(searchFilter.toLowerCase());
+    const matchesStatus = statusFilter === "all" || order.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  }).sort((a: Order, b: Order) => {
+    switch (sortBy) {
+      case "price-high":
+        return parseFloat(b.price) - parseFloat(a.price);
+      case "price-low":
+        return parseFloat(a.price) - parseFloat(b.price);
+      case "recent":
+      default:
+        // Handle null createdAt values safely
+        const aDate = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const bDate = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return bDate - aDate;
+    }
+  });
 
   // Filter orders by status
   const pendingOrders = orders.filter((order: Order) => order.status === 'pending');
@@ -23,13 +57,16 @@ export default function Orders() {
   const renderOrderList = (orderList: Order[], emptyMessage: string) => {
     if (isLoading) {
       return (
-        <div className="space-y-4">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="solid-card rounded-xl p-4 animate-pulse">
-              <div className="h-4 bg-muted rounded w-3/4 mb-2"></div>
-              <div className="h-3 bg-muted rounded w-1/2 mb-2"></div>
-              <div className="h-3 bg-muted rounded w-2/3"></div>
-            </div>
+        <div className="grid gap-4 md:gap-6 grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <Card key={i} className="overflow-hidden animate-pulse">
+              <div className="aspect-video bg-muted"></div>
+              <CardContent className="p-4">
+                <div className="h-4 bg-muted rounded w-3/4 mb-2"></div>
+                <div className="h-3 bg-muted rounded w-1/2 mb-2"></div>
+                <div className="h-3 bg-muted rounded w-2/3"></div>
+              </CardContent>
+            </Card>
           ))}
         </div>
       );
@@ -37,84 +74,184 @@ export default function Orders() {
 
     if (orderList.length === 0) {
       return (
-        <div className="solid-card rounded-xl p-8 text-center">
-          <p className="text-muted-foreground">
+        <div className="text-center py-12">
+          <div className="w-16 h-16 mx-auto mb-4 bg-muted rounded-full flex items-center justify-center">
+            <Calendar className="w-8 h-8 text-muted-foreground" />
+          </div>
+          <h3 className="text-lg font-medium text-foreground mb-2">
             <TranslatedText>{emptyMessage}</TranslatedText>
+          </h3>
+          <p className="text-muted-foreground mb-4">
+            <TranslatedText>Create your first streaming order to get started</TranslatedText>
           </p>
+          <Button>
+            <Plus className="w-4 h-4 mr-2" />
+            <TranslatedText>Create Order</TranslatedText>
+          </Button>
         </div>
       );
     }
 
+    // Use LiveStreamCard for live orders, OrderCard for others
     return (
-      <div className="space-y-4">
-        {orderList.map((order) => (
-          <OrderCard
-            key={order.id}
-            order={order}
-            showActions={false}
-          />
-        ))}
+      <div className="grid gap-4 md:gap-6 grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
+        {orderList.map((order) => {
+          if (order.status === 'live' || order.status === 'accepted') {
+            return (
+              <LiveStreamCard
+                key={order.id}
+                stream={order}
+                onJoin={() => console.log('Join stream:', order.id)}
+              />
+            );
+          }
+          return (
+            <div key={order.id} className="col-span-1">
+              <OrderCard
+                order={order}
+                showActions={true}
+              />
+            </div>
+          );
+        })}
       </div>
     );
   };
 
   return (
-    <div className="flex-1 p-6">
-      <header className="mb-6">
-        <h2 className="text-2xl font-bold text-foreground">
-          <TranslatedText>My Orders</TranslatedText>
-        </h2>
-        <p className="text-muted-foreground">
-          <TranslatedText>Manage your streaming orders and track their progress</TranslatedText>
-        </p>
+    <div className="flex-1 flex flex-col">
+      {/* Enhanced Header with Stats */}
+      <header className="p-4 lg:p-6 border-b border-border bg-background/95 backdrop-blur">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <h2 className="text-2xl lg:text-3xl font-bold text-foreground mb-2">
+              <TranslatedText>My Orders Dashboard</TranslatedText>
+            </h2>
+            <p className="text-muted-foreground">
+              <TranslatedText>Manage your streaming orders and track their progress</TranslatedText>
+            </p>
+          </div>
+          
+          {/* Quick Stats */}
+          <div className="flex gap-4">
+            <Card className="p-3">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-primary">{orders.length}</div>
+                <div className="text-xs text-muted-foreground"><TranslatedText>Total</TranslatedText></div>
+              </div>
+            </Card>
+            <Card className="p-3">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-green-600">{liveOrders.length}</div>
+                <div className="text-xs text-muted-foreground"><TranslatedText>Live</TranslatedText></div>
+              </div>
+            </Card>
+            <Card className="p-3">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-orange-600">{pendingOrders.length}</div>
+                <div className="text-xs text-muted-foreground"><TranslatedText>Pending</TranslatedText></div>
+              </div>
+            </Card>
+          </div>
+        </div>
       </header>
 
-      <Tabs defaultValue="all" className="w-full">
-        <TabsList className="grid w-full grid-cols-6 bg-secondary mb-6">
-          <TabsTrigger value="all" data-testid="tab-all">
-            <TranslatedText>All</TranslatedText>
-          </TabsTrigger>
-          <TabsTrigger value="pending" data-testid="tab-pending">
-            <TranslatedText>Pending</TranslatedText>
-          </TabsTrigger>
-          <TabsTrigger value="open" data-testid="tab-open">
-            <TranslatedText>Open</TranslatedText>
-          </TabsTrigger>
-          <TabsTrigger value="accepted" data-testid="tab-accepted">
-            <TranslatedText>Accepted</TranslatedText>
-          </TabsTrigger>
-          <TabsTrigger value="live" data-testid="tab-live">
-            <TranslatedText>Live</TranslatedText>
-          </TabsTrigger>
-          <TabsTrigger value="completed" data-testid="tab-completed">
-            <TranslatedText>Completed</TranslatedText>
-          </TabsTrigger>
-        </TabsList>
+      {/* Filters and Search */}
+      <div className="p-4 lg:p-6 border-b border-border bg-card/50">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex-1 flex gap-3">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+              <Input
+                placeholder="Search orders..."
+                className="pl-10"
+                value={searchFilter}
+                onChange={(e) => setSearchFilter(e.target.value)}
+                data-testid="input-search-orders"
+              />
+            </div>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-40">
+                <Filter className="w-4 h-4 mr-2" />
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all"><TranslatedText>All Status</TranslatedText></SelectItem>
+                <SelectItem value="pending"><TranslatedText>Pending</TranslatedText></SelectItem>
+                <SelectItem value="live"><TranslatedText>Live</TranslatedText></SelectItem>
+                <SelectItem value="completed"><TranslatedText>Completed</TranslatedText></SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={sortBy} onValueChange={setSortBy}>
+              <SelectTrigger className="w-40">
+                <TrendingUp className="w-4 h-4 mr-2" />
+                <SelectValue placeholder="Sort" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="recent"><TranslatedText>Most Recent</TranslatedText></SelectItem>
+                <SelectItem value="price-high"><TranslatedText>Price: High to Low</TranslatedText></SelectItem>
+                <SelectItem value="price-low"><TranslatedText>Price: Low to High</TranslatedText></SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </div>
 
-        <TabsContent value="all">
-          {renderOrderList(orders, "You haven't created any orders yet")}
-        </TabsContent>
+      {/* Main Content */}
+      <div className="flex-1 p-4 lg:p-6">
+        <Tabs defaultValue="all" className="w-full">
+          <TabsList className="grid w-full grid-cols-6 bg-secondary mb-6">
+            <TabsTrigger value="all" data-testid="tab-all">
+              <TranslatedText>All</TranslatedText>
+              <Badge variant="secondary" className="ml-2">{orders.length}</Badge>
+            </TabsTrigger>
+            <TabsTrigger value="pending" data-testid="tab-pending">
+              <TranslatedText>Pending</TranslatedText>
+              <Badge variant="secondary" className="ml-2">{pendingOrders.length}</Badge>
+            </TabsTrigger>
+            <TabsTrigger value="open" data-testid="tab-open">
+              <TranslatedText>Open</TranslatedText>
+              <Badge variant="secondary" className="ml-2">{openOrders.length}</Badge>
+            </TabsTrigger>
+            <TabsTrigger value="accepted" data-testid="tab-accepted">
+              <TranslatedText>Accepted</TranslatedText>
+              <Badge variant="secondary" className="ml-2">{acceptedOrders.length}</Badge>
+            </TabsTrigger>
+            <TabsTrigger value="live" data-testid="tab-live">
+              <TranslatedText>Live</TranslatedText>
+              <Badge variant="secondary" className="ml-2">{liveOrders.length}</Badge>
+            </TabsTrigger>
+            <TabsTrigger value="completed" data-testid="tab-completed">
+              <TranslatedText>Completed</TranslatedText>
+              <Badge variant="secondary" className="ml-2">{completedOrders.length}</Badge>
+            </TabsTrigger>
+          </TabsList>
 
-        <TabsContent value="pending">
-          {renderOrderList(pendingOrders, "No pending orders")}
-        </TabsContent>
+          <TabsContent value="all">
+            {renderOrderList(filteredOrders, "You haven't created any orders yet")}
+          </TabsContent>
 
-        <TabsContent value="open">
-          {renderOrderList(openOrders, "No open orders")}
-        </TabsContent>
+          <TabsContent value="pending">
+            {renderOrderList(pendingOrders, "No pending orders")}
+          </TabsContent>
 
-        <TabsContent value="accepted">
-          {renderOrderList(acceptedOrders, "No accepted orders")}
-        </TabsContent>
+          <TabsContent value="open">
+            {renderOrderList(openOrders, "No open orders")}
+          </TabsContent>
 
-        <TabsContent value="live">
-          {renderOrderList(liveOrders, "No live streams")}
-        </TabsContent>
+          <TabsContent value="accepted">
+            {renderOrderList(acceptedOrders, "No accepted orders")}
+          </TabsContent>
 
-        <TabsContent value="completed">
-          {renderOrderList(completedOrders, "No completed orders")}
-        </TabsContent>
-      </Tabs>
+          <TabsContent value="live">
+            {renderOrderList(liveOrders, "No live streams")}
+          </TabsContent>
+
+          <TabsContent value="completed">
+            {renderOrderList(completedOrders, "No completed orders")}
+          </TabsContent>
+        </Tabs>
+      </div>
     </div>
   );
 }

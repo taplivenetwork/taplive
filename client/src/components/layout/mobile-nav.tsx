@@ -1,6 +1,7 @@
-import { MapPin, List, Video, User, Globe } from "lucide-react";
+import { MapPin, List, Video, User, Globe, Play, TrendingUp, Plus } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { LanguageSelector } from "@/components/language-selector";
 import { TranslatedText } from "@/components/translated-text";
 import { useTranslation } from "@/hooks/use-translation";
@@ -10,10 +11,10 @@ export function MobileNavigation() {
   const { currentLanguage, setCurrentLanguage } = useTranslation();
 
   const navigation = [
-    { name: "Discover", href: "/", icon: MapPin },
+    { name: "Live", href: "/", icon: Play },
     { name: "Orders", href: "/orders", icon: List },
     { name: "Streams", href: "/streams", icon: Video },
-    { name: "Profile", href: "/profile", icon: User },
+    { name: "Dashboard", href: "/dashboard", icon: TrendingUp },
   ];
 
   return (
@@ -27,31 +28,60 @@ export function MobileNavigation() {
         />
       </div>
       
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-card border-t border-border p-4 z-40" data-testid="mobile-nav">
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-sm border-t border-border p-2 z-40 shadow-lg" data-testid="mobile-nav">
         <div className="flex items-center justify-around">
-        {navigation.map((item) => {
-          const Icon = item.icon;
-          const isActive = location === item.href;
+          {navigation.map((item) => {
+            const Icon = item.icon;
+            const isActive = location === item.href;
+            
+            return (
+              <Link key={item.name} href={item.href}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className={`flex flex-col items-center gap-1 h-auto py-3 px-4 rounded-xl transition-all duration-200 ${
+                    isActive 
+                      ? "text-primary bg-primary/10 shadow-md" 
+                      : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
+                  }`}
+                  data-testid={`mobile-nav-${item.name.toLowerCase()}`}
+                >
+                  <div className="relative">
+                    <Icon className="w-6 h-6" />
+                    {/* Active indicator */}
+                    {isActive && (
+                      <div className="absolute -top-1 -right-1 w-2 h-2 bg-primary rounded-full animate-pulse" />
+                    )}
+                  </div>
+                  <span className={`text-xs font-medium ${
+                    isActive ? "text-primary" : "text-muted-foreground"
+                  }`}>
+                    <TranslatedText>{item.name}</TranslatedText>
+                  </span>
+                </Button>
+              </Link>
+            );
+          })}
           
-          return (
-            <Link key={item.name} href={item.href}>
+          {/* Floating Action Button for Creating Stream */}
+          <div className="relative">
+            <Link href="/?create=true">
               <Button
-                variant="ghost"
                 size="sm"
-                className={`flex flex-col items-center gap-1 h-auto py-2 px-3 ${
-                  isActive ? "text-primary" : "text-muted-foreground"
-                }`}
-                data-testid={`mobile-nav-${item.name.toLowerCase()}`}
+                className="w-14 h-14 rounded-full bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
+                data-testid="mobile-create-stream"
               >
-                <Icon className="w-5 h-5" />
-                <span className="text-xs">
-                  <TranslatedText>{item.name}</TranslatedText>
-                </span>
+                <Plus className="w-6 h-6" />
               </Button>
             </Link>
-          );
-        })}
+            <Badge className="absolute -top-1 -right-1 bg-red-500 text-white animate-pulse">
+              <TranslatedText>New</TranslatedText>
+            </Badge>
+          </div>
         </div>
+        
+        {/* Safe area padding for newer phones */}
+        <div className="h-safe-area-inset-bottom" />
       </nav>
     </>
   );
