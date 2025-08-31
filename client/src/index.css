@@ -92,20 +92,7 @@
     background-attachment: fixed;
   }
   
-  body::before {
-    content: '';
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: 
-      linear-gradient(90deg, transparent 0%, hsl(266, 85%, 58%, 0.02) 50%, transparent 100%),
-      linear-gradient(180deg, transparent 0%, hsl(187, 85%, 53%, 0.02) 50%, transparent 100%);
-    animation: tech-scan 8s ease-in-out infinite;
-    pointer-events: none;
-    z-index: -1;
-  }
+  /* 移除了一直向右滑动的竖线条效果 */
 }
 
 @keyframes fadeIn {
@@ -191,7 +178,7 @@
     background-position: 0 center;
   }
   100% {
-    background-position: -2000px center;
+    background-position: -3000px center;
   }
 }
 
@@ -374,13 +361,13 @@
   animation: neon-pulse 2s ease-in-out infinite alternate;
 }
 
-/* 动态世界地图背景 - 替换原网格效果 */
+/* 真实世界地图背景 - 替换原网格效果 */
 .circuit-bg {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 2000 400'%3E%3Cg fill='none' stroke='hsl(266, 85%, 58%)' stroke-width='1.2' opacity='0.4'%3E%3C!-- 北美洲轮廓 --%3E%3Cpath d='M200,120 C220,110 250,115 280,125 C310,135 340,130 370,140 C400,150 430,145 460,155 C490,165 520,160 550,170 C580,180 610,175 640,185 L620,200 L580,190 L540,195 L500,185 L460,190 L420,180 L380,185 L340,175 L300,180 L260,170 L220,175 L200,160 Z'/%3E%3C!-- 南美洲 --%3E%3Cpath d='M350,220 C380,210 400,215 420,225 C440,235 450,255 445,280 C440,305 435,330 420,350 C405,340 390,325 385,300 C380,275 375,250 350,240 Z'/%3E%3C!-- 欧洲 --%3E%3Cpath d='M700,100 C720,90 745,95 770,105 C795,115 820,110 845,120 L840,140 L815,145 L790,140 L765,145 L740,135 L715,140 L700,120 Z'/%3E%3C!-- 非洲 --%3E%3Cpath d='M750,160 C780,150 810,155 840,165 C870,175 885,200 890,225 C895,250 885,275 870,295 C855,315 825,320 795,310 C765,300 750,275 745,250 C740,225 745,200 750,180 Z'/%3E%3C!-- 亚洲 --%3E%3Cpath d='M950,80 C1000,70 1050,75 1100,85 C1150,95 1200,90 1250,100 C1300,110 1350,105 1400,115 L1390,135 L1340,140 L1290,135 L1240,140 L1190,130 L1140,135 L1090,125 L1040,130 L990,120 L950,100 Z'/%3E%3C!-- 澳洲 --%3E%3Cpath d='M1300,250 C1330,240 1360,245 1390,255 C1420,265 1440,280 1435,300 C1430,285 1405,275 1375,280 C1345,285 1315,275 1300,265 Z'/%3E%3C/g%3E%3Cg fill='none' stroke='hsl(187, 85%, 53%)' stroke-width='0.8' opacity='0.3'%3E%3C!-- 连接线网络效果 --%3E%3Cline x1='300' y1='150' x2='750' y2='120' stroke-dasharray='3,3'/%3E%3Cline x1='750' y1='180' x2='1100' y2='110' stroke-dasharray='3,3'/%3E%3Cline x1='400' y1='280' x2='800' y2='200' stroke-dasharray='3,3'/%3E%3Cline x1='1200' y1='130' x2='1350' y2='270' stroke-dasharray='3,3'/%3E%3C/g%3E%3C/svg%3E");
-  background-size: 2000px 400px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 3000 600'%3E%3Cdefs%3E%3CradialGradient id='orderGrad1'%3E%3Cstop offset='0%25' stop-color='hsl(187, 85%25, 53%25)' stop-opacity='0.8'/%3E%3Cstop offset='100%25' stop-color='hsl(187, 85%25, 53%25)' stop-opacity='0'/%3E%3C/radialGradient%3E%3CradialGradient id='orderGrad2'%3E%3Cstop offset='0%25' stop-color='hsl(266, 85%25, 58%25)' stop-opacity='0.8'/%3E%3Cstop offset='100%25' stop-color='hsl(266, 85%25, 58%25)' stop-opacity='0'/%3E%3C/radialGradient%3E%3C/defs%3E%3Cg fill='none' stroke='hsl(266, 85%25, 58%25)' stroke-width='1' opacity='0.4'%3E%3C!-- 北美洲真实轮廓 --%3E%3Cpath d='M200,150 L280,140 Q320,130 360,140 Q400,135 440,145 Q480,140 520,150 Q560,145 600,155 Q640,150 680,160 L720,170 Q750,165 780,175 L800,180 Q820,175 840,185 L860,190 Q880,195 900,205 L880,220 Q850,215 820,210 L790,205 Q760,200 730,195 L700,200 Q670,195 640,200 L610,195 Q580,200 550,195 L520,200 Q490,195 460,200 L430,195 Q400,200 370,195 L340,200 Q310,195 280,200 L250,195 Q220,190 200,180 Z'/%3E%3C!-- 南美洲 --%3E%3Cpath d='M480,300 Q510,290 540,300 Q570,295 590,305 Q600,325 595,350 Q590,375 580,400 Q570,425 560,450 Q550,440 540,420 Q530,400 525,380 Q520,360 515,340 Q510,320 480,310 Z'/%3E%3C!-- 欧洲 --%3E%3Cpath d='M1000,180 Q1020,170 1040,175 Q1060,170 1080,180 Q1100,175 1120,185 Q1140,180 1160,190 L1180,200 Q1200,195 1220,205 L1200,220 Q1180,215 1160,210 L1140,215 Q1120,210 1100,215 L1080,210 Q1060,215 1040,210 L1020,215 Q1000,210 980,200 Z'/%3E%3C!-- 非洲 --%3E%3Cpath d='M1080,260 Q1110,250 1140,260 Q1170,255 1200,265 Q1230,270 1250,290 Q1260,310 1265,330 Q1270,350 1275,370 Q1280,390 1275,410 Q1270,430 1260,450 Q1250,470 1230,485 Q1210,500 1190,490 Q1170,480 1150,470 Q1130,460 1115,440 Q1100,420 1095,400 Q1090,380 1095,360 Q1100,340 1105,320 Q1110,300 1120,280 Z'/%3E%3C!-- 亚洲 --%3E%3Cpath d='M1400,120 Q1450,110 1500,120 Q1550,115 1600,125 Q1650,120 1700,130 Q1750,125 1800,135 Q1850,130 1900,140 Q1950,135 2000,145 Q2050,140 2100,150 L2120,170 Q2100,175 2080,170 L2040,175 Q2000,170 1960,175 L1920,170 Q1880,175 1840,170 L1800,175 Q1760,170 1720,175 L1680,170 Q1640,175 1600,170 L1560,175 Q1520,170 1480,175 L1440,170 Q1410,165 1380,160 Z'/%3E%3C!-- 澳洲 --%3E%3Cpath d='M1900,420 Q1930,410 1960,420 Q1990,415 2020,425 Q2050,430 2070,450 Q2080,470 2070,490 Q2060,485 2040,480 L2010,485 Q1980,480 1950,485 L1920,480 Q1900,475 1890,455 Q1885,435 1900,430 Z'/%3E%3C/g%3E%3C!-- 订单闪烁点 --%3E%3Cg%3E%3Ccircle cx='350' cy='180' r='4' fill='url(%23orderGrad1)'%3E%3Canimate attributeName='opacity' values='0;1;0' dur='3s' repeatCount='indefinite'/%3E%3C/circle%3E%3Ccircle cx='1150' cy='200' r='4' fill='url(%23orderGrad2)'%3E%3Canimate attributeName='opacity' values='0;1;0' dur='4s' repeatCount='indefinite' begin='1s'/%3E%3C/circle%3E%3Ccircle cx='1650' cy='160' r='4' fill='url(%23orderGrad1)'%3E%3Canimate attributeName='opacity' values='0;1;0' dur='3.5s' repeatCount='indefinite' begin='2s'/%3E%3C/circle%3E%3Ccircle cx='560' cy='380' r='4' fill='url(%23orderGrad2)'%3E%3Canimate attributeName='opacity' values='0;1;0' dur='4.5s' repeatCount='indefinite' begin='0.5s'/%3E%3C/circle%3E%3Ccircle cx='2000' cy='450' r='4' fill='url(%23orderGrad1)'%3E%3Canimate attributeName='opacity' values='0;1;0' dur='3.8s' repeatCount='indefinite' begin='1.8s'/%3E%3C/circle%3E%3C/g%3E%3C!-- 弧线连接订单 --%3E%3Cg fill='none' stroke='hsl(187, 85%25, 53%25)' stroke-width='1.5' opacity='0.6'%3E%3Cpath d='M350,180 Q750,80 1150,200' stroke-dasharray='8,4'%3E%3Canimate attributeName='stroke-dashoffset' values='0;-100' dur='5s' repeatCount='indefinite'/%3E%3C/path%3E%3Cpath d='M1150,200 Q1400,120 1650,160' stroke-dasharray='6,3'%3E%3Canimate attributeName='stroke-dashoffset' values='0;-80' dur='4s' repeatCount='indefinite' begin='1s'/%3E%3C/path%3E%3Cpath d='M560,380 Q1300,250 2000,450' stroke-dasharray='10,5'%3E%3Canimate attributeName='stroke-dashoffset' values='0;-120' dur='6s' repeatCount='indefinite' begin='2s'/%3E%3C/path%3E%3C/g%3E%3C/svg%3E");
+  background-size: 3000px 600px;
   background-repeat: repeat-x;
   background-position: 0 center;
-  animation: world-map-flow 60s linear infinite;
+  animation: world-map-flow 120s linear infinite;
 }
 
 /* Holographic effect */

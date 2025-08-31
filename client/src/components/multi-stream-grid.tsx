@@ -285,15 +285,10 @@ export function MultiStreamGrid({ streams, onStreamClick }: MultiStreamGridProps
         {gridStreams.map((stream, index) => (
           <div
             key={stream.displayId}
-            className={`relative group cursor-pointer border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-black/20 backdrop-blur-sm z-20 ${
+            className={`relative group cursor-pointer border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden z-20 ${
               isUltraLowPerformance ? '' : 'transform transition-all duration-200 hover:scale-105 hover:z-30'
             }`}
             onClick={() => handleStreamClick(stream)}
-            style={{
-              boxShadow: stream.isRealStream 
-                ? '0 0 15px hsl(187, 85%, 53%, 0.3)' 
-                : '0 0 10px hsl(266, 85%, 58%, 0.2)'
-            }}
           >
             {/* 关闭按钮 - 只在真实直播上显示，且屏幕数量不超过64 */}
             {stream.isRealStream && currentConfig.count <= 64 && (

@@ -305,9 +305,9 @@ export default function Home() {
   }
 
   return (
-    <div className="flex-1 flex flex-col global-network">
+    <div className="flex-1 flex flex-col">
       {/* Header with Search and Quick Actions */}
-      <header className="p-4 lg:p-6 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 circuit-bg relative data-stream">
+      <header className="p-4 lg:p-6 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 circuit-bg relative">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex-1">
             <h1 className="text-2xl lg:text-3xl font-bold text-foreground mb-2 neon-text">
@@ -457,15 +457,14 @@ export default function Home() {
               ) : activeStreams.length > 0 ? (
                 /* 传统卡片模式 */
                 <div className="grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
-                  {activeStreams.map((stream, index) => (
-                    <div key={stream.id} className="order-pulse" style={{ animationDelay: `${index * 0.5}s` }}>
-                      <LiveStreamCard
-                        stream={stream}
-                        onJoin={handleJoinStream}
-                        onCancel={handleCancelOrder}
-                        isMyOrder={false}
-                      />
-                    </div>
+                  {activeStreams.map((stream) => (
+                    <LiveStreamCard
+                      key={stream.id}
+                      stream={stream}
+                      onJoin={handleJoinStream}
+                      onCancel={handleCancelOrder}
+                      isMyOrder={false}
+                    />
                   ))}
                 </div>
               ) : (
@@ -490,15 +489,14 @@ export default function Home() {
             <TabsContent value="trending" className="mt-6">
               <div className="grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
                 {/* Show trending streams */}
-                {filteredOrders.slice(0, 6).map((order, index) => (
-                  <div key={order.id} className="order-pulse" style={{ animationDelay: `${index * 0.3}s` }}>
-                    <LiveStreamCard
-                      stream={order}
-                      onJoin={handleJoinStream}
-                      onCancel={handleCancelOrder}
-                      isMyOrder={false}
-                    />
-                  </div>
+                {filteredOrders.slice(0, 6).map((order) => (
+                  <LiveStreamCard
+                    key={order.id}
+                    stream={order}
+                    onJoin={handleJoinStream}
+                    onCancel={handleCancelOrder}
+                    isMyOrder={false}
+                  />
                 ))}
               </div>
             </TabsContent>
@@ -509,16 +507,15 @@ export default function Home() {
                 
                 return availableOrders.length > 0 ? (
                   <div className="grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
-                    {availableOrders.slice(0, 6).map((order, index) => (
-                      <div key={order.id} className="order-pulse" style={{ animationDelay: `${index * 0.4}s` }}>
-                        <LiveStreamCard
-                          stream={order}
-                          onAccept={handleAcceptOrder}
-                          onCancel={handleCancelOrder}
-                          isPending={true}
-                          isMyOrder={true}
-                        />
-                      </div>
+                    {availableOrders.slice(0, 6).map((order) => (
+                      <LiveStreamCard
+                        key={order.id}
+                        stream={order}
+                        onAccept={handleAcceptOrder}
+                        onCancel={handleCancelOrder}
+                        isPending={true}
+                        isMyOrder={true}
+                      />
                     ))}
                   </div>
                 ) : (
@@ -544,7 +541,7 @@ export default function Home() {
         </main>
 
         {/* Sidebar - Create Stream & Quick Actions */}
-        <aside className="w-full lg:w-80 xl:w-96 border-l border-border bg-card/50 backdrop-blur holographic data-stream">
+        <aside className="w-full lg:w-80 xl:w-96 border-l border-border bg-card/50 backdrop-blur holographic">
           <div className="p-4 lg:p-6 space-y-6">
             {/* Quick Create */}
             <div className="space-y-4">
