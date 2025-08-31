@@ -350,6 +350,28 @@ export function StreamBroadcaster({ orderId, onStreamStart, onStreamEnd }: Strea
     }
   };
 
+  // Monitor video pause state without cleanup interference
+  useEffect(() => {
+    if (videoRef.current && stream) {
+      const video = videoRef.current;
+      
+      // Direct pause monitoring to avoid event cleanup issues
+      const checkVideoPause = () => {
+        if (video.paused && !video.ended && video.srcObject) {
+          console.log('🚨 FORCE UPDATE: Video is paused, setting needsUserInteraction = TRUE');
+          setNeedsUserInteraction(true);
+          setError(null);
+        }
+      };
+      
+      // Check immediately and then periodically
+      checkVideoPause();
+      const interval = setInterval(checkVideoPause, 1000);
+      
+      return () => clearInterval(interval);
+    }
+  }, [stream]);
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
@@ -520,6 +542,8 @@ export function StreamBroadcaster({ orderId, onStreamStart, onStreamEnd }: Strea
             <p>isStreaming: {isStreaming ? '✅ TRUE' : '❌ FALSE'}</p>
             <p>isConnected: {isConnected ? '✅ TRUE' : '❌ FALSE'}</p>
             <p>error: {error ? '❌ YES' : '✅ NO'}</p>
+            <p>videoPaused: {videoRef.current?.paused ? '⏸️ TRUE' : '▶️ FALSE'}</p>
+            <p>videoSrc: {videoRef.current?.srcObject ? '✅ YES' : '❌ NO'}</p>
           </div>
         </div>
       </CardContent>
