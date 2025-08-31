@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { StreamViewer } from '@/components/video/stream-viewer';
 import { StreamBroadcaster } from '@/components/video/stream-broadcaster';
+import { NativeWebRTCBroadcaster } from '@/components/video/native-webrtc-broadcaster';
 import { TranslatedText } from '@/components/translated-text';
 import { ArrowLeft, MapPin, Clock, DollarSign, XCircle } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
@@ -167,11 +168,34 @@ export default function LiveStreamPage() {
           <div className="lg:col-span-2">
             {userRole === 'broadcaster' ? (
               <div className="space-y-4">
-                <StreamBroadcaster
-                  orderId={orderId}
-                  onStreamStart={handleStreamStart}
-                  onStreamEnd={handleStreamEnd}
-                />
+                {/* Try Native WebRTC First - More Stable */}
+                <div className="space-y-4">
+                  <div className="text-sm text-blue-600 bg-blue-50 p-3 rounded border">
+                    <TranslatedText>✨ 使用原生WebRTC技术，更稳定的直播体验</TranslatedText>
+                  </div>
+                  <NativeWebRTCBroadcaster
+                    orderId={orderId}
+                    onStreamStart={handleStreamStart}
+                    onStreamEnd={handleStreamEnd}
+                  />
+                </div>
+                
+                {/* Fallback to Simple-Peer */}
+                <details className="mt-6">
+                  <summary className="text-sm text-gray-600 cursor-pointer hover:text-gray-800">
+                    <TranslatedText>🔧 备用直播技术 (点击展开)</TranslatedText>
+                  </summary>
+                  <div className="mt-4 p-4 bg-gray-50 border rounded">
+                    <div className="text-sm text-gray-600 mb-3">
+                      <TranslatedText>如果上方直播无法正常使用，可以尝试这个备用版本</TranslatedText>
+                    </div>
+                    <StreamBroadcaster
+                      orderId={orderId}
+                      onStreamStart={handleStreamStart}
+                      onStreamEnd={handleStreamEnd}
+                    />
+                  </div>
+                </details>
                 
                 {/* Provider cancel order button */}
                 {(order.status === 'accepted' || order.status === 'live') && (
