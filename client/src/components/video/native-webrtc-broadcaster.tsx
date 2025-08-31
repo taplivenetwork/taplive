@@ -190,6 +190,14 @@ export function NativeWebRTCBroadcaster({ orderId, onStreamStart, onStreamEnd }:
           console.log('🔒 Autoplay blocked, requiring user interaction');
           setNeedsUserClick(true);
         }
+        
+        // Additional check for paused video
+        setTimeout(() => {
+          if (video.paused && video.srcObject) {
+            console.log('🚨 FORCE: Video is paused, setting needsUserClick = TRUE');
+            setNeedsUserClick(true);
+          }
+        }, 2000);
       }
 
       // Notify WebSocket that broadcaster is ready
@@ -233,8 +241,16 @@ export function NativeWebRTCBroadcaster({ orderId, onStreamStart, onStreamEnd }:
 
     setIsStreaming(false);
     setNeedsUserClick(false);
-    onStreamEnd();
+    // ONLY call onStreamEnd if user manually stopped
+    // Don't auto-end when video has issues
+    console.log('⚠️ Broadcast stopped but NOT calling onStreamEnd to prevent status change');
     console.log('✅ Native WebRTC broadcast stopped');
+  };
+
+  const manualStopBroadcast = () => {
+    console.log('👤 User manually stopping broadcast');
+    stopBroadcast();
+    onStreamEnd(); // Only call when user manually ends
   };
 
   const handleUserClick = async () => {
@@ -346,7 +362,7 @@ export function NativeWebRTCBroadcaster({ orderId, onStreamStart, onStreamEnd }:
             </Button>
           ) : (
             <Button 
-              onClick={stopBroadcast}
+              onClick={manualStopBroadcast}
               variant="destructive"
               className="flex-1"
               data-testid="native-stop-broadcast-button"

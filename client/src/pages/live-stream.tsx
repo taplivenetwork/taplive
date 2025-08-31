@@ -61,6 +61,7 @@ export default function LiveStreamPage() {
   };
 
   const handleStreamEnd = () => {
+    console.log('🔚 Manually ending stream - setting status to done');
     updateOrderMutation.mutate('done');
   };
 
