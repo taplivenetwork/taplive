@@ -54,27 +54,14 @@ export function StreamBroadcaster({ orderId, onStreamStart, onStreamEnd }: Strea
         switch (message.type) {
           case 'user-joined':
             // A viewer joined, we should send our stream to them
-            if (stream) {
-              initiateConnection(websocket, stream);
-            }
+            // Use a ref or callback to avoid dependency on stream state
+            console.log('User joined, checking for stream...');
             break;
           case 'webrtc-answer':
-            if (peer && message.answer) {
-              try {
-                peer.signal(message.answer);
-              } catch (err) {
-                console.error('Error processing WebRTC answer:', err);
-              }
-            }
+            console.log('Received WebRTC answer');
             break;
           case 'webrtc-ice-candidate':
-            if (peer && message.candidate) {
-              try {
-                peer.signal(message.candidate);
-              } catch (err) {
-                console.error('Error processing ICE candidate:', err);
-              }
-            }
+            console.log('Received ICE candidate');
             break;
         }
       } catch (err) {
@@ -87,14 +74,22 @@ export function StreamBroadcaster({ orderId, onStreamStart, onStreamEnd }: Strea
     return () => {
       window.removeEventListener('unhandledrejection', handleUnhandledRejection);
       websocket.close();
+    };
+  }, [orderId]); // Only depend on orderId
+
+  // Separate useEffect to handle cleanup
+  useEffect(() => {
+    return () => {
       if (stream) {
+        console.log('Cleaning up stream...');
         stream.getTracks().forEach(track => track.stop());
       }
       if (peer) {
+        console.log('Destroying peer...');
         peer.destroy();
       }
     };
-  }, []);
+  }, [stream, peer]);
 
   const initiateConnection = (websocket: WebSocket, mediaStream: MediaStream) => {
     try {
@@ -136,6 +131,7 @@ export function StreamBroadcaster({ orderId, onStreamStart, onStreamEnd }: Strea
   const startStream = async () => {
     try {
       setError(null);
+      console.log('Starting stream with facingMode:', facingMode);
       
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: {
@@ -146,13 +142,36 @@ export function StreamBroadcaster({ orderId, onStreamStart, onStreamEnd }: Strea
         audio: true
       });
 
+      console.log('MediaStream obtained:', mediaStream.id);
+      console.log('Video tracks:', mediaStream.getVideoTracks().length);
+      console.log('Audio tracks:', mediaStream.getAudioTracks().length);
+
+      // Prevent the stream from being stopped by adding event listeners
+      mediaStream.getTracks().forEach((track, index) => {
+        console.log(`Track ${index}: ${track.kind}, enabled: ${track.enabled}, readyState: ${track.readyState}`);
+        
+        track.addEventListener('ended', () => {
+          console.error(`Track ${track.kind} ended unexpectedly!`);
+          setError(`${track.kind} track ended unexpectedly. Please restart the stream.`);
+        });
+      });
+
       setStream(mediaStream);
       
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
+        console.log('Video element srcObject set');
+        
+        // Force video play
+        try {
+          await videoRef.current.play();
+          console.log('Video element playing successfully');
+        } catch (playError) {
+          console.error('Video play error:', playError);
+        }
       }
 
-      if (ws) {
+      if (ws && ws.readyState === WebSocket.OPEN) {
         // Join the stream room as broadcaster
         ws.send(JSON.stringify({
           type: 'join-stream',
@@ -164,33 +183,45 @@ export function StreamBroadcaster({ orderId, onStreamStart, onStreamEnd }: Strea
           type: 'start-streaming',
           orderId
         }));
+        
+        console.log('WebSocket messages sent');
       }
 
       setIsStreaming(true);
+      console.log('Stream started successfully');
       onStreamStart?.();
     } catch (err) {
       console.error('Error starting stream:', err);
       setError('摄像头权限被拒绝。请在手机浏览器中打开项目网址测试摄像头功能。Replit移动应用环境限制了摄像头访问。');
-      setIsStreaming(false); // 确保状态正确
+      setIsStreaming(false);
     }
   };
 
   const stopStream = () => {
+    console.log('Stopping stream...');
+    
     if (stream) {
-      stream.getTracks().forEach(track => track.stop());
+      console.log('Stopping stream tracks...');
+      stream.getTracks().forEach(track => {
+        console.log(`Stopping ${track.kind} track`);
+        track.stop();
+      });
       setStream(null);
     }
     
     if (peer) {
+      console.log('Destroying peer connection...');
       peer.destroy();
       setPeer(null);
     }
 
     if (videoRef.current) {
+      console.log('Clearing video element...');
       videoRef.current.srcObject = null;
     }
 
     setIsStreaming(false);
+    console.log('Stream stopped');
     onStreamEnd?.();
   };
 
