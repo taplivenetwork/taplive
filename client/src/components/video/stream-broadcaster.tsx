@@ -130,7 +130,8 @@ export function StreamBroadcaster({ orderId, onStreamStart, onStreamEnd }: Strea
       onStreamStart?.();
     } catch (err) {
       console.error('Error starting stream:', err);
-      setError('Camera access denied or not available');
+      setError('摄像头权限被拒绝。请在手机浏览器中打开项目网址测试摄像头功能。Replit移动应用环境限制了摄像头访问。');
+      setIsStreaming(false); // 确保状态正确
     }
   };
 
