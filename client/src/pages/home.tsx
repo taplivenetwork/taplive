@@ -279,7 +279,7 @@ export default function Home() {
                   className={viewMode === 'grid' ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700' : ''}
                   data-testid="button-grid-view"
                 >
-                  🚀 震撼网格
+                  📺 多屏网格
                 </Button>
               </div>
             </div>

@@ -90,8 +90,8 @@ export function MultiStreamGrid({ streams, onStreamClick }: MultiStreamGridProps
           <div className="flex items-center gap-3">
             <Grid className="w-6 h-6" />
             <div>
-              <h3 className="text-lg font-bold">震撼多屏直播墙</h3>
-              <p className="text-sm text-blue-100">选择网格布局，体验极致视觉冲击</p>
+              <h3 className="text-lg font-bold">多屏直播墙</h3>
+              <p className="text-sm text-blue-100">选择网格布局，同时观看多个直播</p>
             </div>
           </div>
           
@@ -207,7 +207,7 @@ export function MultiStreamGrid({ streams, onStreamClick }: MultiStreamGridProps
       {/* 底部提示 */}
       <div className="text-center text-sm text-gray-600 dark:text-gray-400">
         <p>
-          🚀 为ETH全球黑客松打造的震撼多屏体验 • 
+          📺 多屏同时观看体验 • 
           真实直播: {liveStreams.length} • 
           演示画面: {currentConfig.count - liveStreams.length}
         </p>
