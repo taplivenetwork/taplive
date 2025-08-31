@@ -3,7 +3,7 @@ import { LiveThumbnail } from '@/components/live-thumbnail';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { TranslatedText } from '@/components/translated-text';
-import { Play, Grid, Maximize2, Users } from 'lucide-react';
+import { Play, Grid, Maximize2, Users, X } from 'lucide-react';
 import type { Order } from '@shared/schema';
 
 interface MultiStreamGridProps {
@@ -25,11 +25,15 @@ const GRID_CONFIGS = [
 export function MultiStreamGrid({ streams, onStreamClick }: MultiStreamGridProps) {
   const [selectedGrid, setSelectedGrid] = useState(4); // 默认4分屏
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [closedStreams, setClosedStreams] = useState<Set<string>>(new Set()); // 跟踪关闭的视频
 
   const currentConfig = GRID_CONFIGS.find(config => config.count === selectedGrid) || GRID_CONFIGS[1];
   
-  // 获取当前直播流
-  const liveStreams = streams.filter(stream => stream.status === 'live');
+  // 获取当前直播流（排除已关闭的流）
+  const availableStreams = streams.filter(stream => 
+    stream.status === 'live' && !closedStreams.has(stream.id)
+  );
+  const liveStreams = availableStreams;
   
   // 性能保护机制
   const isLowPerformance = currentConfig.count >= 64; // 64分屏以上进入低性能模式
@@ -85,6 +89,19 @@ export function MultiStreamGrid({ streams, onStreamClick }: MultiStreamGridProps
       await document.exitFullscreen();
       setIsFullscreen(false);
     }
+  };
+
+  // 关闭视频流
+  const handleCloseStream = (streamId: string, event: React.MouseEvent) => {
+    event.stopPropagation(); // 防止触发视频点击事件
+    console.log(`关闭视频流: ${streamId}`);
+    setClosedStreams(prev => new Set([...Array.from(prev), streamId]));
+  };
+
+  // 重置关闭的流
+  const handleResetClosedStreams = () => {
+    console.log('重置所有关闭的视频流');
+    setClosedStreams(new Set());
   };
 
   return (
@@ -148,6 +165,19 @@ export function MultiStreamGrid({ streams, onStreamClick }: MultiStreamGridProps
             <div className="flex items-center gap-1">
               <span>WebSocket连接: {Math.min(enableWebSocketLimit, liveStreams.length)}</span>
             </div>
+            {closedStreams.size > 0 && (
+              <div className="flex items-center gap-1">
+                <span>已关闭: {closedStreams.size}</span>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleResetClosedStreams}
+                  className="ml-2 h-6 px-2 text-xs border-white/20 text-white hover:bg-white/10"
+                >
+                  恢复全部
+                </Button>
+              </div>
+            )}
           </div>
           
           {/* 性能提示 */}
@@ -176,6 +206,19 @@ export function MultiStreamGrid({ streams, onStreamClick }: MultiStreamGridProps
             }`}
             onClick={() => handleStreamClick(stream)}
           >
+            {/* 关闭按钮 - 只在真实直播上显示，且屏幕数量不超过64 */}
+            {liveStreams.find(s => s.id === stream.id) && currentConfig.count <= 64 && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="absolute top-1 right-1 w-6 h-6 p-0 bg-red-500 hover:bg-red-600 border-0 text-white z-20 opacity-0 group-hover:opacity-100 transition-opacity"
+                onClick={(e) => handleCloseStream(stream.id, e)}
+                title="关闭此视频"
+              >
+                <X className="w-3 h-3" />
+              </Button>
+            )}
+
             {/* 实时画面或演示画面 */}
             {liveStreams.find(s => s.id === stream.id) ? (
               <LiveThumbnail 
@@ -241,9 +284,10 @@ export function MultiStreamGrid({ streams, onStreamClick }: MultiStreamGridProps
           📺 多屏同时观看体验 • 
           真实直播: {liveStreams.length} • 
           演示画面: {currentConfig.count - liveStreams.length}
+          {closedStreams.size > 0 && ` • 已关闭: ${closedStreams.size}`}
         </p>
         <p className="text-xs mt-1">
-          💡 点击任意画面进入观看模式 • 支持最大{GRID_CONFIGS[GRID_CONFIGS.length - 1].count}分屏显示
+          💡 点击任意画面进入观看模式 • 悬停显示"×"按钮可关闭视频 • 支持最大{GRID_CONFIGS[GRID_CONFIGS.length - 1].count}分屏显示
         </p>
       </div>
     </div>
