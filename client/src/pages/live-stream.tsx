@@ -45,10 +45,13 @@ export default function LiveStreamPage() {
 
   useEffect(() => {
     // Determine user role (simplified - in real app would check authentication)
-    // For demo, if order status is 'accepted', show broadcaster controls
-    if (order?.status === 'accepted') {
+    // For demo, if order status is 'accepted' OR 'live', show broadcaster controls
+    // Also allow broadcaster controls for 'pending' and 'open' status for testing
+    if (order && ['pending', 'open', 'accepted', 'live'].includes(order.status)) {
+      console.log('🎬 Setting user role to broadcaster for status:', order.status);
       setUserRole('broadcaster');
     } else {
+      console.log('👥 Setting user role to viewer for status:', order?.status);
       setUserRole('viewer');
     }
   }, [order]);
@@ -78,7 +81,19 @@ export default function LiveStreamPage() {
   };
 
   const handleGoBack = () => {
-    window.history.back();
+    console.log('🔙 Navigating back...');
+    // Try multiple navigation methods
+    try {
+      if (window.history.length > 1) {
+        window.history.back();
+      } else {
+        // Fallback to home page
+        window.location.href = '/';
+      }
+    } catch (error) {
+      console.error('Navigation error:', error);
+      window.location.href = '/';
+    }
   };
 
   if (isLoading) {
@@ -161,6 +176,16 @@ export default function LiveStreamPage() {
               </TranslatedText>
             </Badge>
           </div>
+        </div>
+
+        {/* User Role Debug */}
+        <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded">
+          <p className="text-sm">
+            <strong>调试信息：</strong>
+            用户角色: <span className="font-mono">{userRole}</span> | 
+            订单状态: <span className="font-mono">{order?.status}</span> | 
+            订单ID: <span className="font-mono">{orderId.slice(0, 8)}...</span>
+          </p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

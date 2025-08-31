@@ -380,6 +380,8 @@ export function NativeWebRTCBroadcaster({ orderId, onStreamStart, onStreamEnd }:
             <p>isConnected: {isConnected ? '✅ TRUE' : '❌ FALSE'}</p>
             <p>videoPaused: {videoRef.current?.paused ? '⏸️ TRUE' : '▶️ FALSE'}</p>
             <p>streamTracks: {stream?.getTracks().length || 0}</p>
+            <p>hasVideo: {videoRef.current ? '✅ YES' : '❌ NO'}</p>
+            <p>videoSrc: {videoRef.current?.srcObject ? '✅ YES' : '❌ NO'}</p>
           </div>
         </div>
       </CardContent>
