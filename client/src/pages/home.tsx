@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Plus, Search, Filter, Play, Users, MapPin, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -13,6 +13,7 @@ import { CreateOrderModal } from "@/components/create-order-modal";
 import { DemoControls } from "@/components/demo-controls";
 import { TranslatedText } from "@/components/translated-text";
 import { api } from "@/lib/api";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "@/hooks/use-translation";
 import type { Order } from "@shared/schema";
@@ -66,6 +67,32 @@ export default function Home() {
 
   const orders = ordersResponse?.data || [];
 
+  // Mutation for cancelling orders
+  const cancelOrderMutation = useMutation({
+    mutationFn: async (orderId: string) => {
+      const response = await apiRequest('DELETE', `/api/orders/${orderId}`);
+      if (!response.ok) {
+        throw new Error('Failed to cancel order');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/orders'] });
+      toast({
+        title: "Order Cancelled",
+        description: "Your order has been cancelled successfully.",
+        variant: "default",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Cancellation Failed",
+        description: error.message || "Failed to cancel order. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Filter orders
   const filteredOrders = orders.filter((order: Order) => {
     const matchesSearch = !searchFilter || 
@@ -117,6 +144,12 @@ export default function Home() {
       description: "Opening live stream...",
     });
     // TODO: Implement stream joining logic
+  };
+
+  const handleCancelOrder = async (orderId: string) => {
+    if (window.confirm("Are you sure you want to cancel this order?")) {
+      cancelOrderMutation.mutate(orderId);
+    }
   };
 
   if (error) {
@@ -219,6 +252,8 @@ export default function Home() {
                       key={stream.id}
                       stream={stream}
                       onJoin={handleJoinStream}
+                      onCancel={handleCancelOrder}
+                      isMyOrder={false}
                     />
                   ))}
                 </div>
@@ -249,6 +284,8 @@ export default function Home() {
                     key={order.id}
                     stream={order}
                     onJoin={handleJoinStream}
+                    onCancel={handleCancelOrder}
+                    isMyOrder={false}
                   />
                 ))}
               </div>
@@ -265,7 +302,9 @@ export default function Home() {
                         key={order.id}
                         stream={order}
                         onAccept={handleAcceptOrder}
+                        onCancel={handleCancelOrder}
                         isPending={true}
+                        isMyOrder={true}
                       />
                     ))}
                   </div>

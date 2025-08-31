@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { VideoIcon, VideoOff, Mic, MicOff, Phone, PhoneOff } from 'lucide-react';
+import { VideoIcon, VideoOff, Mic, MicOff, Phone, PhoneOff, RotateCcw } from 'lucide-react';
 
 // Handle global for simple-peer
 if (typeof global === 'undefined') {
@@ -26,6 +26,7 @@ export function StreamBroadcaster({ orderId, onStreamStart, onStreamEnd }: Strea
   const [isVideoEnabled, setIsVideoEnabled] = useState(true);
   const [isAudioEnabled, setIsAudioEnabled] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment'); // Start with rear camera
 
   useEffect(() => {
     // WebSocket connection
@@ -102,7 +103,11 @@ export function StreamBroadcaster({ orderId, onStreamStart, onStreamEnd }: Strea
       setError(null);
       
       const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: true,
+        video: {
+          facingMode: facingMode,
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        },
         audio: true
       });
 
@@ -170,6 +175,58 @@ export function StreamBroadcaster({ orderId, onStreamStart, onStreamEnd }: Strea
       if (audioTrack) {
         audioTrack.enabled = !audioTrack.enabled;
         setIsAudioEnabled(audioTrack.enabled);
+      }
+    }
+  };
+
+  const switchCamera = async () => {
+    if (stream && isStreaming) {
+      try {
+        // Stop current tracks
+        stream.getTracks().forEach(track => track.stop());
+        
+        // Switch facing mode
+        const newFacingMode = facingMode === 'user' ? 'environment' : 'user';
+        setFacingMode(newFacingMode);
+        
+        // Get new stream with different camera
+        const newStream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: newFacingMode,
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          },
+          audio: true
+        });
+
+        setStream(newStream);
+        
+        if (videoRef.current) {
+          videoRef.current.srcObject = newStream;
+        }
+
+        // Update peer with new stream if connected
+        if (peer) {
+          const videoTrack = newStream.getVideoTracks()[0];
+          const audioTrack = newStream.getAudioTracks()[0];
+          
+          if (videoTrack) {
+            const sender = peer._pc?.getSenders().find(s => s.track?.kind === 'video');
+            if (sender) {
+              await sender.replaceTrack(videoTrack);
+            }
+          }
+          
+          if (audioTrack) {
+            const sender = peer._pc?.getSenders().find(s => s.track?.kind === 'audio');
+            if (sender) {
+              await sender.replaceTrack(audioTrack);
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Error switching camera:', err);
+        setError('Failed to switch camera. Make sure you have multiple cameras available.');
       }
     }
   };
@@ -244,6 +301,16 @@ export function StreamBroadcaster({ orderId, onStreamStart, onStreamEnd }: Strea
                 className={!isAudioEnabled ? 'bg-red-100 text-red-600' : ''}
               >
                 {isAudioEnabled ? <Mic className="w-4 h-4" /> : <MicOff className="w-4 h-4" />}
+              </Button>
+              
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={switchCamera}
+                title={`Switch to ${facingMode === 'user' ? 'rear' : 'front'} camera`}
+                data-testid="button-switch-camera"
+              >
+                <RotateCcw className="w-4 h-4" />
               </Button>
               
               <Button 

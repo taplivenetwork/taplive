@@ -4,10 +4,15 @@ import { type User, type InsertUser, type Order, type InsertOrder, type Rating, 
          type GeoRiskZone, type InsertGeoRiskZone, type WeatherAlert, type InsertWeatherAlert,
          type ContentViolation, type InsertContentViolation, type OrderGroup, type InsertOrderGroup,
          type GroupParticipant, type InsertGroupParticipant, type Geofence, type InsertGeofence,
-         type TimezoneRule, type InsertTimezoneRule, type LocationTimezone, type InsertLocationTimezone } from "@shared/schema";
+         type TimezoneRule, type InsertTimezoneRule, type LocationTimezone, type InsertLocationTimezone,
+         users, orders, ratings, payments, payouts, transactions, disputes, orderApprovals,
+         geoRiskZones, weatherAlerts, contentViolations, orderGroups, groupParticipants,
+         geofences, timezoneRules, locationTimezones } from "@shared/schema";
 import { type ProviderRanking, rankProvidersForOrder, updateUserDispatchScore } from "@shared/dispatch";
 import { calculateCommission } from "@shared/payment";
 import { randomUUID } from "crypto";
+import { db } from "./db";
+import { eq, and, isNotNull } from "drizzle-orm";
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
@@ -1150,4 +1155,227 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+// Database Storage Implementation
+export class DatabaseStorage implements IStorage {
+  // User operations
+  async getUser(id: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user || undefined;
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user || undefined;
+  }
+
+  async createUser(insertUser: InsertUser): Promise<User> {
+    const [user] = await db.insert(users).values(insertUser).returning();
+    return user;
+  }
+
+  async updateUser(id: string, updates: Partial<User>): Promise<User | undefined> {
+    const [user] = await db.update(users).set({ ...updates, updatedAt: new Date() }).where(eq(users.id, id)).returning();
+    return user || undefined;
+  }
+
+  // Order operations
+  async getAllOrders(): Promise<Order[]> {
+    return await db.select().from(orders);
+  }
+
+  async getOrderById(id: string): Promise<Order | undefined> {
+    const [order] = await db.select().from(orders).where(eq(orders.id, id));
+    return order || undefined;
+  }
+
+  async createOrder(order: InsertOrder): Promise<Order> {
+    const [newOrder] = await db.insert(orders).values(order).returning();
+    return newOrder;
+  }
+
+  async updateOrder(id: string, updates: Partial<Order>): Promise<Order | undefined> {
+    const [order] = await db.update(orders).set({ ...updates, updatedAt: new Date() }).where(eq(orders.id, id)).returning();
+    return order || undefined;
+  }
+
+  async deleteOrder(id: string): Promise<boolean> {
+    const result = await db.delete(orders).where(eq(orders.id, id));
+    return result.count > 0;
+  }
+
+  async getOrdersByStatus(status: string): Promise<Order[]> {
+    return await db.select().from(orders).where(eq(orders.status, status as any));
+  }
+
+  async getOrdersByLocation(lat: number, lng: number, radiusKm: number): Promise<Order[]> {
+    // Simple implementation - in production would use PostGIS for accurate geo queries
+    return await db.select().from(orders);
+  }
+
+  // Rating operations
+  async createRating(rating: InsertRating): Promise<Rating> {
+    const [newRating] = await db.insert(ratings).values(rating).returning();
+    return newRating;
+  }
+
+  async getRatingsByUser(userId: string): Promise<Rating[]> {
+    return await db.select().from(ratings).where(eq(ratings.revieweeId, userId));
+  }
+
+  async getRatingsByOrder(orderId: string): Promise<Rating[]> {
+    return await db.select().from(ratings).where(eq(ratings.orderId, orderId));
+  }
+
+  async getUserRatings(userId: string): Promise<Rating[]> {
+    return await db.select().from(ratings).where(eq(ratings.revieweeId, userId));
+  }
+
+  async calculateUserStats(userId: string): Promise<void> {
+    // Implementation for calculating user statistics
+  }
+
+  // Dispatch operations
+  async getAvailableProviders(): Promise<User[]> {
+    return await db.select().from(users).where(eq(users.availability, true));
+  }
+
+  async getRankedProvidersForOrder(orderId: string): Promise<ProviderRanking[]> {
+    // Implementation for provider ranking
+    return [];
+  }
+
+  async updateUserLocation(userId: string, latitude: number, longitude: number): Promise<User | undefined> {
+    const [user] = await db.update(users).set({
+      currentLatitude: latitude.toString(),
+      currentLongitude: longitude.toString(),
+      lastActive: new Date()
+    }).where(eq(users.id, userId)).returning();
+    return user || undefined;
+  }
+
+  async updateUserNetworkMetrics(userId: string, networkSpeed: number, devicePerformance: number): Promise<User | undefined> {
+    const [user] = await db.update(users).set({
+      networkSpeed: networkSpeed.toString(),
+      devicePerformance: devicePerformance.toString(),
+      lastActive: new Date()
+    }).where(eq(users.id, userId)).returning();
+    return user || undefined;
+  }
+
+  async calculateUserDispatchScore(userId: string): Promise<void> {
+    // Implementation for dispatch score calculation
+  }
+
+  // Payment operations
+  async createPayment(payment: InsertPayment): Promise<Payment> {
+    const [newPayment] = await db.insert(payments).values(payment).returning();
+    return newPayment;
+  }
+
+  async getPaymentById(id: string): Promise<Payment | undefined> {
+    const [payment] = await db.select().from(payments).where(eq(payments.id, id));
+    return payment || undefined;
+  }
+
+  async updatePayment(id: string, updates: Partial<Payment>): Promise<Payment | undefined> {
+    const [payment] = await db.update(payments).set({ ...updates, updatedAt: new Date() }).where(eq(payments.id, id)).returning();
+    return payment || undefined;
+  }
+
+  async getPaymentsByOrder(orderId: string): Promise<Payment[]> {
+    return await db.select().from(payments).where(eq(payments.orderId, orderId));
+  }
+
+  async getPaymentsByUser(userId: string): Promise<Payment[]> {
+    return await db.select().from(payments).where(eq(payments.payerId, userId));
+  }
+
+  // Simplified implementations for all other methods
+  async createPayout(payout: InsertPayout): Promise<Payout> {
+    const [newPayout] = await db.insert(payouts).values(payout).returning();
+    return newPayout;
+  }
+
+  async getPayoutById(id: string): Promise<Payout | undefined> {
+    const [payout] = await db.select().from(payouts).where(eq(payouts.id, id));
+    return payout || undefined;
+  }
+
+  async updatePayout(id: string, updates: Partial<Payout>): Promise<Payout | undefined> {
+    const [payout] = await db.update(payouts).set({ ...updates, updatedAt: new Date() }).where(eq(payouts.id, id)).returning();
+    return payout || undefined;
+  }
+
+  async getPayoutsByOrder(orderId: string): Promise<Payout[]> {
+    return await db.select().from(payouts).where(eq(payouts.orderId, orderId));
+  }
+
+  async getPayoutsByUser(userId: string): Promise<Payout[]> {
+    return await db.select().from(payouts).where(eq(payouts.recipientId, userId));
+  }
+
+  async createTransaction(transaction: InsertTransaction): Promise<Transaction> {
+    const [newTransaction] = await db.insert(transactions).values(transaction).returning();
+    return newTransaction;
+  }
+
+  async getTransactionsByUser(userId: string): Promise<Transaction[]> {
+    return await db.select().from(transactions).where(eq(transactions.userId, userId));
+  }
+
+  async getTransactionsByOrder(orderId: string): Promise<Transaction[]> {
+    return await db.select().from(transactions).where(eq(transactions.orderId, orderId));
+  }
+
+  async processOrderPayment(orderId: string, paymentId: string): Promise<void> {
+    // Implementation for order payment processing
+  }
+
+  async calculateAndCreatePayout(orderId: string, paymentId: string): Promise<Payout | undefined> {
+    // Implementation for payout calculation
+    return undefined;
+  }
+
+  // Stub implementations for other methods
+  async createDispute(dispute: InsertDispute): Promise<Dispute> { throw new Error("Not implemented"); }
+  async getDisputeById(id: string): Promise<Dispute | undefined> { return undefined; }
+  async updateDispute(id: string, updates: Partial<Dispute>): Promise<Dispute | undefined> { return undefined; }
+  async getDisputesByOrder(orderId: string): Promise<Dispute[]> { return []; }
+  async getDisputesByStatus(status: string): Promise<Dispute[]> { return []; }
+  async createOrderApproval(approval: InsertOrderApproval): Promise<OrderApproval> { throw new Error("Not implemented"); }
+  async getOrderApprovalById(id: string): Promise<OrderApproval | undefined> { return undefined; }
+  async updateOrderApproval(id: string, updates: Partial<OrderApproval>): Promise<OrderApproval | undefined> { return undefined; }
+  async getOrderApprovalByOrder(orderId: string): Promise<OrderApproval | undefined> { return undefined; }
+  async createGeoRiskZone(zone: InsertGeoRiskZone): Promise<GeoRiskZone> { throw new Error("Not implemented"); }
+  async getGeoRiskZones(): Promise<GeoRiskZone[]> { return []; }
+  async checkLocationRisk(latitude: number, longitude: number): Promise<{ riskLevel: string; restrictions: string[] }> { return { riskLevel: "safe", restrictions: [] }; }
+  async createWeatherAlert(alert: InsertWeatherAlert): Promise<WeatherAlert> { throw new Error("Not implemented"); }
+  async getWeatherAlerts(latitude: number, longitude: number, radius: number): Promise<WeatherAlert[]> { return []; }
+  async getActiveWeatherAlerts(): Promise<WeatherAlert[]> { return []; }
+  async createContentViolation(violation: InsertContentViolation): Promise<ContentViolation> { throw new Error("Not implemented"); }
+  async getContentViolationsByOrder(orderId: string): Promise<ContentViolation[]> { return []; }
+  async getContentViolationsByUser(userId: string): Promise<ContentViolation[]> { return []; }
+  async createOrderGroup(group: InsertOrderGroup): Promise<OrderGroup> { throw new Error("Not implemented"); }
+  async getOrderGroupById(id: string): Promise<OrderGroup | undefined> { return undefined; }
+  async updateOrderGroup(id: string, updates: Partial<OrderGroup>): Promise<OrderGroup | undefined> { return undefined; }
+  async getOrderGroupByOrder(orderId: string): Promise<OrderGroup | undefined> { return undefined; }
+  async addGroupParticipant(participant: InsertGroupParticipant): Promise<GroupParticipant> { throw new Error("Not implemented"); }
+  async getGroupParticipants(groupId: string): Promise<GroupParticipant[]> { return []; }
+  async updateGroupParticipant(id: string, updates: Partial<GroupParticipant>): Promise<GroupParticipant | undefined> { return undefined; }
+  async createGeofence(geofence: InsertGeofence): Promise<Geofence> { throw new Error("Not implemented"); }
+  async getGeofences(): Promise<Geofence[]> { return []; }
+  async getActiveGeofences(): Promise<Geofence[]> { return []; }
+  async updateGeofence(id: string, updates: Partial<Geofence>): Promise<Geofence | undefined> { return undefined; }
+  async deleteGeofence(id: string): Promise<boolean> { return false; }
+  async checkPointInGeofences(latitude: number, longitude: number): Promise<any[]> { return []; }
+  async createTimezoneRule(rule: InsertTimezoneRule): Promise<TimezoneRule> { throw new Error("Not implemented"); }
+  async getTimezoneRules(): Promise<TimezoneRule[]> { return []; }
+  async getActiveTimezoneRules(): Promise<TimezoneRule[]> { return []; }
+  async updateTimezoneRule(id: string, updates: Partial<TimezoneRule>): Promise<TimezoneRule | undefined> { return undefined; }
+  async deleteTimezoneRule(id: string): Promise<boolean> { return false; }
+  async createLocationTimezone(locationTz: InsertLocationTimezone): Promise<LocationTimezone> { throw new Error("Not implemented"); }
+  async getLocationTimezoneByOrder(orderId: string): Promise<LocationTimezone | undefined> { return undefined; }
+  async updateLocationTimezone(id: string, updates: Partial<LocationTimezone>): Promise<LocationTimezone | undefined> { return undefined; }
+}
+
+export const storage = new DatabaseStorage();

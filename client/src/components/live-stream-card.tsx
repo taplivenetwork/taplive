@@ -10,10 +10,13 @@ interface LiveStreamCardProps {
   stream: Order;
   onJoin?: (streamId: string) => void;
   onAccept?: (streamId: string) => void;
+  onCancel?: (streamId: string) => void;
   isPending?: boolean;
+  showActions?: boolean;
+  isMyOrder?: boolean;
 }
 
-export function LiveStreamCard({ stream, onJoin, onAccept, isPending = false }: LiveStreamCardProps) {
+export function LiveStreamCard({ stream, onJoin, onAccept, onCancel, isPending = false, showActions = true, isMyOrder = false }: LiveStreamCardProps) {
   const [isLiked, setIsLiked] = useState(false);
   
   const handleLike = (e: React.MouseEvent) => {
@@ -138,13 +141,14 @@ export function LiveStreamCard({ stream, onJoin, onAccept, isPending = false }: 
             <span className="line-clamp-1">{stream.address}</span>
           </div>
 
-          {/* Status and Action Button */}
+          {/* Status and Action Buttons */}
           <div className="flex items-center justify-between pt-2">
             <Badge 
               variant={stream.status === 'live' ? 'default' : 'secondary'}
               className={
                 stream.status === 'live' ? 'bg-green-500 text-white' :
                 stream.status === 'pending' ? 'bg-orange-500 text-white' :
+                stream.status === 'cancelled' ? 'bg-red-500 text-white' :
                 'bg-gray-500 text-white'
               }
             >
@@ -152,33 +156,55 @@ export function LiveStreamCard({ stream, onJoin, onAccept, isPending = false }: 
                 {stream.status === 'live' ? 'Live Now' :
                  stream.status === 'pending' ? 'Waiting for Streamer' :
                  stream.status === 'accepted' ? 'Starting Soon' :
+                 stream.status === 'cancelled' ? 'Cancelled' :
                  'Available'}
               </TranslatedText>
             </Badge>
 
-            <Button 
-              size="sm"
-              onClick={handleAction}
-              className={isPending ? 'bg-primary hover:bg-primary/90' : 'bg-green-600 hover:bg-green-700'}
-              data-testid={`button-${isPending ? 'accept' : 'join'}-stream-${stream.id}`}
-            >
-              {isPending ? (
-                <>
-                  <Play className="w-4 h-4 mr-2" />
-                  <TranslatedText>Start Stream</TranslatedText>
-                </>
-              ) : stream.status === 'live' ? (
-                <>
-                  <Play className="w-4 h-4 mr-2" />
-                  <TranslatedText>Watch Live</TranslatedText>
-                </>
-              ) : (
-                <>
-                  <Play className="w-4 h-4 mr-2" />
-                  <TranslatedText>View Order</TranslatedText>
-                </>
+            <div className="flex gap-2">
+              {/* Cancel button for my orders */}
+              {isMyOrder && stream.status !== 'live' && stream.status !== 'done' && stream.status !== 'cancelled' && onCancel && (
+                <Button 
+                  size="sm"
+                  variant="outline"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onCancel(stream.id);
+                  }}
+                  className="text-red-600 border-red-600 hover:bg-red-600 hover:text-white"
+                  data-testid={`button-cancel-order-${stream.id}`}
+                >
+                  <TranslatedText>Cancel</TranslatedText>
+                </Button>
               )}
-            </Button>
+
+              {/* Main action button */}
+              {showActions && stream.status !== 'cancelled' && (
+                <Button 
+                  size="sm"
+                  onClick={handleAction}
+                  className={isPending ? 'bg-primary hover:bg-primary/90' : 'bg-green-600 hover:bg-green-700'}
+                  data-testid={`button-${isPending ? 'accept' : 'join'}-stream-${stream.id}`}
+                >
+                  {isPending ? (
+                    <>
+                      <Play className="w-4 h-4 mr-2" />
+                      <TranslatedText>Start Stream</TranslatedText>
+                    </>
+                  ) : stream.status === 'live' ? (
+                    <>
+                      <Play className="w-4 h-4 mr-2" />
+                      <TranslatedText>Watch Live</TranslatedText>
+                    </>
+                  ) : (
+                    <>
+                      <Play className="w-4 h-4 mr-2" />
+                      <TranslatedText>View Order</TranslatedText>
+                    </>
+                  )}
+                </Button>
+              )}
+            </div>
           </div>
         </div>
       </CardContent>

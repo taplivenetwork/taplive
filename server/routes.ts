@@ -1739,6 +1739,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Cancel order - update status to cancelled instead of deleting
+  app.delete("/api/orders/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      // Update order status to cancelled instead of actual deletion
+      const updatedOrder = await storage.updateOrder(id, { status: 'cancelled' });
+      if (!updatedOrder) {
+        return res.status(404).json({
+          success: false,
+          message: "Order not found"
+        });
+      }
+      
+      res.json({
+        success: true,
+        data: updatedOrder,
+        message: "Order cancelled successfully"
+      });
+    } catch (error) {
+      console.error('Error cancelling order:', error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to cancel order"
+      });
+    }
+  });
+
   const httpServer = createServer(app);
   
   // WebSocket server for video streaming signaling
