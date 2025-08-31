@@ -24,7 +24,7 @@ export function MobileNavigation() {
         <LanguageSelector 
           currentLanguage={currentLanguage}
           onLanguageChange={setCurrentLanguage}
-          className="bg-white shadow-lg"
+          className="bg-white dark:bg-gray-800 shadow-xl border-2 border-primary/20 hover:border-primary/40 transition-colors"
         />
       </div>
       

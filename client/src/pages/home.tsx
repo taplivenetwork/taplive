@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Plus, Search, Filter, Play, Users, MapPin, Clock, X } from "lucide-react";
+import { LanguageSelector } from "@/components/language-selector";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -27,7 +28,7 @@ declare global {
 
 export default function Home() {
   const { toast } = useToast();
-  const { currentLanguage } = useTranslation();
+  const { currentLanguage, setCurrentLanguage } = useTranslation();
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | undefined>();
   const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number } | undefined>();
@@ -317,6 +318,15 @@ export default function Home() {
             </p>
           </div>
           
+          {/* 桌面版语言选择器 - 右上角显眼位置 */}
+          <div className="hidden lg:flex items-center gap-3 mb-4">
+            <LanguageSelector 
+              currentLanguage={currentLanguage}
+              onLanguageChange={setCurrentLanguage}
+              className="shadow-md border-2 border-primary/20 hover:border-primary/40 transition-colors"
+            />
+          </div>
+
           {/* Search and Actions */}
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
             {/* 观看直播按钮 - 震撼入口 */}

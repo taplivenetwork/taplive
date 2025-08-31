@@ -58,17 +58,6 @@ export function Sidebar() {
         })}
       </nav>
 
-      {/* Language Selector */}
-      <div className="mt-6 pt-4 border-t border-border">
-        <div className="mb-3">
-          <p className="text-xs font-medium text-muted-foreground mb-2"><TranslatedText>Language / 语言</TranslatedText></p>
-          <LanguageSelector 
-            currentLanguage={currentLanguage}
-            onLanguageChange={setCurrentLanguage}
-            className="w-full"
-          />
-        </div>
-      </div>
 
       {/* User Profile */}
       <div className="pt-4 border-t border-border">
