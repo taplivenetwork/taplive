@@ -158,19 +158,15 @@ export function StreamBroadcaster({ orderId, onStreamStart, onStreamEnd }: Strea
           video.addEventListener('pause', (e) => {
             console.warn('⏸️ Video paused');
             
-            // Only attempt resume if:
-            // 1. Video is not ended
-            // 2. Video has a valid source
-            // 3. Not manually paused by user
-            if (!video.ended && video.srcObject && !video.paused) {
+            // If video is paused immediately after starting, likely due to autoplay policy
+            if (!video.ended && video.srcObject) {
               setTimeout(() => {
                 if (video.paused && !video.ended && video.srcObject) {
-                  console.log('🔄 Attempting to resume paused video after delay');
-                  video.play().catch(err => {
-                    console.error('❌ Auto-resume failed:', err.name, err.message);
-                  });
+                  console.log('🔒 Video auto-paused by browser - requiring user interaction');
+                  setNeedsUserInteraction(true);
+                  setError(null);
                 }
-              }, 500); // Wait 500ms before attempting resume
+              }, 1000); // Wait 1s to see if it's a permanent pause
             }
           });
 
@@ -200,9 +196,12 @@ export function StreamBroadcaster({ orderId, onStreamStart, onStreamEnd }: Strea
             // Verify it's actually playing after a delay
             setTimeout(() => {
               if (video.paused && !video.ended) {
-                console.warn('⚠️ Video auto-paused after start');
+                console.warn('⚠️ Video auto-paused after start - browser autoplay restriction');
+                setNeedsUserInteraction(true);
+                setError(null);
               } else {
                 console.log('✅ Video confirmed playing');
+                setNeedsUserInteraction(false);
               }
             }, 2000);
             
