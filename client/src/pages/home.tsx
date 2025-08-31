@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { OrderCard } from "@/components/order-card";
 import { LiveStreamCard } from "@/components/live-stream-card";
+import { MultiStreamGrid } from "@/components/multi-stream-grid";
 import { CreateOrderModal } from "@/components/create-order-modal";
 import { DemoControls } from "@/components/demo-controls";
 import { TranslatedText } from "@/components/translated-text";
@@ -34,6 +35,7 @@ export default function Home() {
   const [categoryFilter, setCategoryFilter] = useState("");
   const [priceFilter, setPriceFilter] = useState("");
   const [healthStatus, setHealthStatus] = useState<"connected" | "disconnected">("disconnected");
+  const [viewMode, setViewMode] = useState<'cards' | 'grid'>('cards');
 
   // Health check
   const { data: healthData } = useQuery({
@@ -144,10 +146,11 @@ export default function Home() {
 
   const handleJoinStream = (orderId: string) => {
     toast({
-      title: "Joining Stream",
-      description: "Opening live stream...",
+      title: "正在进入直播",
+      description: "正在打开直播间...",
     });
-    // TODO: Implement stream joining logic
+    // 直接跳转到观看模式
+    window.location.href = `/stream/${orderId}?mode=viewer`;
   };
 
   const handleCancelOrder = async (orderId: string) => {
@@ -243,20 +246,43 @@ export default function Home() {
         <main className="flex-1 p-4 lg:p-6">
           {/* Filter Tabs */}
           <Tabs defaultValue="live" className="mb-6">
-            <TabsList className="grid w-full grid-cols-3 lg:w-fit lg:grid-cols-3 bg-secondary">
-              <TabsTrigger value="live" data-testid="tab-live-streams">
-                <Play className="w-4 h-4 mr-2" />
-                <TranslatedText>Live Now</TranslatedText>
-              </TabsTrigger>
-              <TabsTrigger value="trending" data-testid="tab-trending">
-                <Users className="w-4 h-4 mr-2" />
-                <TranslatedText>Trending</TranslatedText>
-              </TabsTrigger>
-              <TabsTrigger value="nearby" data-testid="tab-nearby">
-                <MapPin className="w-4 h-4 mr-2" />
-                <TranslatedText>Nearby</TranslatedText>
-              </TabsTrigger>
-            </TabsList>
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-4">
+              <TabsList className="grid w-full grid-cols-3 lg:w-fit lg:grid-cols-3 bg-secondary">
+                <TabsTrigger value="live" data-testid="tab-live-streams">
+                  <Play className="w-4 h-4 mr-2" />
+                  <TranslatedText>Live Now</TranslatedText>
+                </TabsTrigger>
+                <TabsTrigger value="trending" data-testid="tab-trending">
+                  <Users className="w-4 h-4 mr-2" />
+                  <TranslatedText>Trending</TranslatedText>
+                </TabsTrigger>
+                <TabsTrigger value="nearby" data-testid="tab-nearby">
+                  <MapPin className="w-4 h-4 mr-2" />
+                  <TranslatedText>Nearby</TranslatedText>
+                </TabsTrigger>
+              </TabsList>
+              
+              {/* 视图模式切换 */}
+              <div className="flex gap-2 mt-4 lg:mt-0">
+                <Button
+                  size="sm"
+                  variant={viewMode === 'cards' ? 'default' : 'outline'}
+                  onClick={() => setViewMode('cards')}
+                  data-testid="button-card-view"
+                >
+                  📱 卡片视图
+                </Button>
+                <Button
+                  size="sm"
+                  variant={viewMode === 'grid' ? 'default' : 'outline'}
+                  onClick={() => setViewMode('grid')}
+                  className={viewMode === 'grid' ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700' : ''}
+                  data-testid="button-grid-view"
+                >
+                  🚀 震撼网格
+                </Button>
+              </div>
+            </div>
 
             {/* Live Streams Grid */}
             <TabsContent value="live" className="mt-6">
@@ -272,7 +298,14 @@ export default function Home() {
                     </Card>
                   ))}
                 </div>
+              ) : viewMode === 'grid' ? (
+                /* 震撼多屏网格模式 */
+                <MultiStreamGrid 
+                  streams={orders} 
+                  onStreamClick={handleJoinStream} 
+                />
               ) : activeStreams.length > 0 ? (
+                /* 传统卡片模式 */
                 <div className="grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
                   {activeStreams.map((stream) => (
                     <LiveStreamCard
