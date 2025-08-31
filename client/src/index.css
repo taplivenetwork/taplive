@@ -83,16 +83,31 @@
   }
 
   body {
-    @apply font-sans antialiased bg-background text-foreground relative;
+    @apply font-sans antialiased bg-background text-foreground relative overflow-x-hidden;
     font-family: var(--font-sans);
-    background-image: 
-      radial-gradient(circle at 20% 80%, hsl(266, 85%, 58%, 0.1) 0%, transparent 50%),
-      radial-gradient(circle at 80% 20%, hsl(187, 85%, 53%, 0.1) 0%, transparent 50%),
-      radial-gradient(circle at 40% 40%, hsl(280, 100%, 70%, 0.05) 0%, transparent 50%);
-    background-attachment: fixed;
+    background-color: hsl(220, 27%, 6%);
   }
   
+  /* 世界地图背景层 */
   body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 300%;
+    height: 100%;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1800 500'%3E%3C!-- 北美洲 --%3E%3Cpath d='M280,120 C290,110 310,115 320,125 L340,140 L360,135 L380,145 L400,140 L420,150 L440,145 L460,155 L480,150 L500,160 L520,155 L540,165 L560,170 L580,165 L600,175 L620,180 L640,175 L660,185 L680,180 L700,190 L720,185 L740,195 L760,200 L780,195 L800,205 L820,210 L840,205 L860,215 L880,220 L900,215 L920,225 L940,230 L960,235' fill='none' stroke='hsl(266, 85%, 58%)' stroke-width='0.8' opacity='0.5'/%3E%3C!-- 欧洲 --%3E%3Cpath d='M850,150 C860,140 880,145 890,155 L910,160 L930,155 L950,165 L970,160 L990,170 L1010,165 L1030,175 L1050,170 L1070,180 L1090,175 L1110,185 L1130,190 L1150,185 L1170,195' fill='none' stroke='hsl(187, 85%, 53%)' stroke-width='0.6' opacity='0.4'/%3E%3C!-- 亚洲 --%3E%3Cpath d='M1200,140 C1220,130 1240,135 1260,145 L1280,150 L1300,145 L1320,155 L1340,160 L1360,155 L1380,165 L1400,170 L1420,165 L1440,175 L1460,180 L1480,175 L1500,185 L1520,190 L1540,185 L1560,195 L1580,200 L1600,195' fill='none' stroke='hsl(280, 100%, 70%)' stroke-width='0.7' opacity='0.45'/%3E%3C!-- 非洲 --%3E%3Cpath d='M900,220 C920,210 940,215 960,225 L980,230 L1000,235 L1020,240 L1040,245 L1060,250 L1080,255 L1100,260 L1120,265 L1140,270 L1160,275 L1180,270' fill='none' stroke='hsl(180, 100%, 50%)' stroke-width='0.6' opacity='0.4'/%3E%3C!-- 南美洲 --%3E%3Cpath d='M400,280 C420,270 440,275 460,285 L480,290 L500,295 L520,300 L540,305 L560,310 L580,315 L600,320 L620,325 L640,330 L660,335' fill='none' stroke='hsl(120, 80%, 50%)' stroke-width='0.6' opacity='0.4'/%3E%3C!-- 澳洲 --%3E%3Cpath d='M1400,320 C1420,310 1440,315 1460,325 L1480,330 L1500,325 L1520,335 L1540,340' fill='none' stroke='hsl(60, 80%, 50%)' stroke-width='0.5' opacity='0.35'/%3E%3C/svg%3E");
+    background-size: 1800px 500px;
+    background-repeat: repeat-x;
+    background-position: 0 center;
+    animation: world-map-scroll 180s linear infinite;
+    pointer-events: none;
+    z-index: -3;
+    opacity: 0.6;
+  }
+
+  /* 科技扫描效果层 */  
+  body::after {
     content: '';
     position: fixed;
     top: 0;
@@ -100,11 +115,11 @@
     width: 100%;
     height: 100%;
     background: 
-      linear-gradient(90deg, transparent 0%, hsl(266, 85%, 58%, 0.02) 50%, transparent 100%),
+      linear-gradient(90deg, transparent 0%, hsl(266, 85%, 58%, 0.03) 50%, transparent 100%),
       linear-gradient(180deg, transparent 0%, hsl(187, 85%, 53%, 0.02) 50%, transparent 100%);
     animation: tech-scan 8s ease-in-out infinite;
     pointer-events: none;
-    z-index: -1;
+    z-index: -2;
   }
 }
 
@@ -135,9 +150,37 @@
   }
 }
 
+/* 世界地图滚动动画 */
+@keyframes world-map-scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-1800px); }
+}
+
 @keyframes tech-scan {
   0%, 100% { transform: translateX(-100%); }
   50% { transform: translateX(100%); }
+}
+
+/* 订单闪烁动画 */
+@keyframes order-pulse {
+  0%, 100% { 
+    opacity: 0.6;
+    transform: scale(1);
+    box-shadow: 0 0 0 0 hsl(187, 85%, 53%, 0.4);
+  }
+  50% { 
+    opacity: 1;
+    transform: scale(1.1);
+    box-shadow: 0 0 0 15px hsl(187, 85%, 53%, 0);
+  }
+}
+
+/* 数据流动画 */
+@keyframes data-flow {
+  0% { transform: translateX(-100%) translateY(0); opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { transform: translateX(200vw) translateY(-20px); opacity: 0; }
 }
 
 @keyframes tech-shimmer {
@@ -371,6 +414,98 @@
   );
   background-size: 400% 400%;
   animation: holographic-shift 4s ease-in-out infinite;
+}
+
+/* 订单闪烁点效果 */
+.order-pulse {
+  animation: order-pulse 3s ease-in-out infinite;
+  position: relative;
+}
+
+.order-pulse::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 6px;
+  height: 6px;
+  background: hsl(187, 85%, 53%);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  box-shadow: 
+    0 0 10px hsl(187, 85%, 53%),
+    0 0 20px hsl(187, 85%, 53%, 0.5);
+}
+
+/* 数据流动画效果 */
+.data-stream {
+  position: relative;
+  overflow: hidden;
+}
+
+.data-stream::before {
+  content: '';
+  position: absolute;
+  top: 20%;
+  left: -100%;
+  width: 2px;
+  height: 60%;
+  background: linear-gradient(to bottom, 
+    transparent, 
+    hsl(266, 85%, 58%), 
+    hsl(187, 85%, 53%),
+    transparent
+  );
+  animation: data-flow 8s linear infinite;
+}
+
+.data-stream::after {
+  content: '';
+  position: absolute;
+  top: 40%;
+  left: -100%;
+  width: 1px;
+  height: 40%;
+  background: linear-gradient(to bottom, 
+    transparent, 
+    hsl(280, 100%, 70%), 
+    transparent
+  );
+  animation: data-flow 12s linear infinite 2s;
+}
+
+/* 全球连接线动画 */
+.global-network {
+  position: relative;
+}
+
+.global-network::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    radial-gradient(circle at 20% 30%, hsl(266, 85%, 58%, 0.1) 1px, transparent 1px),
+    radial-gradient(circle at 70% 20%, hsl(187, 85%, 53%, 0.1) 1px, transparent 1px),
+    radial-gradient(circle at 40% 70%, hsl(280, 100%, 70%, 0.1) 1px, transparent 1px),
+    radial-gradient(circle at 80% 80%, hsl(180, 100%, 50%, 0.1) 1px, transparent 1px);
+  background-size: 400px 300px;
+  animation: global-pulse 15s ease-in-out infinite;
+  pointer-events: none;
+  z-index: -1;
+}
+
+@keyframes global-pulse {
+  0%, 100% { 
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  50% { 
+    opacity: 0.6;
+    transform: scale(1.05);
+  }
 }
 
 /* Tech card enhancements */
