@@ -117,7 +117,11 @@ export default function Streams() {
                       </div>
                     </div>
                     
-                    <Button className="w-full" data-testid={`watch-stream-${stream.id}`}>
+                    <Button 
+                      className="w-full" 
+                      data-testid={`watch-stream-${stream.id}`}
+                      onClick={() => window.location.href = `/stream/${stream.id}`}
+                    >
                       <Play className="w-4 h-4 mr-2" />
                       <TranslatedText>Watch Stream</TranslatedText>
                     </Button>

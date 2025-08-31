@@ -1,5 +1,6 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import { WebSocketServer, WebSocket } from "ws";
 import Stripe from "stripe";
 import { storage } from "./storage";
 import { insertOrderSchema, ratingValidationSchema, paymentValidationSchema, cryptoPaymentSchema, disputeSubmissionSchema, geoLocationSchema, aaGroupCreationSchema, type Order } from "@shared/schema";
@@ -1734,5 +1735,84 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  return createServer(app);
+  const httpServer = createServer(app);
+  
+  // WebSocket server for video streaming signaling
+  const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
+  
+  // Store active stream rooms
+  const streamRooms = new Map<string, Set<WebSocket>>();
+  
+  wss.on('connection', (ws: WebSocket) => {
+    console.log('WebSocket client connected');
+    
+    ws.on('message', (data: Buffer) => {
+      try {
+        const message = JSON.parse(data.toString());
+        
+        switch (message.type) {
+          case 'join-stream':
+            const { streamId } = message;
+            if (!streamRooms.has(streamId)) {
+              streamRooms.set(streamId, new Set());
+            }
+            streamRooms.get(streamId)!.add(ws);
+            
+            // Notify others in the room
+            streamRooms.get(streamId)!.forEach(client => {
+              if (client !== ws && client.readyState === WebSocket.OPEN) {
+                client.send(JSON.stringify({
+                  type: 'user-joined',
+                  streamId
+                }));
+              }
+            });
+            break;
+            
+          case 'webrtc-offer':
+          case 'webrtc-answer':
+          case 'webrtc-ice-candidate':
+            // Forward WebRTC signaling to all other clients in the stream
+            const targetStreamId = message.streamId;
+            if (streamRooms.has(targetStreamId)) {
+              streamRooms.get(targetStreamId)!.forEach(client => {
+                if (client !== ws && client.readyState === WebSocket.OPEN) {
+                  client.send(data.toString());
+                }
+              });
+            }
+            break;
+            
+          case 'start-streaming':
+            // Streamer started broadcasting
+            const { orderId } = message;
+            if (streamRooms.has(orderId)) {
+              streamRooms.get(orderId)!.forEach(client => {
+                if (client !== ws && client.readyState === WebSocket.OPEN) {
+                  client.send(JSON.stringify({
+                    type: 'stream-started',
+                    streamId: orderId
+                  }));
+                }
+              });
+            }
+            break;
+        }
+      } catch (error) {
+        console.error('WebSocket message error:', error);
+      }
+    });
+    
+    ws.on('close', () => {
+      // Remove client from all rooms
+      streamRooms.forEach((clients, streamId) => {
+        clients.delete(ws);
+        if (clients.size === 0) {
+          streamRooms.delete(streamId);
+        }
+      });
+    });
+  });
+
+  return httpServer;
 }

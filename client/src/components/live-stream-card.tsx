@@ -31,6 +31,9 @@ export function LiveStreamCard({ stream, onJoin, onAccept, isPending = false }: 
       onAccept(stream.id);
     } else if (onJoin) {
       onJoin(stream.id);
+    } else {
+      // Navigate to live stream page
+      window.location.href = `/stream/${stream.id}`;
     }
   };
 
@@ -157,17 +160,22 @@ export function LiveStreamCard({ stream, onJoin, onAccept, isPending = false }: 
               size="sm"
               onClick={handleAction}
               className={isPending ? 'bg-primary hover:bg-primary/90' : 'bg-green-600 hover:bg-green-700'}
-              data-testid={`button-${isPending ? 'accept' : 'join'}-stream`}
+              data-testid={`button-${isPending ? 'accept' : 'join'}-stream-${stream.id}`}
             >
               {isPending ? (
                 <>
                   <Play className="w-4 h-4 mr-2" />
                   <TranslatedText>Start Stream</TranslatedText>
                 </>
-              ) : (
+              ) : stream.status === 'live' ? (
                 <>
                   <Play className="w-4 h-4 mr-2" />
                   <TranslatedText>Watch Live</TranslatedText>
+                </>
+              ) : (
+                <>
+                  <Play className="w-4 h-4 mr-2" />
+                  <TranslatedText>View Order</TranslatedText>
                 </>
               )}
             </Button>
