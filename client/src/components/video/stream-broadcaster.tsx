@@ -311,14 +311,34 @@ export function StreamBroadcaster({ orderId, onStreamStart, onStreamEnd }: Strea
     console.log('👆 User interaction received');
     if (videoRef.current && stream) {
       try {
+        // Force video properties again
+        videoRef.current.muted = true;
+        videoRef.current.setAttribute('playsinline', 'true');
+        
         await videoRef.current.play();
         console.log('✅ Video started after user interaction');
         setNeedsUserInteraction(false);
         setError(null);
+        
+        // Double check after a delay
+        setTimeout(() => {
+          if (videoRef.current?.paused) {
+            console.warn('⚠️ Video paused again after user interaction');
+            setError('视频仍然无法播放。请尝试刷新页面。');
+          } else {
+            console.log('✅ Video confirmed playing after user interaction');
+          }
+        }, 1000);
+        
       } catch (err: any) {
         console.error('❌ User interaction play failed:', err);
-        setError('播放失败，请重试或检查浏览器设置');
+        setError(`播放失败: ${err.message}. 请刷新页面重试。`);
+        setNeedsUserInteraction(false);
       }
+    } else {
+      console.error('❌ No video element or stream available');
+      setError('视频未准备好，请重新开始直播');
+      setNeedsUserInteraction(false);
     }
   };
 
@@ -375,25 +395,28 @@ export function StreamBroadcaster({ orderId, onStreamStart, onStreamEnd }: Strea
             </div>
           )}
           
-          {/* User Interaction Overlay */}
+          {/* User Interaction Overlay - High Priority */}
           {needsUserInteraction && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black/70 z-10">
-              <div className="text-center text-white space-y-4">
-                <div className="text-4xl mb-4">🎬</div>
-                <h3 className="text-lg font-semibold">
-                  <TranslatedText>准备开始直播</TranslatedText>
+            <div className="absolute inset-0 flex items-center justify-center bg-black/80 z-50 animate-pulse">
+              <div className="text-center text-white space-y-6 p-8 bg-black/60 rounded-lg border-2 border-red-500">
+                <div className="text-6xl mb-4 animate-bounce">🎬</div>
+                <h3 className="text-xl font-bold text-red-400">
+                  <TranslatedText>需要用户操作</TranslatedText>
                 </h3>
-                <p className="text-sm opacity-90 mb-4">
-                  <TranslatedText>点击下方按钮开始直播</TranslatedText>
+                <p className="text-base opacity-95 mb-6">
+                  <TranslatedText>浏览器限制需要点击才能播放视频</TranslatedText>
                 </p>
                 <Button 
                   onClick={handleUserInteraction}
-                  className="bg-red-600 hover:bg-red-700 text-white px-6 py-3"
+                  className="bg-red-600 hover:bg-red-700 text-white px-8 py-4 text-lg font-semibold animate-pulse"
                   data-testid="user-interaction-play-button"
                 >
-                  <Play className="w-4 h-4 mr-2" />
-                  <TranslatedText>开始播放</TranslatedText>
+                  <Play className="w-6 h-6 mr-3" />
+                  <TranslatedText>点击开始播放</TranslatedText>
                 </Button>
+                <p className="text-xs opacity-70 mt-4">
+                  <TranslatedText>这是浏览器安全限制，点击即可正常播放</TranslatedText>
+                </p>
               </div>
             </div>
           )}
