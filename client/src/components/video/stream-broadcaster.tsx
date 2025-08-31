@@ -163,6 +163,7 @@ export function StreamBroadcaster({ orderId, onStreamStart, onStreamEnd }: Strea
               setTimeout(() => {
                 if (video.paused && !video.ended && video.srcObject) {
                   console.log('🔒 Video auto-paused by browser - requiring user interaction');
+                  console.log('🚨 Setting needsUserInteraction to TRUE');
                   setNeedsUserInteraction(true);
                   setError(null);
                 }
@@ -197,6 +198,7 @@ export function StreamBroadcaster({ orderId, onStreamStart, onStreamEnd }: Strea
             setTimeout(() => {
               if (video.paused && !video.ended) {
                 console.warn('⚠️ Video auto-paused after start - browser autoplay restriction');
+                console.log('🚨 Setting needsUserInteraction to TRUE (from timeout)');
                 setNeedsUserInteraction(true);
                 setError(null);
               } else {
@@ -397,25 +399,28 @@ export function StreamBroadcaster({ orderId, onStreamStart, onStreamEnd }: Strea
           
           {/* User Interaction Overlay - High Priority */}
           {needsUserInteraction && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black/80 z-50 animate-pulse">
-              <div className="text-center text-white space-y-6 p-8 bg-black/60 rounded-lg border-2 border-red-500">
-                <div className="text-6xl mb-4 animate-bounce">🎬</div>
-                <h3 className="text-xl font-bold text-red-400">
-                  <TranslatedText>需要用户操作</TranslatedText>
+            <div 
+              className="fixed inset-0 flex items-center justify-center bg-red-900/90 z-[9999] animate-pulse"
+              style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 9999 }}
+            >
+              <div className="text-center text-white space-y-6 p-8 bg-red-800/80 rounded-lg border-4 border-red-300 shadow-2xl">
+                <div className="text-8xl mb-4 animate-bounce">🚨</div>
+                <h3 className="text-2xl font-bold text-white animate-pulse">
+                  <TranslatedText>必须点击才能播放!</TranslatedText>
                 </h3>
-                <p className="text-base opacity-95 mb-6">
-                  <TranslatedText>浏览器限制需要点击才能播放视频</TranslatedText>
+                <p className="text-lg opacity-95 mb-6">
+                  <TranslatedText>浏览器阻止了自动播放</TranslatedText>
                 </p>
                 <Button 
                   onClick={handleUserInteraction}
-                  className="bg-red-600 hover:bg-red-700 text-white px-8 py-4 text-lg font-semibold animate-pulse"
+                  className="bg-yellow-500 hover:bg-yellow-400 text-black px-10 py-6 text-2xl font-bold animate-bounce"
                   data-testid="user-interaction-play-button"
                 >
-                  <Play className="w-6 h-6 mr-3" />
-                  <TranslatedText>点击开始播放</TranslatedText>
+                  <Play className="w-8 h-8 mr-4" />
+                  <TranslatedText>立即播放视频</TranslatedText>
                 </Button>
-                <p className="text-xs opacity-70 mt-4">
-                  <TranslatedText>这是浏览器安全限制，点击即可正常播放</TranslatedText>
+                <p className="text-sm opacity-80 mt-4">
+                  <TranslatedText>点击上方按钮继续</TranslatedText>
                 </p>
               </div>
             </div>
@@ -500,6 +505,15 @@ export function StreamBroadcaster({ orderId, onStreamStart, onStreamEnd }: Strea
               <TranslatedText>{`正在重连... (${retryCount}/5)`}</TranslatedText>
             </p>
           )}
+          
+          {/* Debug Status Display */}
+          <div className="text-xs space-y-1 mt-2 p-2 bg-gray-100 rounded">
+            <p>调试状态:</p>
+            <p>needsUserInteraction: {needsUserInteraction ? '🔴 TRUE' : '🟢 FALSE'}</p>
+            <p>isStreaming: {isStreaming ? '✅ TRUE' : '❌ FALSE'}</p>
+            <p>isConnected: {isConnected ? '✅ TRUE' : '❌ FALSE'}</p>
+            <p>error: {error ? '❌ YES' : '✅ NO'}</p>
+          </div>
         </div>
       </CardContent>
     </Card>
