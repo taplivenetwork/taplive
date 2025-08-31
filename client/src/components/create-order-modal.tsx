@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { useMutation } from "@tanstack/react-query";
+import { TranslatedText } from '@/components/translated-text';
 import { api, invalidateOrders } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import type { InsertOrder } from "@shared/schema";
@@ -25,7 +26,10 @@ const createOrderSchema = z.object({
   address: z.string().min(1, "Address is required"),
   scheduledAt: z.string().min(1, "Scheduled time is required"),
   duration: z.number().min(10, "Duration must be at least 10 minutes").max(480),
-  price: z.string().min(1, "Price is required"),
+  price: z.string().min(1, "Price is required").refine((val) => {
+    const num = parseFloat(val);
+    return !isNaN(num) && num >= 0;
+  }, "Please enter a valid price (0 or higher)"),
   type: z.enum(["single", "group"]),
   maxParticipants: z.number().optional(),
   tags: z.array(z.string()).optional(),
@@ -57,6 +61,12 @@ export function CreateOrderModal({ open, onOpenChange, selectedLocation }: Creat
 
   // Handle mouse down on header for dragging
   const handleMouseDown = (e: React.MouseEvent) => {
+    // Prevent dragging when clicking on interactive elements
+    const target = e.target as HTMLElement;
+    if (target.closest('button, input, select, textarea')) {
+      return;
+    }
+    
     setIsDragging(true);
     setDragStart({
       x: e.clientX - position.x,
@@ -125,7 +135,7 @@ export function CreateOrderModal({ open, onOpenChange, selectedLocation }: Creat
         address: data.address,
         scheduledAt: new Date(data.scheduledAt),
         duration: data.duration,
-        price: data.price,
+        price: parseFloat(data.price).toString(),
         type: data.type,
         maxParticipants: data.type === "group" ? data.maxParticipants : null,
         tags: data.tags || [],
@@ -270,22 +280,23 @@ export function CreateOrderModal({ open, onOpenChange, selectedLocation }: Creat
         className="sm:max-w-md max-h-[80vh] overflow-y-auto bg-white border-2 border-gray-200 shadow-2xl rounded-xl fixed z-[9999]"
         style={{
           transform: `translate(${position.x}px, ${position.y}px)`,
-          cursor: isDragging ? 'grabbing' : 'default'
+          cursor: isDragging ? 'grabbing' : 'default',
+          willChange: isDragging ? 'transform' : 'auto'
         }}
         data-testid="create-order-modal" 
         aria-describedby="create-order-description"
       >
         <DialogHeader 
-          className="cursor-grab active:cursor-grabbing border-b border-gray-100 pb-3 mb-4"
+          className="cursor-grab active:cursor-grabbing border-b border-gray-100 pb-3 mb-4 select-none"
           onMouseDown={handleMouseDown}
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Move className="w-4 h-4 text-gray-400" />
-              <DialogTitle className="text-lg font-bold text-foreground">Create Streaming Order</DialogTitle>
+              <DialogTitle className="text-lg font-bold text-foreground"><TranslatedText>Create Streaming Order</TranslatedText></DialogTitle>
             </div>
           </div>
-          <p id="create-order-description" className="text-sm text-muted-foreground">Fill out the form below to create a new streaming request. Drag this window to view the map.</p>
+          <p id="create-order-description" className="text-sm text-muted-foreground"><TranslatedText>Fill out the form below to create a new streaming request. Drag this window to view the map.</TranslatedText></p>
         </DialogHeader>
 
         <Form {...form}>
@@ -295,7 +306,7 @@ export function CreateOrderModal({ open, onOpenChange, selectedLocation }: Creat
               name="title"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Stream Title</FormLabel>
+                  <FormLabel><TranslatedText>Stream Title</TranslatedText></FormLabel>
                   <FormControl>
                     <Input 
                       placeholder="What would you like to stream?" 
@@ -313,7 +324,7 @@ export function CreateOrderModal({ open, onOpenChange, selectedLocation }: Creat
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Description</FormLabel>
+                  <FormLabel><TranslatedText>Description</TranslatedText></FormLabel>
                   <FormControl>
                     <Textarea 
                       placeholder="Describe the streaming experience you want..." 
@@ -332,7 +343,7 @@ export function CreateOrderModal({ open, onOpenChange, selectedLocation }: Creat
               name="address"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Location</FormLabel>
+                  <FormLabel><TranslatedText>Location</TranslatedText></FormLabel>
                   <FormControl>
                     <div className="relative">
                       <Input 
@@ -364,7 +375,7 @@ export function CreateOrderModal({ open, onOpenChange, selectedLocation }: Creat
                 name="scheduledAt"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Date & Time</FormLabel>
+                    <FormLabel><TranslatedText>Date & Time</TranslatedText></FormLabel>
                     <FormControl>
                       <Input 
                         type="datetime-local" 
@@ -382,18 +393,18 @@ export function CreateOrderModal({ open, onOpenChange, selectedLocation }: Creat
                 name="duration"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Duration</FormLabel>
+                    <FormLabel><TranslatedText>Duration</TranslatedText></FormLabel>
                     <Select onValueChange={(value) => field.onChange(parseInt(value))}>
                       <FormControl>
                         <SelectTrigger data-testid="select-duration">
                           <SelectValue placeholder="Select duration" />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent>
-                        <SelectItem value="30">30 minutes</SelectItem>
-                        <SelectItem value="60">1 hour</SelectItem>
-                        <SelectItem value="120">2 hours</SelectItem>
-                        <SelectItem value="180">3 hours</SelectItem>
+                      <SelectContent className="z-[10000]">
+                        <SelectItem value="30"><TranslatedText>30 minutes</TranslatedText></SelectItem>
+                        <SelectItem value="60"><TranslatedText>1 hour</TranslatedText></SelectItem>
+                        <SelectItem value="120"><TranslatedText>2 hours</TranslatedText></SelectItem>
+                        <SelectItem value="180"><TranslatedText>3 hours</TranslatedText></SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -407,20 +418,20 @@ export function CreateOrderModal({ open, onOpenChange, selectedLocation }: Creat
               name="category"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Category</FormLabel>
+                  <FormLabel><TranslatedText>Category</TranslatedText></FormLabel>
                   <Select onValueChange={field.onChange}>
                     <FormControl>
                       <SelectTrigger data-testid="select-category">
                         <SelectValue placeholder="Select category" />
                       </SelectTrigger>
                     </FormControl>
-                    <SelectContent>
-                      <SelectItem value="music">Music & Entertainment</SelectItem>
-                      <SelectItem value="food">Food & Dining</SelectItem>
-                      <SelectItem value="travel">Travel & Tourism</SelectItem>
-                      <SelectItem value="events">Events & Gatherings</SelectItem>
-                      <SelectItem value="education">Educational</SelectItem>
-                      <SelectItem value="fitness">Fitness & Wellness</SelectItem>
+                    <SelectContent className="z-[10000]">
+                      <SelectItem value="music"><TranslatedText>Music & Entertainment</TranslatedText></SelectItem>
+                      <SelectItem value="food"><TranslatedText>Food & Dining</TranslatedText></SelectItem>
+                      <SelectItem value="travel"><TranslatedText>Travel & Tourism</TranslatedText></SelectItem>
+                      <SelectItem value="events"><TranslatedText>Events & Gatherings</TranslatedText></SelectItem>
+                      <SelectItem value="education"><TranslatedText>Educational</TranslatedText></SelectItem>
+                      <SelectItem value="fitness"><TranslatedText>Fitness & Wellness</TranslatedText></SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -429,7 +440,7 @@ export function CreateOrderModal({ open, onOpenChange, selectedLocation }: Creat
             />
 
             <div className="border-2 border-gray-200 bg-gray-50 rounded-lg p-4 space-y-4">
-              <h4 className="font-medium text-foreground">Payment Options</h4>
+              <h4 className="font-medium text-foreground"><TranslatedText>Payment Options</TranslatedText></h4>
               
               <FormField
                 control={form.control}
@@ -448,16 +459,16 @@ export function CreateOrderModal({ open, onOpenChange, selectedLocation }: Creat
                         <div className="flex items-center space-x-3">
                           <RadioGroupItem value="single" id="solo" data-testid="radio-single" />
                           <Label htmlFor="solo" className="flex-1">
-                            <div className="font-medium text-foreground">Solo Payment</div>
-                            <div className="text-sm text-muted-foreground">Pay the full amount yourself</div>
+                            <div className="font-medium text-foreground"><TranslatedText>Solo Payment</TranslatedText></div>
+                            <div className="text-sm text-muted-foreground"><TranslatedText>Pay the full amount yourself</TranslatedText></div>
                           </Label>
                         </div>
                         
                         <div className="flex items-center space-x-3">
                           <RadioGroupItem value="group" id="group" data-testid="radio-group" />
                           <Label htmlFor="group" className="flex-1">
-                            <div className="font-medium text-foreground">Group Payment</div>
-                            <div className="text-sm text-muted-foreground">Split the cost with others</div>
+                            <div className="font-medium text-foreground"><TranslatedText>Group Payment</TranslatedText></div>
+                            <div className="text-sm text-muted-foreground"><TranslatedText>Split the cost with others</TranslatedText></div>
                           </Label>
                         </div>
                       </RadioGroup>
@@ -473,7 +484,7 @@ export function CreateOrderModal({ open, onOpenChange, selectedLocation }: Creat
                   name="price"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Total Budget</FormLabel>
+                      <FormLabel><TranslatedText>Total Budget</TranslatedText></FormLabel>
                       <FormControl>
                         <div className="relative">
                           <span className="absolute left-3 top-3 text-muted-foreground">$</span>
@@ -496,7 +507,7 @@ export function CreateOrderModal({ open, onOpenChange, selectedLocation }: Creat
                     name="maxParticipants"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Max Participants</FormLabel>
+                        <FormLabel><TranslatedText>Max Participants</TranslatedText></FormLabel>
                         <FormControl>
                           <Input 
                             type="number" 
@@ -524,7 +535,7 @@ export function CreateOrderModal({ open, onOpenChange, selectedLocation }: Creat
                 onClick={() => onOpenChange(false)}
                 data-testid="button-cancel"
               >
-                Cancel
+                <TranslatedText>Cancel</TranslatedText>
               </Button>
               <Button 
                 type="submit" 
@@ -532,7 +543,7 @@ export function CreateOrderModal({ open, onOpenChange, selectedLocation }: Creat
                 disabled={createOrderMutation.isPending}
                 data-testid="button-create-order"
               >
-                {createOrderMutation.isPending ? "Creating..." : "Create Order"}
+                {createOrderMutation.isPending ? <TranslatedText>Creating...</TranslatedText> : <TranslatedText>Create Order</TranslatedText>}
               </Button>
             </div>
           </form>
