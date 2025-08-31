@@ -210,22 +210,90 @@ export function MultiStreamGrid({ streams, onStreamClick }: MultiStreamGridProps
         </div>
       </div>
 
-      {/* 多屏网格 */}
+      {/* 多屏网格 - 世界地图背景 */}
       <div className={`
-        grid gap-1 lg:gap-2 w-full
-        ${isFullscreen ? 'h-screen p-2' : ''}
+        grid gap-1 lg:gap-2 w-full relative
+        ${isFullscreen ? 'h-screen p-2' : 'min-h-[600px]'}
       `}
       style={{
         gridTemplateColumns: `repeat(${currentConfig.cols}, 1fr)`,
-        gridTemplateRows: `repeat(${currentConfig.rows}, 1fr)`
+        gridTemplateRows: `repeat(${currentConfig.rows}, 1fr)`,
+        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 600'%3E%3C!-- 世界地图轮廓 --%3E%3Cg fill='none' stroke='hsl(266, 85%, 58%)' stroke-width='1' opacity='0.3'%3E%3C!-- 北美洲 --%3E%3Cpath d='M150,150 L200,140 L250,160 L300,150 L350,170 L400,160 L450,180 L350,200 L300,190 L250,180 L200,170 L150,180 Z'/%3E%3C!-- 南美洲 --%3E%3Cpath d='M250,250 L300,240 L320,280 L310,320 L290,350 L270,340 L250,300 L240,260 Z'/%3E%3C!-- 欧洲 --%3E%3Cpath d='M500,120 L550,110 L580,130 L570,150 L540,160 L510,150 L500,130 Z'/%3E%3C!-- 非洲 --%3E%3Cpath d='M520,200 L570,190 L590,230 L580,280 L560,320 L540,310 L520,270 L510,230 L520,200 Z'/%3E%3C!-- 亚洲 --%3E%3Cpath d='M650,100 L750,90 L850,110 L900,120 L920,160 L880,180 L820,170 L750,160 L680,150 L650,130 Z'/%3E%3C!-- 澳洲 --%3E%3Cpath d='M850,300 L900,290 L930,310 L920,330 L890,340 L860,330 L850,310 Z'/%3E%3C/g%3E%3C/svg%3E")`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat'
       }}>
+        
+        {/* 订单位置闪烁点 */}
+        {streams.map((stream, index) => {
+          // 根据经纬度计算在地图上的位置
+          const x = ((parseFloat(stream.longitude) + 180) / 360) * 100;
+          const y = ((90 - parseFloat(stream.latitude)) / 180) * 100;
+          
+          return (
+            <div
+              key={`order-dot-${stream.id}`}
+              className="absolute w-3 h-3 rounded-full animate-pulse z-10"
+              style={{
+                left: `${Math.max(5, Math.min(95, x))}%`,
+                top: `${Math.max(5, Math.min(95, y))}%`,
+                background: index % 2 === 0 
+                  ? 'radial-gradient(circle, hsl(187, 85%, 53%) 0%, hsl(187, 85%, 53%, 0.3) 100%)'
+                  : 'radial-gradient(circle, hsl(266, 85%, 58%) 0%, hsl(266, 85%, 58%, 0.3) 100%)',
+                boxShadow: `0 0 10px ${index % 2 === 0 ? 'hsl(187, 85%, 53%)' : 'hsl(266, 85%, 58%)'}`,
+                animation: `order-pulse 2s ease-in-out infinite ${index * 0.3}s`,
+                transform: 'translate(-50%, -50%)'
+              }}
+              title={`${stream.title} - ${stream.address}`}
+            />
+          );
+        })}
+        
+        {/* 连接线动画 */}
+        <div className="absolute inset-0 pointer-events-none">
+          <svg className="w-full h-full opacity-20">
+            <defs>
+              <linearGradient id="connectionGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="hsl(187, 85%, 53%)" stopOpacity="0.6" />
+                <stop offset="100%" stopColor="hsl(266, 85%, 58%)" stopOpacity="0.2" />
+              </linearGradient>
+            </defs>
+            {streams.slice(0, Math.min(streams.length, 8)).map((stream, index) => {
+              const nextStream = streams[(index + 1) % streams.length];
+              const x1 = ((parseFloat(stream.longitude) + 180) / 360) * 100;
+              const y1 = ((90 - parseFloat(stream.latitude)) / 180) * 100;
+              const x2 = ((parseFloat(nextStream.longitude) + 180) / 360) * 100;
+              const y2 = ((90 - parseFloat(nextStream.latitude)) / 180) * 100;
+              
+              return (
+                <line
+                  key={`connection-${index}`}
+                  x1={`${Math.max(5, Math.min(95, x1))}%`}
+                  y1={`${Math.max(5, Math.min(95, y1))}%`}
+                  x2={`${Math.max(5, Math.min(95, x2))}%`}
+                  y2={`${Math.max(5, Math.min(95, y2))}%`}
+                  stroke="url(#connectionGradient)"
+                  strokeWidth="1"
+                  strokeDasharray="5,5"
+                  className="animate-pulse"
+                  style={{ animationDelay: `${index * 0.5}s` }}
+                />
+              );
+            })}
+          </svg>
+        </div>
         {gridStreams.map((stream, index) => (
           <div
             key={stream.displayId}
-            className={`relative group cursor-pointer border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden ${
-              isUltraLowPerformance ? '' : 'transform transition-all duration-200 hover:scale-105 hover:z-10'
+            className={`relative group cursor-pointer border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-black/20 backdrop-blur-sm z-20 ${
+              isUltraLowPerformance ? '' : 'transform transition-all duration-200 hover:scale-105 hover:z-30'
             }`}
             onClick={() => handleStreamClick(stream)}
+            style={{
+              boxShadow: stream.isRealStream 
+                ? '0 0 15px hsl(187, 85%, 53%, 0.3)' 
+                : '0 0 10px hsl(266, 85%, 58%, 0.2)'
+            }}
           >
             {/* 关闭按钮 - 只在真实直播上显示，且屏幕数量不超过64 */}
             {stream.isRealStream && currentConfig.count <= 64 && (
