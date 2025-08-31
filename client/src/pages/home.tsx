@@ -129,10 +129,10 @@ export default function Home() {
   return (
     <div className="flex-1 flex flex-col">
       {/* Header with Search and Quick Actions */}
-      <header className="p-4 lg:p-6 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <header className="p-4 lg:p-6 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 circuit-bg relative">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex-1">
-            <h1 className="text-2xl lg:text-3xl font-bold text-foreground mb-2">
+            <h1 className="text-2xl lg:text-3xl font-bold text-foreground mb-2 neon-text">
               <TranslatedText>Live Streaming Hub</TranslatedText>
             </h1>
             <p className="text-muted-foreground">
@@ -267,7 +267,7 @@ export default function Home() {
         </main>
 
         {/* Sidebar - Create Stream & Quick Actions */}
-        <aside className="w-full lg:w-80 xl:w-96 border-l border-border bg-card/50 backdrop-blur">
+        <aside className="w-full lg:w-80 xl:w-96 border-l border-border bg-card/50 backdrop-blur holographic">
           <div className="p-4 lg:p-6 space-y-6">
             {/* Quick Create */}
             <div className="space-y-4">

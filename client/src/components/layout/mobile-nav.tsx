@@ -28,7 +28,7 @@ export function MobileNavigation() {
         />
       </div>
       
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-sm border-t border-border p-2 z-40 shadow-lg" data-testid="mobile-nav">
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-sm border-t border-border p-2 z-40 shadow-lg tech-card" data-testid="mobile-nav">
         <div className="flex items-center justify-around">
           {navigation.map((item) => {
             const Icon = item.icon;

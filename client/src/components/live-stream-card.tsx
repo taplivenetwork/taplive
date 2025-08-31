@@ -39,7 +39,7 @@ export function LiveStreamCard({ stream, onJoin, onAccept, isPending = false }: 
   
   return (
     <Card 
-      className="group overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer"
+      className="group overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer tech-card card-hover"
       data-testid={`stream-card-${stream.id}`}
     >
       {/* Video Thumbnail/Preview */}
