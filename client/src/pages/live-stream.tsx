@@ -19,7 +19,13 @@ interface LiveStreamPageProps {
 export default function LiveStreamPage() {
   const [match, params] = useRoute('/stream/:orderId');
   const [viewerCount, setViewerCount] = useState(0);
-  const [userRole, setUserRole] = useState<'viewer' | 'broadcaster'>('viewer');
+  
+  // 检查URL参数决定默认模式
+  const urlParams = new URLSearchParams(window.location.search);
+  const modeParam = urlParams.get('mode');
+  const [userRole, setUserRole] = useState<'viewer' | 'broadcaster'>(
+    modeParam === 'viewer' ? 'viewer' : 'viewer' // 默认为观看模式，除非是主播
+  );
   const queryClient = useQueryClient();
 
   const orderId = params?.orderId || '';

@@ -65,7 +65,11 @@ export default function Home() {
     queryFn: () => api.orders.getAll(),
   });
 
-  const orders = ordersResponse?.data || [];
+  // 去重订单 - 基于订单ID去重
+  const allOrders = ordersResponse?.data || [];
+  const orders = allOrders.filter((order: Order, index: number, arr: Order[]) => 
+    arr.findIndex(o => o.id === order.id) === index
+  );
 
   // Mutation for cancelling orders
   const cancelOrderMutation = useMutation({
@@ -178,7 +182,30 @@ export default function Home() {
           </div>
           
           {/* Search and Actions */}
-          <div className="flex items-center gap-3">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+            {/* 观看直播按钮 - 震撼入口 */}
+            <div className="flex gap-2">
+              <Button
+                onClick={() => {
+                  // 跳转到最新的live订单进行观看
+                  const liveOrder = activeStreams[0];
+                  if (liveOrder) {
+                    window.location.href = `/stream/${liveOrder.id}?mode=viewer`;
+                  } else {
+                    toast({
+                      title: "暂无直播",
+                      description: "目前没有进行中的直播，请稍后再试",
+                    });
+                  }
+                }}
+                size="lg"
+                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold px-6 py-3 shadow-lg shadow-purple-500/25"
+                data-testid="button-watch-live"
+              >
+                👥 立即观看直播
+              </Button>
+            </div>
+            
             <div className="relative flex-1 lg:w-80">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
               <Input

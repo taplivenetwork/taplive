@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { TranslatedText } from "@/components/translated-text";
+import { LiveThumbnail } from "@/components/live-thumbnail";
 import type { Order } from "@shared/schema";
 
 interface LiveStreamCardProps {
@@ -35,9 +36,20 @@ export function LiveStreamCard({ stream, onJoin, onAccept, onCancel, isPending =
     } else if (onJoin) {
       onJoin(stream.id);
     } else {
-      // Navigate to live stream page
-      window.location.href = `/stream/${stream.id}`;
+      // Navigate to live stream page in viewer mode
+      window.location.href = `/stream/${stream.id}?mode=viewer`;
     }
+  };
+
+  // 点击卡片任意位置进入观看
+  const handleCardClick = (e: React.MouseEvent) => {
+    // 避免按钮点击冲突
+    if ((e.target as HTMLElement).closest('button')) {
+      return;
+    }
+    
+    // 直接进入观看模式
+    window.location.href = `/stream/${stream.id}?mode=viewer`;
   };
 
   // Simulate viewer count based on stream data
@@ -45,11 +57,22 @@ export function LiveStreamCard({ stream, onJoin, onAccept, onCancel, isPending =
   
   return (
     <Card 
-      className="group overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer tech-card card-hover"
+      className="group overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer tech-card card-hover hover:scale-105"
       data-testid={`stream-card-${stream.id}`}
+      onClick={handleCardClick}
     >
       {/* Video Thumbnail/Preview */}
       <div className="relative aspect-video bg-gradient-to-br from-primary/20 via-purple-500/20 to-pink-500/20 overflow-hidden">
+        {/* 实时画面预览 - 震撼效果！ */}
+        {stream.status === 'live' ? (
+          <LiveThumbnail 
+            streamId={stream.id} 
+            className="w-full h-full"
+            showViewerCount={false} // 我们在外面显示
+          />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-br from-primary/20 via-purple-500/20 to-pink-500/20" />
+        )}
         {/* Live indicator for active streams */}
         {stream.status === 'live' && (
           <Badge className="absolute top-3 left-3 bg-red-500 text-white animate-pulse">
