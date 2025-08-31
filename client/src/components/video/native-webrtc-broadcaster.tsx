@@ -191,13 +191,21 @@ export function NativeWebRTCBroadcaster({ orderId, onStreamStart, onStreamEnd }:
           setNeedsUserClick(true);
         }
         
-        // Additional check for paused video
-        setTimeout(() => {
+        // Additional check for paused video - ENHANCED
+        const checkVideoState = () => {
           if (video.paused && video.srcObject) {
             console.log('🚨 FORCE: Video is paused, setting needsUserClick = TRUE');
             setNeedsUserClick(true);
+          } else if (video.paused && !video.srcObject) {
+            console.log('🚨 CRITICAL: Video has no source and is paused, setting needsUserClick = TRUE');
+            setNeedsUserClick(true);
           }
-        }, 2000);
+        };
+        
+        // Check immediately and repeatedly
+        setTimeout(checkVideoState, 1000);
+        setTimeout(checkVideoState, 2000);
+        setTimeout(checkVideoState, 3000);
       }
 
       // Notify WebSocket that broadcaster is ready
@@ -391,13 +399,31 @@ export function NativeWebRTCBroadcaster({ orderId, onStreamStart, onStreamEnd }:
           {/* Debug Status */}
           <div className="text-xs space-y-1 mt-2 p-2 bg-blue-50 rounded border">
             <p className="font-semibold">原生WebRTC状态:</p>
-            <p>needsUserClick: {needsUserClick ? '🔴 TRUE' : '🟢 FALSE'}</p>
+            <p className={needsUserClick ? 'text-red-600 font-bold' : ''}>
+              needsUserClick: {needsUserClick ? '🔴 TRUE' : '🟢 FALSE'}
+              {videoRef.current?.paused && !needsUserClick && ' ⚠️ 状态错误!'}
+            </p>
             <p>isStreaming: {isStreaming ? '✅ TRUE' : '❌ FALSE'}</p>
             <p>isConnected: {isConnected ? '✅ TRUE' : '❌ FALSE'}</p>
             <p>videoPaused: {videoRef.current?.paused ? '⏸️ TRUE' : '▶️ FALSE'}</p>
             <p>streamTracks: {stream?.getTracks().length || 0}</p>
             <p>hasVideo: {videoRef.current ? '✅ YES' : '❌ NO'}</p>
             <p>videoSrc: {videoRef.current?.srcObject ? '✅ YES' : '❌ NO'}</p>
+            
+            {/* 强制修复按钮 */}
+            {videoRef.current?.paused && !needsUserClick && (
+              <Button 
+                onClick={() => {
+                  console.log('🔧 Manual fix: Setting needsUserClick = TRUE');
+                  setNeedsUserClick(true);
+                }}
+                size="sm"
+                variant="destructive"
+                className="mt-2"
+              >
+                🔧 强制修复状态
+              </Button>
+            )}
           </div>
         </div>
       </CardContent>
