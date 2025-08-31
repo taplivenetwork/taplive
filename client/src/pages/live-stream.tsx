@@ -195,20 +195,28 @@ export default function LiveStreamPage() {
             </div>
             <div className="flex gap-2">
               <Button
-                onClick={() => setUserRole('broadcaster')}
+                onClick={() => {
+                  console.log('🔄 Switching to broadcaster mode');
+                  setUserRole('broadcaster');
+                }}
                 variant={userRole === 'broadcaster' ? 'default' : 'outline'}
                 size="sm"
                 data-testid="switch-to-broadcaster"
+                className={userRole === 'broadcaster' ? 'bg-green-500 hover:bg-green-600' : ''}
               >
-                🎬 主播模式
+                🎬 {userRole === 'broadcaster' ? '✅ 当前主播' : '切换主播'}
               </Button>
               <Button
-                onClick={() => setUserRole('viewer')}
+                onClick={() => {
+                  console.log('🔄 Switching to viewer mode');
+                  setUserRole('viewer');
+                }}
                 variant={userRole === 'viewer' ? 'default' : 'outline'}
                 size="sm"
                 data-testid="switch-to-viewer"
+                className={userRole === 'viewer' ? 'bg-purple-500 hover:bg-purple-600' : ''}
               >
-                👥 观看模式
+                👥 {userRole === 'viewer' ? '✅ 当前观看' : '切换观看'}
               </Button>
             </div>
           </div>
