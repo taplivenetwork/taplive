@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { StreamViewer } from '@/components/video/stream-viewer';
 import { StreamBroadcaster } from '@/components/video/stream-broadcaster';
 import { TranslatedText } from '@/components/translated-text';
-import { ArrowLeft, MapPin, Clock, DollarSign } from 'lucide-react';
+import { ArrowLeft, MapPin, Clock, DollarSign, XCircle } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
 import type { Order } from '@shared/schema';
 
@@ -58,6 +58,22 @@ export default function LiveStreamPage() {
 
   const handleStreamEnd = () => {
     updateOrderMutation.mutate('done');
+  };
+
+  // Provider cancel order mutation (with rating penalty)
+  const cancelOrderMutation = useMutation({
+    mutationFn: () => 
+      apiRequest('POST', `/api/orders/${orderId}/cancel-by-provider`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/orders'] });
+      window.history.back(); // Go back to previous page
+    }
+  });
+
+  const handleCancelOrder = () => {
+    if (window.confirm('确定要取消订单吗？取消订单会降低您的信用评分作为惩罚。')) {
+      cancelOrderMutation.mutate();
+    }
   };
 
   const handleGoBack = () => {
@@ -150,11 +166,34 @@ export default function LiveStreamPage() {
           {/* Main Video Area */}
           <div className="lg:col-span-2">
             {userRole === 'broadcaster' ? (
-              <StreamBroadcaster
-                orderId={orderId}
-                onStreamStart={handleStreamStart}
-                onStreamEnd={handleStreamEnd}
-              />
+              <div className="space-y-4">
+                <StreamBroadcaster
+                  orderId={orderId}
+                  onStreamStart={handleStreamStart}
+                  onStreamEnd={handleStreamEnd}
+                />
+                
+                {/* Provider cancel order button */}
+                {(order.status === 'accepted' || order.status === 'live') && (
+                  <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    <p className="text-sm text-yellow-800 mb-3">
+                      <TranslatedText>作为服务提供者，您可以取消订单，但这会降低您的信用评分</TranslatedText>
+                    </p>
+                    <Button 
+                      onClick={handleCancelOrder}
+                      variant="destructive"
+                      disabled={cancelOrderMutation.isPending}
+                      data-testid="cancel-order-button"
+                      className="w-full"
+                    >
+                      <XCircle className="w-4 h-4 mr-2" />
+                      <TranslatedText>
+                        {cancelOrderMutation.isPending ? '取消中...' : '取消订单 (会扣分)'}
+                      </TranslatedText>
+                    </Button>
+                  </div>
+                )}
+              </div>
             ) : (
               <StreamViewer
                 streamId={orderId}

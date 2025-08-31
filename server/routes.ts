@@ -170,6 +170,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Provider cancel order (with rating penalty)
+  app.post("/api/orders/:id/cancel-by-provider", async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      const order = await storage.getOrderById(id);
+      if (!order) {
+        return res.status(404).json({
+          success: false,
+          message: "Order not found"
+        });
+      }
+
+      // Only allow cancellation if order is accepted or live
+      if (!['accepted', 'live'].includes(order.status)) {
+        return res.status(400).json({
+          success: false,
+          message: "Cannot cancel order in current status"
+        });
+      }
+
+      // Update order status to cancelled
+      const updatedOrder = await storage.updateOrder(id, { 
+        status: 'cancelled' as const,
+        providerId: null // Remove provider assignment
+      });
+
+      // Apply rating penalty to the provider (if exists)
+      if (order.providerId) {
+        await storage.applyProviderCancelPenalty(order.providerId);
+      }
+
+      res.json({
+        success: true,
+        data: updatedOrder,
+        message: "Order cancelled successfully. Your rating has been reduced as a penalty."
+      });
+    } catch (error) {
+      console.error('Error cancelling order by provider:', error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to cancel order"
+      });
+    }
+  });
+
   // Submit order for customer approval (Provider completes service)
   app.post("/api/orders/:id/submit-for-approval", async (req, res) => {
     try {

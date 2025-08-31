@@ -1231,7 +1231,51 @@ export class DatabaseStorage implements IStorage {
   }
 
   async calculateUserStats(userId: string): Promise<void> {
-    // Implementation for calculating user statistics
+    const userRatings = await this.getUserRatings(userId);
+    const user = await this.getUser(userId);
+    
+    if (!user || userRatings.length === 0) return;
+
+    // Calculate average rating
+    const avgRating = userRatings.reduce((sum, rating) => sum + rating.rating, 0) / userRatings.length;
+    
+    // Calculate completed orders (orders that have ratings)
+    const completedOrderIds = new Set(userRatings.map(r => r.orderId));
+    const completedOrders = completedOrderIds.size;
+    
+    // Simple trust score calculation (can be enhanced with more factors)
+    const trustScore = Math.min(5.0, avgRating * (1 + Math.log10(userRatings.length + 1) / 10));
+    
+    // Update user stats
+    await this.updateUser(userId, {
+      rating: avgRating.toFixed(2),
+      totalRatings: userRatings.length,
+      completedOrders,
+      trustScore: trustScore.toFixed(2),
+    });
+    
+    // Recalculate dispatch score
+    await this.calculateUserDispatchScore(userId);
+  }
+
+  // Apply rating penalty for provider cancellation
+  async applyProviderCancelPenalty(userId: string): Promise<void> {
+    const user = await this.getUser(userId);
+    if (!user) return;
+
+    // Reduce trust score and rating by 0.2 points (penalty)
+    const currentRating = parseFloat(user.rating || '0');
+    const currentTrustScore = parseFloat(user.trustScore || '0');
+    
+    const newRating = Math.max(1.0, currentRating - 0.2);
+    const newTrustScore = Math.max(1.0, currentTrustScore - 0.2);
+    
+    await this.updateUser(userId, {
+      rating: newRating.toFixed(2),
+      trustScore: newTrustScore.toFixed(2),
+    });
+
+    console.log(`Applied cancellation penalty to user ${userId}. Rating: ${currentRating} → ${newRating}, Trust Score: ${currentTrustScore} → ${newTrustScore}`);
   }
 
   // Dispatch operations
