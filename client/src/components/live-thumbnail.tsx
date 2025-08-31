@@ -115,10 +115,11 @@ export function LiveThumbnail({
 
     // 根据性能模式选择动画方式
     if (lowPerformance) {
-      // 低性能模式：使用定时器，降低帧率
-      animationInterval = setInterval(simulatePreview, 200); // 5fps instead of 60fps
+      // 低性能模式：使用定时器，大幅降低帧率
+      const frameRate = enableWebSocket ? 200 : 1000; // 有WebSocket时5fps，否则1fps（1秒一帧）
+      animationInterval = setInterval(simulatePreview, frameRate);
     } else {
-      // 正常模式：使用requestAnimationFrame
+      // 正常模式：使用requestAnimationFrame (60fps)
       const animate = () => {
         simulatePreview();
         animationFrame = requestAnimationFrame(animate);

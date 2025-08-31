@@ -33,7 +33,7 @@ export function MultiStreamGrid({ streams, onStreamClick }: MultiStreamGridProps
   
   // 性能保护机制
   const isLowPerformance = currentConfig.count >= 64; // 64分屏以上进入低性能模式
-  const isUltraLowPerformance = currentConfig.count >= 128; // 128分屏以上进入超低性能模式
+  const isUltraLowPerformance = currentConfig.count >= 128; // 128分屏以上进入超低性能模式（1fps动画）
   const enableWebSocketLimit = Math.min(currentConfig.count, 16); // 最多16个WebSocket连接
   
   // 生成足够的流来填满网格（复制现有流或创建模拟流）
@@ -153,7 +153,7 @@ export function MultiStreamGrid({ streams, onStreamClick }: MultiStreamGridProps
           {/* 性能提示 */}
           {isLowPerformance && (
             <div className="text-xs text-orange-200 flex items-center gap-1">
-              ⚡ 低性能模式已启用 {isUltraLowPerformance ? '(超低)' : ''}
+              ⚡ 低性能模式已启用 {isUltraLowPerformance ? '(1fps动画)' : '(5fps动画)'}
             </div>
           )}
         </div>
@@ -186,10 +186,8 @@ export function MultiStreamGrid({ streams, onStreamClick }: MultiStreamGridProps
                 lowPerformance={isLowPerformance} // 启用低性能模式
               />
             ) : (
-              /* 演示画面 */
-              <div className={`w-full aspect-video bg-gradient-to-br from-purple-500 via-pink-500 to-red-500 flex items-center justify-center text-white relative ${
-                isUltraLowPerformance ? 'bg-gray-600' : ''
-              }`}>
+              /* 演示画面 - 保持动态效果 */
+              <div className="w-full aspect-video bg-gradient-to-br from-purple-500 via-pink-500 to-red-500 flex items-center justify-center text-white relative">
                 <div className="text-center">
                   <Play className={`w-8 h-8 mx-auto mb-2 ${isLowPerformance ? '' : 'animate-pulse'}`} />
                   {currentConfig.count <= 32 && (
