@@ -168,7 +168,9 @@ const translations: Record<string, Record<string, string>> = {
       'Beautiful sunset view from Marin': 'Beautiful sunset view from Marin',
       'San Francisco, CA': 'San Francisco, CA',
       'Central Park Concert': 'Central Park Concert',
-      'Live jazz performance in the park': 'Live jazz performance in the park'
+      'Live jazz performance in the park': 'Live jazz performance in the park',
+      '404 Page Not Found': '404 Page Not Found',
+      'Did you forget to add the page to the router?': 'Did you forget to add the page to the router?'
     },
     'zh': {
       // Basic UI
@@ -332,6 +334,8 @@ const translations: Record<string, Record<string, string>> = {
       'San Francisco, CA': '加利福尼亚州旧金山',
       'Central Park Concert': '中央公园音乐会',
       'Live jazz performance in the park': '公园里的现场爵士乐表演',
+      '404 Page Not Found': '404 页面未找到',
+      'Did you forget to add the page to the router?': '您是否忘记将页面添加到路由器？',
       
       // Rating system translations
       'reviews': '评价',
@@ -519,7 +523,9 @@ const translations: Record<string, Record<string, string>> = {
       'Beautiful sunset view from Marin': 'マリンからの美しい夕日の眺め',
       'San Francisco, CA': 'サンフランシスコ、CA',
       'Central Park Concert': 'セントラルパークコンサート',
-      'Live jazz performance in the park': '公園でのライブジャズパフォーマンス'
+      'Live jazz performance in the park': '公園でのライブジャズパフォーマンス',
+      '404 Page Not Found': '404 ページが見つかりません',
+      'Did you forget to add the page to the router?': 'ルーターにページを追加するのを忘れましたか？'
     },
     'es': {
       'Search by location or description...': 'Buscar por ubicación o descripción...',
@@ -674,7 +680,9 @@ const translations: Record<string, Record<string, string>> = {
       'Beautiful sunset view from Marin': 'Hermosa vista del atardecer desde Marin',
       'San Francisco, CA': 'San Francisco, CA',
       'Central Park Concert': 'Concierto en Central Park',
-      'Live jazz performance in the park': 'Actuación de jazz en vivo en el parque'
+      'Live jazz performance in the park': 'Actuación de jazz en vivo en el parque',
+      '404 Page Not Found': '404 Página No Encontrada',
+      'Did you forget to add the page to the router?': '¿Olvidaste agregar la página al enrutador?'
     },
     'ko': {
       'Search by location or description...': '위치 또는 설명으로 검색...',
@@ -844,7 +852,9 @@ const translations: Record<string, Record<string, string>> = {
       'Beautiful sunset view from Marin': '마린에서 보는 아름다운 일몰',
       'San Francisco, CA': '샌프란시스코, CA',
       'Central Park Concert': '센트럴 파크 콘서트',
-      'Live jazz performance in the park': '공원에서의 라이브 재즈 공연'
+      'Live jazz performance in the park': '공원에서의 라이브 재즈 공연',
+      '404 Page Not Found': '404 페이지를 찾을 수 없습니다',
+      'Did you forget to add the page to the router?': '라우터에 페이지를 추가하는 것을 잊으셨나요?'
     },
     'fr': {
       'Search by location or description...': 'Rechercher par lieu ou description...',
@@ -1006,7 +1016,9 @@ const translations: Record<string, Record<string, string>> = {
       'Beautiful sunset view from Marin': 'Belle vue du coucher de soleil depuis Marin',
       'San Francisco, CA': 'San Francisco, CA',
       'Central Park Concert': 'Concert de Central Park',
-      'Live jazz performance in the park': 'Performance de jazz en direct dans le parc'
+      'Live jazz performance in the park': 'Performance de jazz en direct dans le parc',
+      '404 Page Not Found': '404 Page Non Trouvée',
+      'Did you forget to add the page to the router?': 'Avez-vous oublié d\'ajouter la page au routeur ?'
     },
     'de': {
       'Search by location or description...': 'Nach Ort oder Beschreibung suchen...',
@@ -1152,7 +1164,9 @@ const translations: Record<string, Record<string, string>> = {
       'Beautiful sunset view from Marin': 'Schöne Sonnenuntergangsaussicht von Marin',
       'San Francisco, CA': 'San Francisco, CA',
       'Central Park Concert': 'Central Park Konzert',
-      'Live jazz performance in the park': 'Live Jazz-Performance im Park'
+      'Live jazz performance in the park': 'Live Jazz-Performance im Park',
+      '404 Page Not Found': '404 Seite Nicht Gefunden',
+      'Did you forget to add the page to the router?': 'Haben Sie vergessen, die Seite zum Router hinzuzufügen?'
     },
     'ru': {
       'Search by location or description...': 'Поиск по местоположению или описанию...',
@@ -1251,7 +1265,9 @@ const translations: Record<string, Record<string, string>> = {
       'Location Sharing': 'Обмен местоположением',
       'Allow sharing your location during streams': 'Разрешить обмен местоположением во время стримов',
       'Change Password': 'Изменить пароль',
-      'Delete Account': 'Удалить аккаунт'
+      'Delete Account': 'Удалить аккаунт',
+      '404 Page Not Found': '404 Страница Не Найдена',
+      'Did you forget to add the page to the router?': 'Вы забыли добавить страницу в маршрутизатор?'
     },
     'pt': {
       'Search by location or description...': 'Pesquisar por localização ou descrição...',
@@ -1350,7 +1366,9 @@ const translations: Record<string, Record<string, string>> = {
       'Location Sharing': 'Compartilhamento de Localização',
       'Allow sharing your location during streams': 'Permitir compartilhamento de localização durante streams',
       'Change Password': 'Alterar Senha',
-      'Delete Account': 'Excluir Conta'
+      'Delete Account': 'Excluir Conta',
+      '404 Page Not Found': '404 Página Não Encontrada',
+      'Did you forget to add the page to the router?': 'Você esqueceu de adicionar a página ao roteador?'
     },
     'it': {
       'Search by location or description...': 'Cerca per posizione o descrizione...',
@@ -1449,7 +1467,9 @@ const translations: Record<string, Record<string, string>> = {
       'Location Sharing': 'Condivisione Posizione',
       'Allow sharing your location during streams': 'Consenti la condivisione della posizione durante gli stream',
       'Change Password': 'Cambia Password',
-      'Delete Account': 'Elimina Account'
+      'Delete Account': 'Elimina Account',
+      '404 Page Not Found': '404 Pagina Non Trovata',
+      'Did you forget to add the page to the router?': 'Hai dimenticato di aggiungere la pagina al router?'
     },
     'ar': {
       'Search by location or description...': 'البحث حسب الموقع أو الوصف...',
@@ -1548,7 +1568,9 @@ const translations: Record<string, Record<string, string>> = {
       'Location Sharing': 'مشاركة الموقع',
       'Allow sharing your location during streams': 'السماح بمشاركة موقعك أثناء البثوث',
       'Change Password': 'تغيير كلمة المرور',
-      'Delete Account': 'حذف الحساب'
+      'Delete Account': 'حذف الحساب',
+      '404 Page Not Found': '404 الصفحة غير موجودة',
+      'Did you forget to add the page to the router?': 'هل نسيت إضافة الصفحة إلى جهاز التوجيه؟'
     },
     'hi': {
       'Search by location or description...': 'स्थान या विवरण द्वारा खोजें...',
@@ -1710,169 +1732,9 @@ const translations: Record<string, Record<string, string>> = {
       'Beautiful sunset view from Marin': 'मारिन से खूबसूरत सूर्यास्त का दृश्य',
       'San Francisco, CA': 'सैन फ्रांसिस्को, CA',
       'Central Park Concert': 'सेंट्रल पार्क कॉन्सर्ट',
-      'Live jazz performance in the park': 'पार्क में लाइव जैज़ प्रदर्शन'
-    },
-    'ko': {
-      'Search by location or description...': '위치나 설명으로 검색...',
-      'All Categories': '모든 카테고리',
-      'Any Price': '모든 가격',
-      'Music': '음악',
-      'Food': '음식',
-      'Travel': '여행',
-      'Events': '이벤트',
-      'Fitness': '피트니스',
-      'Education': '교육',
-      'Available Orders': '이용 가능한 주문',
-      'My Orders': '내 주문',
-      'Streaming Requests': '스트리밍 요청',
-      'Creator': '크리에이터',
-      'Price': '가격',
-      'Total Pool': '총 풀',
-      'Accept Order': '주문 수락',
-      'Join Stream': '스트림 참여',
-      'Open': '열림',
-      'Live': '라이브',
-      'Completed': '완료',
-      'Unavailable': '사용할 수 없음',
-      'Pending': '대기 중',
-      'Accepted': '수락됨',
-      'participants': '참가자',
-      'min': '분',
-      'Create Order': '주문 생성',
-      'Discover': '발견',
-      'Orders': '주문',
-      'Streams': '스트림',
-      'Profile': '프로필',
-      'All': '모두',
-      'Live Streams': '라이브 스트림',
-      'Earnings': '수익',
-      'Settings': '설정',
-      'Content Creator': '콘텐츠 크리에이터',
-      'Language / 语言': '언어 / Language',
-      'TapLive': '탭라이브',
-      'MVP Platform': 'MVP 플랫폼',
-      'Sarah Chen': '사라 첸',
-      'Discover Live Streams': '라이브 스트림 발견',
-      'Find and create location-based streaming experiences': '위치 기반 스트리밍 경험 찾기 및 생성',
-      'API Connected': 'API 연결됨',
-      'API Disconnected': 'API 연결 해제됨',
-      'Active Streams Nearby': '주변 활성 스트림',
-      'No active streams nearby at the moment': '현재 주변에 활성 스트림이 없습니다',
-      'No orders match your filters': '필터와 일치하는 주문이 없습니다',
-      'You haven\'t created any orders yet': '아직 주문을 생성하지 않았습니다',
-      'Create Your First Order': '첫 번째 주문 생성',
-      'What would you like to stream?': '무엇을 스트리밍하고 싶으신가요?',
-      'Describe the streaming experience you want...': '원하는 스트리밍 경험을 설명해주세요...',
-      'Enter location (e.g., San Francisco, CA)': '위치 입력 (예: 서울, 한국)',
-      'Select duration': '지속 시간 선택',
-      'Select category': '카테고리 선택',
-      'Get Current Location': '현재 위치 가져오기',
-      'Creating...': '생성 중...',
-      'Central Park Concert Stream': '센트럴 파크 콘서트 스트림',
-      'Looking for someone to stream the outdoor concert happening at Central Park this evening': '오늘 저녁 센트럴 파크에서 열리는 야외 콘서트를 스트리밍해 줄 사람을 찾고 있습니다',
-      'Central Park, NYC': '센트럴 파크, 뉴욕',
-      'Food Market Tour': '푸드 마켓 투어',
-      'Want someone to stream a guided tour of Pike Place Market, showcasing local vendors and food': '파이크 플레이스 마켓의 가이드 투어를 스트리밍하여 현지 상인들과 음식을 소개해 주실 분을 찾습니다',
-      'Pike Place Market, Seattle': '파이크 플레이스 마켓, 시애틀',
-      'Beach Sunset Yoga': '해변 일몰 요가',
-      'Stream a peaceful sunset yoga session at Santa Monica Beach for wellness enthusiasts': '웰니스 애호가들을 위해 산타 모니카 해변에서 평화로운 일몰 요가 세션을 스트리밍해 주세요',
-      'Santa Monica Beach, CA': '산타 모니카 해변, 캘리포니아',
-      'Success': '성공',
-      'Error': '오류',
-      'Connection Error': '연결 오류',
-      'Failed to connect to the server': '서버 연결에 실패했습니다',
-      'Order accepted successfully!': '주문이 성공적으로 수락되었습니다!',
-      'Failed to accept order': '주문 수락에 실패했습니다',
-      'Joining Stream': '스트림 참여 중',
-      'Opening live stream...': '라이브 스트림 열기 중...',
-      'Manage your streaming orders and track their progress': '스트리밍 주문을 관리하고 진행 상황을 추적하세요',
-      'No orders found': '주문을 찾을 수 없습니다',
-      'Your orders will appear here once you create them': '주문을 생성하면 여기에 나타납니다',
-      'Select Language / 选择语言': '언어 선택 / Select Language',
-      'Active': '활성',
-      'Tomorrow': '내일',
-      'Now': '지금',
-      'In 1h': '1시간 후',
-      'In 23h': '23시간 후',
-      'In 2 days': '2일 후',
-      'No pending orders': '대기 중인 주문 없음',
-      'No open orders': '열린 주문 없음',
-      'No accepted orders': '수락된 주문 없음',
-      'No live streams': '라이브 스트림 없음',
-      'No completed orders': '완료된 주문 없음',
-      
-      // Settings page - Korean translations
-      'Manage your account preferences and streaming settings': '계정 기본 설정 및 스트리밍 설정 관리',
-      'Profile Settings': '프로필 설정',
-      'Update your personal information and profile details': '개인 정보 및 프로필 세부 정보 업데이트',
-      'First Name': '이름',
-      'Last Name': '성',
-      'Email': '이메일',
-      'Bio': '소개',
-      'Tell viewers about yourself...': '시청자에게 자신에 대해 알려주세요...',
-      'Professional content creator specializing in travel and lifestyle streaming.': '여행 및 라이프스타일 스트리밍을 전문으로 하는 전문 콘텐츠 크리에이터입니다.',
-      'Save Profile': '프로필 저장',
-      'Streaming Settings': '스트리밍 설정',
-      'Configure your default streaming preferences': '기본 스트리밍 기본 설정 구성',
-      'Default Stream Duration': '기본 스트림 지속 시간',
-      'Default Category': '기본 카테고리',
-      'Auto-start recording': '자동 녹화 시작',
-      'Automatically record all your streams': '모든 스트림을 자동으로 녹화',
-      'HD Quality': 'HD 품질',
-      'Stream in high definition (uses more data)': '고화질로 스트리밍 (더 많은 데이터 사용)',
-      'Notifications': '알림',
-      'Choose what notifications you want to receive': '받고 싶은 알림을 선택하세요',
-      'New Order Alerts': '새 주문 알림',
-      'Get notified when someone places a new order': '누군가 새 주문을 할 때 알림 받기',
-      'Stream Reminders': '스트림 알림',
-      'Remind you before scheduled streams': '예정된 스트림 전에 알림',
-      'Payment Notifications': '결제 알림',
-      'Get notified when you receive payments': '결제를 받을 때 알림 받기',
-      'Marketing Emails': '마케팅 이메일',
-      'Receive tips and updates about the platform': '플랫폼에 대한 팁과 업데이트 받기',
-      'Language & Region': '언어 및 지역',
-      'Set your language and regional preferences': '언어 및 지역 기본 설정 지정',
-      'Timezone': '시간대',
-      'Privacy & Security': '개인정보 보호 및 보안',
-      'Manage your privacy settings and account security': '개인정보 보호 설정 및 계정 보안 관리',
-      'Profile Visibility': '프로필 표시',
-      'Make your profile visible to other users': '다른 사용자가 프로필을 볼 수 있도록 설정',
-      'Location Sharing': '위치 공유',
-      'Allow sharing your location during streams': '스트림 중 위치 공유 허용',
-      'Change Password': '비밀번호 변경',
-      'Delete Account': '계정 삭제',
-      
-      // Earnings page - Korean translations
-      'Track your streaming revenue and performance': '스트리밍 수익 및 성과 추적',
-      'Total Earnings': '총 수익',
-      'All time': '전체 기간',
-      'This Month': '이번 달',
-      '+12% from last month': '지난 달보다 +12%',
-      'Completed Streams': '완료된 스트림',
-      'Average Rating': '평균 평점',
-      'From customer reviews': '고객 리뷰에서',
-      'Recent Earnings': '최근 수익',
-      'Your latest completed streaming sessions': '최근 완료된 스트리밍 세션',
-      
-      // Streams page - Korean translations
-      'Watch and manage your live streaming sessions': '라이브 스트리밍 세션 시청 및 관리',
-      'Live Now': '지금 라이브',
-      'Watch Stream': '스트림 시청',
-      'No Live Streams': '라이브 스트림 없음',
-      'No streams are currently live. Check back later!': '현재 라이브 스트림이 없습니다. 나중에 다시 확인해주세요!',
-      'Upcoming Streams': '예정된 스트림',
-      'Scheduled': '예약됨',
-      'Set Reminder': '알림 설정',
-      'No Upcoming Streams': '예정된 스트림 없음',
-      'No streams are scheduled yet.': '아직 예약된 스트림이 없습니다.',
-      'Times Square Night Walk': '타임스 스퀘어 야간 산책',
-      'Exploring the bright lights of NYC': '뉴욕의 밝은 불빛 탐험',
-      'Times Square, NYC': '타임스 스퀘어, 뉴욕',
-      'Golden Gate Bridge View': '골든 게이트 브리지 전망',
-      'Beautiful sunset view from Marin': '마린에서 보는 아름다운 일몰 전망',
-      'San Francisco, CA': '샌프란시스코, 캘리포니아',
-      'Central Park Concert': '센트럴 파크 콘서트',
-      'Live jazz performance in the park': '공원에서의 라이브 재즈 공연'
+      'Live jazz performance in the park': 'पार्क में लाइव जैज़ प्रदर्शन',
+      '404 Page Not Found': '404 पृष्ठ नहीं मिला',
+      'Did you forget to add the page to the router?': 'क्या आप पेज को राउटर में जोड़ना भूल गए?'
     }
   };
 
