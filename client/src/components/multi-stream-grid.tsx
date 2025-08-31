@@ -29,10 +29,13 @@ export function MultiStreamGrid({ streams, onStreamClick }: MultiStreamGridProps
 
   const currentConfig = GRID_CONFIGS.find(config => config.count === selectedGrid) || GRID_CONFIGS[1];
   
-  // 获取当前直播流（排除已关闭的流）
+  // 获取所有可用的实时直播流（排除已关闭的流）
   const availableStreams = streams.filter(stream => 
     stream.status === 'live' && !closedStreams.has(stream.id)
   );
+  
+  // 获取更多真实直播源用于补充（包括其他状态的流，模拟未来有足够视频源的场景）
+  const allPotentialStreams = streams.filter(stream => !closedStreams.has(stream.id));
   const liveStreams = availableStreams;
   
   // 性能保护机制
@@ -40,22 +43,36 @@ export function MultiStreamGrid({ streams, onStreamClick }: MultiStreamGridProps
   const isUltraLowPerformance = currentConfig.count >= 128; // 128分屏以上进入超低性能模式（1fps动画）
   const enableWebSocketLimit = Math.min(currentConfig.count, 16); // 最多16个WebSocket连接
   
-  // 生成足够的流来填满网格（复制现有流或创建模拟流）
+  // 智能填充网格：优先使用真实直播源，不足时补充演示内容
   const gridStreams = [];
+  
   for (let i = 0; i < currentConfig.count; i++) {
-    if (liveStreams[i % liveStreams.length]) {
+    // 第一优先级：可用的实时直播流
+    if (availableStreams[i]) {
       gridStreams.push({
-        ...liveStreams[i % liveStreams.length],
-        // 为重复流添加唯一标识
-        displayId: `${liveStreams[i % liveStreams.length].id}-${i}`
+        ...availableStreams[i],
+        displayId: `${availableStreams[i].id}-${i}`,
+        isRealStream: true
       });
-    } else {
-      // 创建模拟流用于演示
+    }
+    // 第二优先级：循环使用现有实时直播流（模拟未来视频源足够多的场景）
+    else if (availableStreams.length > 0) {
+      const sourceStream = availableStreams[i % availableStreams.length];
+      gridStreams.push({
+        ...sourceStream,
+        displayId: `${sourceStream.id}-cycle-${i}`,
+        title: `${sourceStream.title} (补充源${Math.floor(i / availableStreams.length) + 1})`,
+        isRealStream: true, // 仍然是真实直播源，只是循环使用
+        isCycledStream: true // 标记为循环流
+      });
+    }
+    // 第三优先级：MVP阶段的演示视频（视频源不足时的降级方案）
+    else {
       gridStreams.push({
         id: `demo-${i}`,
         displayId: `demo-${i}`,
-        title: `演示直播 ${i + 1}`,
-        description: '精彩内容正在直播中...',
+        title: `等待直播源 ${i + 1}`,
+        description: 'MVP阶段演示内容，未来将是实时直播',
         price: '15.99',
         status: 'live' as const,
         category: 'entertainment',
@@ -66,18 +83,22 @@ export function MultiStreamGrid({ streams, onStreamClick }: MultiStreamGridProps
         creatorId: 'demo',
         providerId: null,
         createdAt: new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
+        isRealStream: false,
+        isDemoStream: true
       });
     }
   }
 
   const handleStreamClick = (stream: any) => {
-    if (onStreamClick && liveStreams.find(s => s.id === stream.id)) {
-      // 只有真实直播才能点击进入
+    if (onStreamClick && stream.isRealStream) {
+      // 真实直播源可以点击进入
       onStreamClick(stream.id);
-    } else {
+    } else if (stream.isDemoStream) {
       // 演示流显示提示
-      console.log('点击了演示流，真实环境中这里会有实际直播');
+      console.log('点击了MVP演示流，未来将是真实直播源');
+    } else {
+      console.log('点击了直播流');
     }
   };
 
@@ -152,7 +173,7 @@ export function MultiStreamGrid({ streams, onStreamClick }: MultiStreamGridProps
           <div className="flex items-center gap-6 text-sm">
             <div className="flex items-center gap-1">
               <div className="w-2 h-2 bg-red-400 rounded-full animate-pulse" />
-              <span>真实直播: {liveStreams.length}</span>
+              <span>实时直播源: {availableStreams.length}</span>
             </div>
             <div className="flex items-center gap-1">
               <Grid className="w-3 h-3" />
@@ -163,7 +184,7 @@ export function MultiStreamGrid({ streams, onStreamClick }: MultiStreamGridProps
               <span>总画面: {currentConfig.count}</span>
             </div>
             <div className="flex items-center gap-1">
-              <span>WebSocket连接: {Math.min(enableWebSocketLimit, liveStreams.length)}</span>
+              <span>WebSocket连接: {Math.min(enableWebSocketLimit, availableStreams.length)}</span>
             </div>
             {closedStreams.size > 0 && (
               <div className="flex items-center gap-1">
@@ -207,7 +228,7 @@ export function MultiStreamGrid({ streams, onStreamClick }: MultiStreamGridProps
             onClick={() => handleStreamClick(stream)}
           >
             {/* 关闭按钮 - 只在真实直播上显示，且屏幕数量不超过64 */}
-            {liveStreams.find(s => s.id === stream.id) && currentConfig.count <= 64 && (
+            {stream.isRealStream && currentConfig.count <= 64 && (
               <Button
                 size="sm"
                 variant="outline"
@@ -220,7 +241,7 @@ export function MultiStreamGrid({ streams, onStreamClick }: MultiStreamGridProps
             )}
 
             {/* 实时画面或演示画面 */}
-            {liveStreams.find(s => s.id === stream.id) ? (
+            {stream.isRealStream ? (
               <LiveThumbnail 
                 streamId={stream.id} 
                 className="w-full h-full aspect-video"
@@ -229,26 +250,26 @@ export function MultiStreamGrid({ streams, onStreamClick }: MultiStreamGridProps
                 lowPerformance={isLowPerformance} // 启用低性能模式
               />
             ) : (
-              /* 演示画面 - 保持动态效果 */
-              <div className="w-full aspect-video bg-gradient-to-br from-purple-500 via-pink-500 to-red-500 flex items-center justify-center text-white relative">
+              /* MVP阶段演示画面 - 等待真实直播源 */
+              <div className="w-full aspect-video bg-gradient-to-br from-gray-500 via-gray-600 to-gray-700 flex items-center justify-center text-white relative">
                 <div className="text-center">
                   <Play className={`w-8 h-8 mx-auto mb-2 ${isLowPerformance ? '' : 'animate-pulse'}`} />
                   {currentConfig.count <= 32 && (
-                    <div className="text-xs font-bold">演示直播</div>
+                    <div className="text-xs font-bold">等待直播源</div>
                   )}
                 </div>
                 
-                {/* DEMO 标识 - 只在小网格时显示 */}
+                {/* MVP 标识 - 只在小网格时显示 */}
                 {currentConfig.count <= 32 && (
-                  <Badge className="absolute top-1 left-1 bg-orange-500 text-white text-xs">
-                    DEMO
+                  <Badge className="absolute top-1 left-1 bg-blue-500 text-white text-xs">
+                    MVP
                   </Badge>
                 )}
                 
                 {currentConfig.count <= 16 && (
                   <Badge className="absolute top-1 right-1 bg-black/50 text-white text-xs">
                     <Users className="w-2 h-2 mr-1" />
-                    {Math.floor(Math.random() * 200) + 10}
+                    待上线
                   </Badge>
                 )}
               </div>
@@ -281,13 +302,13 @@ export function MultiStreamGrid({ streams, onStreamClick }: MultiStreamGridProps
       {/* 底部提示 */}
       <div className="text-center text-sm text-gray-600 dark:text-gray-400">
         <p>
-          📺 多屏同时观看体验 • 
-          真实直播: {liveStreams.length} • 
-          演示画面: {currentConfig.count - liveStreams.length}
+          📺 实时视频调度平台 • 
+          直播源: {availableStreams.length} • 
+          补充/演示: {currentConfig.count - availableStreams.length}
           {closedStreams.size > 0 && ` • 已关闭: ${closedStreams.size}`}
         </p>
         <p className="text-xs mt-1">
-          💡 点击任意画面进入观看模式 • 悬停显示"×"按钮可关闭视频 • 支持最大{GRID_CONFIGS[GRID_CONFIGS.length - 1].count}分屏显示
+          💡 关闭不感兴趣的视频自动补充新源 • 未来将有无限实时直播源 • 当前MVP阶段视频源有限
         </p>
       </div>
     </div>
