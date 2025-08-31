@@ -268,24 +268,25 @@ export default function Home() {
                   size="sm"
                   variant={viewMode === 'cards' ? 'default' : 'outline'}
                   onClick={() => {
-                    console.log('切换到列表模式');
+                    console.log('切换到单个直播模式，当前模式:', viewMode);
                     setViewMode('cards');
                   }}
+                  className={viewMode === 'cards' ? 'bg-blue-600 text-white hover:bg-blue-700' : ''}
                   data-testid="button-card-view"
                 >
-                  🎬 单个直播
+                  🎬 单个直播 {viewMode === 'cards' && '✓'}
                 </Button>
                 <Button
                   size="sm"
                   variant={viewMode === 'grid' ? 'default' : 'outline'}
                   onClick={() => {
-                    console.log('切换到多屏模式');
+                    console.log('切换到多屏模式，当前模式:', viewMode);
                     setViewMode('grid');
                   }}
                   className={viewMode === 'grid' ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700' : ''}
                   data-testid="button-grid-view"
                 >
-                  📺 多屏网格
+                  📺 多屏网格 {viewMode === 'grid' && '✓'}
                 </Button>
               </div>
             </div>
