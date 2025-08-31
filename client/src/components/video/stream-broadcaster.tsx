@@ -74,6 +74,10 @@ export function StreamBroadcaster({ orderId, onStreamStart, onStreamEnd }: Strea
       setError(null);
       console.log('🎬 Starting stream with camera:', facingMode);
       
+      // Reset user interaction state at start
+      console.log('🔄 Resetting needsUserInteraction to FALSE at start');
+      setNeedsUserInteraction(false);
+      
       // Clean up existing stream
       if (stream) {
         console.log('🧹 Cleaning up existing stream...');
@@ -157,18 +161,19 @@ export function StreamBroadcaster({ orderId, onStreamStart, onStreamEnd }: Strea
 
           video.addEventListener('pause', (e) => {
             console.warn('⏸️ Video paused');
+            console.log('🚨 IMMEDIATE: Setting needsUserInteraction to TRUE on pause');
+            setNeedsUserInteraction(true);
+            setError(null);
             
-            // If video is paused immediately after starting, likely due to autoplay policy
-            if (!video.ended && video.srcObject) {
-              setTimeout(() => {
-                if (video.paused && !video.ended && video.srcObject) {
-                  console.log('🔒 Video auto-paused by browser - requiring user interaction');
-                  console.log('🚨 Setting needsUserInteraction to TRUE');
-                  setNeedsUserInteraction(true);
-                  setError(null);
-                }
-              }, 1000); // Wait 1s to see if it's a permanent pause
-            }
+            // Also check after delay for confirmation
+            setTimeout(() => {
+              if (video.paused && !video.ended && video.srcObject) {
+                console.log('🔒 Confirmed: Video auto-paused by browser - requiring user interaction');
+                console.log('🚨 DOUBLE CONFIRM: Setting needsUserInteraction to TRUE');
+                setNeedsUserInteraction(true);
+                setError(null);
+              }
+            }, 1000);
           });
 
           video.addEventListener('ended', () => {
@@ -285,6 +290,7 @@ export function StreamBroadcaster({ orderId, onStreamStart, onStreamEnd }: Strea
     setIsStreaming(false);
     onStreamEnd();
     setError(null);
+    // DON'T reset needsUserInteraction here!
     console.log('✅ Stream stopped');
   };
 
@@ -354,6 +360,7 @@ export function StreamBroadcaster({ orderId, onStreamStart, onStreamEnd }: Strea
       if (ws) {
         ws.close();
       }
+      // DON'T reset needsUserInteraction on cleanup
     };
   }, [stream, ws]);
 
