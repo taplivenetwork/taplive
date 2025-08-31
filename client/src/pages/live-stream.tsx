@@ -179,14 +179,39 @@ export default function LiveStreamPage() {
           </div>
         </div>
 
-        {/* User Role Debug */}
-        <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded">
-          <p className="text-sm">
-            <strong>调试信息：</strong>
-            用户角色: <span className="font-mono">{userRole}</span> | 
-            订单状态: <span className="font-mono">{order?.status}</span> | 
-            订单ID: <span className="font-mono">{orderId.slice(0, 8)}...</span>
-          </p>
+        {/* 模式切换控制 */}
+        <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <div className="flex items-center justify-between">
+            <div className="text-sm">
+              <strong>当前模式：</strong>
+              <span className={`ml-2 px-2 py-1 rounded text-xs font-semibold ${
+                userRole === 'broadcaster' ? 'bg-green-500 text-white' : 'bg-purple-500 text-white'
+              }`}>
+                {userRole === 'broadcaster' ? '🎬 主播模式' : '👥 观看模式'}
+              </span>
+              <span className="ml-4 text-gray-600">
+                订单状态: <span className="font-mono">{order?.status}</span>
+              </span>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                onClick={() => setUserRole('broadcaster')}
+                variant={userRole === 'broadcaster' ? 'default' : 'outline'}
+                size="sm"
+                data-testid="switch-to-broadcaster"
+              >
+                🎬 主播模式
+              </Button>
+              <Button
+                onClick={() => setUserRole('viewer')}
+                variant={userRole === 'viewer' ? 'default' : 'outline'}
+                size="sm"
+                data-testid="switch-to-viewer"
+              >
+                👥 观看模式
+              </Button>
+            </div>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -194,34 +219,15 @@ export default function LiveStreamPage() {
           <div className="lg:col-span-2">
             {userRole === 'broadcaster' ? (
               <div className="space-y-4">
-                {/* Try Native WebRTC First - More Stable */}
-                <div className="space-y-4">
-                  <div className="text-sm text-blue-600 bg-blue-50 p-3 rounded border">
-                    <TranslatedText>✨ 使用原生WebRTC技术，更稳定的直播体验</TranslatedText>
-                  </div>
-                  <NativeWebRTCBroadcaster
-                    orderId={orderId}
-                    onStreamStart={handleStreamStart}
-                    onStreamEnd={handleStreamEnd}
-                  />
+                {/* 主播界面 - 原生WebRTC直播 */}
+                <div className="text-sm text-green-600 bg-green-50 p-3 rounded border font-semibold">
+                  🎬 <TranslatedText>主播模式：您正在直播</TranslatedText>
                 </div>
-                
-                {/* Fallback to Simple-Peer */}
-                <details className="mt-6">
-                  <summary className="text-sm text-gray-600 cursor-pointer hover:text-gray-800">
-                    <TranslatedText>🔧 备用直播技术 (点击展开)</TranslatedText>
-                  </summary>
-                  <div className="mt-4 p-4 bg-gray-50 border rounded">
-                    <div className="text-sm text-gray-600 mb-3">
-                      <TranslatedText>如果上方直播无法正常使用，可以尝试这个备用版本</TranslatedText>
-                    </div>
-                    <StreamBroadcaster
-                      orderId={orderId}
-                      onStreamStart={handleStreamStart}
-                      onStreamEnd={handleStreamEnd}
-                    />
-                  </div>
-                </details>
+                <NativeWebRTCBroadcaster
+                  orderId={orderId}
+                  onStreamStart={handleStreamStart}
+                  onStreamEnd={handleStreamEnd}
+                />
                 
                 {/* Provider cancel order button */}
                 {(order.status === 'accepted' || order.status === 'live') && (
@@ -245,11 +251,17 @@ export default function LiveStreamPage() {
                 )}
               </div>
             ) : (
-              <StreamViewer
-                streamId={orderId}
-                isLive={isLive}
-                onViewerCountChange={setViewerCount}
-              />
+              <div className="space-y-4">
+                {/* 观看者界面 */}
+                <div className="text-sm text-purple-600 bg-purple-50 p-3 rounded border font-semibold">
+                  👥 <TranslatedText>观看模式：正在观看直播</TranslatedText>
+                </div>
+                <StreamViewer
+                  streamId={orderId}
+                  isLive={isLive}
+                  onViewerCountChange={setViewerCount}
+                />
+              </div>
             )}
           </div>
 
