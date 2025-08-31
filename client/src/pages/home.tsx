@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Plus, Search, Filter, Play, Users, MapPin, Clock } from "lucide-react";
+import { Plus, Search, Filter, Play, Users, MapPin, Clock, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -36,6 +36,7 @@ export default function Home() {
   const [priceFilter, setPriceFilter] = useState("");
   const [healthStatus, setHealthStatus] = useState<"connected" | "disconnected">("disconnected");
   const [viewMode, setViewMode] = useState<'cards' | 'grid'>('cards');
+  const [dismissedOrders, setDismissedOrders] = useState<Set<string>>(new Set()); // 跟踪被关闭的订单
 
   // Health check
   const { data: healthData } = useQuery({
@@ -67,11 +68,114 @@ export default function Home() {
     queryFn: () => api.orders.getAll(),
   });
 
-  // 去重订单 - 基于订单ID去重
+  // 创建国外著名景点的模拟订单（MVP阶段补充内容）
+  const mockTouristOrders = [
+    {
+      id: 'mock-tokyo-tower',
+      title: '东京塔实时景观直播',
+      description: '360度俯瞰东京夜景，感受日本都市魅力',
+      price: '25.00',
+      status: 'pending' as const,
+      category: 'travel',
+      address: '日本东京都港区芝公园4-2-8',
+      latitude: "35.6586",
+      longitude: "139.7454",
+      type: 'single' as const,
+      creatorId: 'tourist-jp',
+      providerId: null,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    },
+    {
+      id: 'mock-times-square',
+      title: '纽约时代广场现场直播',
+      description: '感受纽约不夜城的繁华，实时人流车流',
+      price: '30.00',
+      status: 'pending' as const,
+      category: 'events',
+      address: '美国纽约州纽约市曼哈顿时代广场',
+      latitude: "40.7589",
+      longitude: "-73.9851",
+      type: 'single' as const,
+      creatorId: 'tourist-ny',
+      providerId: null,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    },
+    {
+      id: 'mock-eiffel-tower',
+      title: '埃菲尔铁塔日落直播',
+      description: '巴黎地标建筑，浪漫日落时分现场直播',
+      price: '35.00',
+      status: 'pending' as const,
+      category: 'travel',
+      address: '法国巴黎第七区战神广场5号',
+      latitude: "48.8584",
+      longitude: "2.2945",
+      type: 'single' as const,
+      creatorId: 'tourist-paris',
+      providerId: null,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    },
+    {
+      id: 'mock-big-ben',
+      title: '伦敦大本钟整点报时',
+      description: '英国标志性建筑，听取整点报时钟声',
+      price: '20.00',
+      status: 'pending' as const,
+      category: 'events',
+      address: '英国伦敦威斯敏斯特宫',
+      latitude: "51.5007",
+      longitude: "-0.1246",
+      type: 'single' as const,
+      creatorId: 'tourist-london',
+      providerId: null,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    },
+    {
+      id: 'mock-sydney-opera',
+      title: '悉尼歌剧院海港全景',
+      description: '澳洲地标建筑，悉尼海港大桥全景直播',
+      price: '28.00',
+      status: 'pending' as const,
+      category: 'travel',
+      address: '澳大利亚新南威尔士州悉尼本尼朗角',
+      latitude: "-33.8568",
+      longitude: "151.2153",
+      type: 'single' as const,
+      creatorId: 'tourist-sydney',
+      providerId: null,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    },
+    {
+      id: 'mock-santorini',
+      title: '圣托里尼日落观景直播',
+      description: '希腊最美岛屿，爱琴海蓝白建筑群',
+      price: '40.00',
+      status: 'pending' as const,
+      category: 'travel',
+      address: '希腊圣托里尼岛伊亚镇',
+      latitude: "36.4618",
+      longitude: "25.3753",
+      type: 'single' as const,
+      creatorId: 'tourist-greece',
+      providerId: null,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }
+  ];
+
+  // 去重订单 - 基于订单ID去重，然后添加模拟订单
   const allOrders = ordersResponse?.data || [];
-  const orders = allOrders.filter((order: Order, index: number, arr: Order[]) => 
+  const realOrders = allOrders.filter((order: Order, index: number, arr: Order[]) => 
     arr.findIndex(o => o.id === order.id) === index
   );
+  
+  // 合并真实订单和模拟订单
+  const orders = [...realOrders, ...mockTouristOrders] as Order[];
 
   // Mutation for cancelling orders
   const cancelOrderMutation = useMutation({
@@ -99,8 +203,37 @@ export default function Home() {
     },
   });
 
-  // Filter orders
+  // 处理订单关闭
+  const handleDismissOrder = (orderId: string) => {
+    console.log(`关闭订单: ${orderId}`);
+    setDismissedOrders(prev => new Set([...Array.from(prev), orderId]));
+    
+    // 显示提示
+    toast({
+      title: "订单已关闭",
+      description: "该订单不再显示，系统会自动推荐新的订单",
+      variant: "default",
+    });
+  };
+
+  // 重置关闭的订单
+  const handleResetDismissedOrders = () => {
+    console.log('重置所有关闭的订单');
+    setDismissedOrders(new Set());
+    toast({
+      title: "订单恢复",
+      description: "所有关闭的订单已重新显示",
+      variant: "default",
+    });
+  };
+
+  // Filter orders (排除被关闭的订单)
   const filteredOrders = orders.filter((order: Order) => {
+    // 首先排除被关闭的订单
+    if (dismissedOrders.has(order.id)) {
+      return false;
+    }
+
     const matchesSearch = !searchFilter || 
       order.title.toLowerCase().includes(searchFilter.toLowerCase()) ||
       order.description.toLowerCase().includes(searchFilter.toLowerCase()) ||
@@ -462,10 +595,22 @@ export default function Home() {
 
             {/* Recent Requests */}
             <div className="space-y-4">
-              <h3 className="font-semibold text-foreground flex items-center gap-2">
-                <Clock className="w-5 h-5" />
-                <TranslatedText>Recent Requests</TranslatedText>
-              </h3>
+              <div className="flex items-center justify-between">
+                <h3 className="font-semibold text-foreground flex items-center gap-2">
+                  <Clock className="w-5 h-5" />
+                  <TranslatedText>Recent Requests</TranslatedText>
+                </h3>
+                {dismissedOrders.size > 0 && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handleResetDismissedOrders}
+                    className="h-6 px-2 text-xs"
+                  >
+                    恢复全部 ({dismissedOrders.size})
+                  </Button>
+                )}
+              </div>
               
               {isLoading ? (
                 <div className="space-y-3">
@@ -479,7 +624,21 @@ export default function Home() {
               ) : filteredOrders.length > 0 ? (
                 <div className="space-y-3 max-h-96 overflow-y-auto">
                   {filteredOrders.slice(0, 5).map((order) => (
-                    <Card key={order.id} className="p-3 hover:bg-accent/50 transition-colors cursor-pointer">
+                    <Card key={order.id} className="relative group p-3 hover:bg-accent/50 transition-colors cursor-pointer">
+                      {/* 关闭按钮 */}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="absolute top-1 right-1 w-5 h-5 p-0 bg-red-500 hover:bg-red-600 border-0 text-white z-10 opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDismissOrder(order.id);
+                        }}
+                        title="关闭此订单"
+                      >
+                        <X className="w-3 h-3" />
+                      </Button>
+
                       <div className="space-y-2">
                         <div className="flex items-center justify-between">
                           <Badge variant="secondary" className="text-xs">
@@ -489,18 +648,38 @@ export default function Home() {
                             ${order.price}
                           </span>
                         </div>
-                        <h4 className="font-medium text-sm line-clamp-1">
+                        <h4 className="font-medium text-sm line-clamp-1 pr-6">
                           {order.title}
                         </h4>
                         <p className="text-xs text-muted-foreground line-clamp-2">
                           {order.address}
                         </p>
+                        
+                        {/* 模拟订单标识 */}
+                        {order.id.startsWith('mock-') && (
+                          <Badge className="text-xs bg-blue-500 text-white">
+                            🌍 国际景点
+                          </Badge>
+                        )}
+                        
                         <Button size="sm" className="w-full" onClick={() => handleAcceptOrder(order.id)}>
                           <TranslatedText>Accept Request</TranslatedText>
                         </Button>
                       </div>
                     </Card>
                   ))}
+                </div>
+              ) : dismissedOrders.size > 0 ? (
+                <div className="text-center py-6">
+                  <p className="text-sm text-muted-foreground mb-3">
+                    所有订单已关闭
+                  </p>
+                  <p className="text-xs text-muted-foreground mb-3">
+                    📺 MVP阶段订单有限，未来将有无限订单源
+                  </p>
+                  <Button size="sm" variant="outline" onClick={handleResetDismissedOrders}>
+                    恢复全部订单
+                  </Button>
                 </div>
               ) : (
                 <div className="text-center py-6">
