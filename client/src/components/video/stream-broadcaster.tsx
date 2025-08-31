@@ -29,6 +29,14 @@ export function StreamBroadcaster({ orderId, onStreamStart, onStreamEnd }: Strea
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment'); // Start with rear camera
 
   useEffect(() => {
+    // Global error handlers to prevent stream termination
+    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
+      console.error('Unhandled promise rejection in video component:', event.reason);
+      event.preventDefault(); // Prevent default behavior (which might stop the stream)
+    };
+
+    window.addEventListener('unhandledrejection', handleUnhandledRejection);
+
     // WebSocket connection
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
     const wsUrl = `${protocol}//${window.location.host}/ws`;
@@ -40,31 +48,44 @@ export function StreamBroadcaster({ orderId, onStreamStart, onStreamEnd }: Strea
     };
 
     websocket.onmessage = (event) => {
-      const message = JSON.parse(event.data);
-      
-      switch (message.type) {
-        case 'user-joined':
-          // A viewer joined, we should send our stream to them
-          if (stream) {
-            initiateConnection(websocket, stream);
-          }
-          break;
-        case 'webrtc-answer':
-          if (peer && message.answer) {
-            peer.signal(message.answer);
-          }
-          break;
-        case 'webrtc-ice-candidate':
-          if (peer && message.candidate) {
-            peer.signal(message.candidate);
-          }
-          break;
+      try {
+        const message = JSON.parse(event.data);
+        
+        switch (message.type) {
+          case 'user-joined':
+            // A viewer joined, we should send our stream to them
+            if (stream) {
+              initiateConnection(websocket, stream);
+            }
+            break;
+          case 'webrtc-answer':
+            if (peer && message.answer) {
+              try {
+                peer.signal(message.answer);
+              } catch (err) {
+                console.error('Error processing WebRTC answer:', err);
+              }
+            }
+            break;
+          case 'webrtc-ice-candidate':
+            if (peer && message.candidate) {
+              try {
+                peer.signal(message.candidate);
+              } catch (err) {
+                console.error('Error processing ICE candidate:', err);
+              }
+            }
+            break;
+        }
+      } catch (err) {
+        console.error('Error processing WebSocket message:', err);
       }
     };
 
     setWs(websocket);
 
     return () => {
+      window.removeEventListener('unhandledrejection', handleUnhandledRejection);
       websocket.close();
       if (stream) {
         stream.getTracks().forEach(track => track.stop());
@@ -76,26 +97,40 @@ export function StreamBroadcaster({ orderId, onStreamStart, onStreamEnd }: Strea
   }, []);
 
   const initiateConnection = (websocket: WebSocket, mediaStream: MediaStream) => {
-    const newPeer = new Peer({
-      initiator: true,
-      trickle: false,
-      stream: mediaStream
-    });
+    try {
+      const newPeer = new Peer({
+        initiator: true,
+        trickle: false,
+        stream: mediaStream
+      });
 
-    newPeer.on('signal', (data) => {
-      websocket.send(JSON.stringify({
-        type: 'webrtc-offer',
-        offer: data,
-        streamId: orderId
-      }));
-    });
+      newPeer.on('signal', (data: any) => {
+        try {
+          websocket.send(JSON.stringify({
+            type: 'webrtc-offer',
+            offer: data,
+            streamId: orderId
+          }));
+        } catch (err) {
+          console.error('Error sending WebRTC signal:', err);
+        }
+      });
 
-    newPeer.on('error', (err) => {
-      console.error('Peer error:', err);
-      setError('Connection error occurred');
-    });
+      newPeer.on('error', (err: any) => {
+        console.error('Peer error:', err);
+        setError('WebRTC连接错误，请重试');
+        // Don't stop the stream on peer errors, just log them
+      });
 
-    setPeer(newPeer);
+      newPeer.on('close', () => {
+        console.log('Peer connection closed');
+      });
+
+      setPeer(newPeer);
+    } catch (err) {
+      console.error('Error creating peer connection:', err);
+      setError('无法创建视频连接');
+    }
   };
 
   const startStream = async () => {
@@ -211,16 +246,24 @@ export function StreamBroadcaster({ orderId, onStreamStart, onStreamEnd }: Strea
           const audioTrack = newStream.getAudioTracks()[0];
           
           if (videoTrack) {
-            const sender = peer._pc?.getSenders().find(s => s.track?.kind === 'video');
+            const sender = (peer as any)._pc?.getSenders().find((s: any) => s.track?.kind === 'video');
             if (sender) {
-              await sender.replaceTrack(videoTrack);
+              try {
+                await sender.replaceTrack(videoTrack);
+              } catch (err) {
+                console.error('Error replacing video track:', err);
+              }
             }
           }
           
           if (audioTrack) {
-            const sender = peer._pc?.getSenders().find(s => s.track?.kind === 'audio');
+            const sender = (peer as any)._pc?.getSenders().find((s: any) => s.track?.kind === 'audio');
             if (sender) {
-              await sender.replaceTrack(audioTrack);
+              try {
+                await sender.replaceTrack(audioTrack);
+              } catch (err) {
+                console.error('Error replacing audio track:', err);
+              }
             }
           }
         }
