@@ -19,6 +19,7 @@ export function StreamBroadcaster({ orderId, onStreamStart, onStreamEnd }: Strea
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [ws, setWs] = useState<WebSocket | null>(null);
   const [retryCount, setRetryCount] = useState(0);
+  const [needsUserInteraction, setNeedsUserInteraction] = useState(false);
   
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -205,23 +206,13 @@ export function StreamBroadcaster({ orderId, onStreamStart, onStreamEnd }: Strea
               }
             }, 2000);
             
-          } catch (playError) {
+          } catch (playError: any) {
             console.error('❌ Play failed:', playError.name, '-', playError.message);
             
             if (playError.name === 'NotAllowedError') {
-              setError('需要用户交互才能开始播放。请点击视频区域。');
-              
-              // Add click handler for user interaction
-              const clickHandler = async () => {
-                try {
-                  await video.play();
-                  console.log('✅ Video started after user interaction');
-                  video.removeEventListener('click', clickHandler);
-                } catch (err) {
-                  console.error('❌ User interaction play failed:', err);
-                }
-              };
-              video.addEventListener('click', clickHandler);
+              console.log('🔒 需要用户交互才能播放');
+              setNeedsUserInteraction(true);
+              setError(null); // Clear error since this is expected behavior
             } else {
               setError('视频播放失败。请检查摄像头权限。');
             }
@@ -317,6 +308,21 @@ export function StreamBroadcaster({ orderId, onStreamStart, onStreamEnd }: Strea
     setTimeout(() => startStream(), 2000);
   };
 
+  const handleUserInteraction = async () => {
+    console.log('👆 User interaction received');
+    if (videoRef.current && stream) {
+      try {
+        await videoRef.current.play();
+        console.log('✅ Video started after user interaction');
+        setNeedsUserInteraction(false);
+        setError(null);
+      } catch (err: any) {
+        console.error('❌ User interaction play failed:', err);
+        setError('播放失败，请重试或检查浏览器设置');
+      }
+    }
+  };
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
@@ -366,6 +372,29 @@ export function StreamBroadcaster({ orderId, onStreamStart, onStreamEnd }: Strea
                 <p className="text-sm opacity-75">
                   <TranslatedText>点击开始直播</TranslatedText>
                 </p>
+              </div>
+            </div>
+          )}
+          
+          {/* User Interaction Overlay */}
+          {needsUserInteraction && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/70 z-10">
+              <div className="text-center text-white space-y-4">
+                <div className="text-4xl mb-4">🎬</div>
+                <h3 className="text-lg font-semibold">
+                  <TranslatedText>准备开始直播</TranslatedText>
+                </h3>
+                <p className="text-sm opacity-90 mb-4">
+                  <TranslatedText>点击下方按钮开始直播</TranslatedText>
+                </p>
+                <Button 
+                  onClick={handleUserInteraction}
+                  className="bg-red-600 hover:bg-red-700 text-white px-6 py-3"
+                  data-testid="user-interaction-play-button"
+                >
+                  <Play className="w-4 h-4 mr-2" />
+                  <TranslatedText>开始播放</TranslatedText>
+                </Button>
               </div>
             </div>
           )}
