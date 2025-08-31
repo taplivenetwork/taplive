@@ -1373,7 +1373,10 @@ export class DatabaseStorage implements IStorage {
   async getActiveTimezoneRules(): Promise<TimezoneRule[]> { return []; }
   async updateTimezoneRule(id: string, updates: Partial<TimezoneRule>): Promise<TimezoneRule | undefined> { return undefined; }
   async deleteTimezoneRule(id: string): Promise<boolean> { return false; }
-  async createLocationTimezone(locationTz: InsertLocationTimezone): Promise<LocationTimezone> { throw new Error("Not implemented"); }
+  async createLocationTimezone(locationTz: InsertLocationTimezone): Promise<LocationTimezone> {
+    const [newLocationTz] = await db.insert(locationTimezones).values(locationTz).returning();
+    return newLocationTz;
+  }
   async getLocationTimezoneByOrder(orderId: string): Promise<LocationTimezone | undefined> { return undefined; }
   async updateLocationTimezone(id: string, updates: Partial<LocationTimezone>): Promise<LocationTimezone | undefined> { return undefined; }
 }

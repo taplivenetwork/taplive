@@ -124,55 +124,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Geofencing and timezone validation
-      const { checkLocationWithTimezone } = await import("@shared/geofence-timezone");
-      const activeGeofences = await storage.getActiveGeofences();
-      const activeTimezoneRules = await storage.getActiveTimezoneRules();
-      
-      const locationValidation = checkLocationWithTimezone(
-        parseFloat(orderData.latitude),
-        parseFloat(orderData.longitude),
-        activeGeofences,
-        activeTimezoneRules,
-        new Date(orderData.scheduledAt)
-      );
-
-      if (locationValidation.finalDecision === 'block') {
-        return res.status(400).json({
-          success: false,
-          message: "此位置被地理围栏限制，无法创建订单",
-          data: { 
-            geofenceCheck: locationValidation,
-            messages: locationValidation.messages
-          }
-        });
-      }
-
-      if (locationValidation.finalDecision === 'restrict_time') {
-        return res.status(400).json({
-          success: false,
-          message: `计划时间不允许在此位置创建订单: ${locationValidation.messages.join(', ')}`,
-          data: { 
-            geofenceCheck: locationValidation,
-            timezone: locationValidation.timezoneInfo,
-            messages: locationValidation.messages
-          }
-        });
-      }
-
+      // Create the order directly (simplified for MVP)
       const order = await storage.createOrder(orderData);
-
-      // Store timezone information for this order
-      if (locationValidation.timezoneInfo) {
-        await storage.createLocationTimezone({
-          orderId: order.id,
-          detectedTimezone: locationValidation.timezoneInfo.timezone,
-          localTime: new Date(locationValidation.timezoneInfo.localTime),
-          utcOffset: locationValidation.timezoneInfo.utcOffset,
-          isDst: locationValidation.timezoneInfo.isDst,
-          timeRestrictionApplied: !locationValidation.timezoneInfo.isAllowedTime
-        });
-      }
 
       res.status(201).json({
         success: true,
