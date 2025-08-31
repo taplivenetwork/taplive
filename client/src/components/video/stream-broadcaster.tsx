@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { TranslatedText } from '@/components/translated-text';
-import { Upload, Image, CheckCircle, X } from 'lucide-react';
+import { Play, Square, Camera, Wifi, WifiOff, RefreshCw, RotateCcw } from 'lucide-react';
 
 interface StreamBroadcasterProps {
   orderId: string;
@@ -12,165 +12,406 @@ interface StreamBroadcasterProps {
 }
 
 export function StreamBroadcaster({ orderId, onStreamStart, onStreamEnd }: StreamBroadcasterProps) {
-  const [images, setImages] = useState<string[]>([]);
-  const [isActive, setIsActive] = useState(false);
-  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [isConnected, setIsConnected] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment');
+  const [stream, setStream] = useState<MediaStream | null>(null);
+  const [ws, setWs] = useState<WebSocket | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
+  
+  const videoRef = useRef<HTMLVideoElement>(null);
 
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
-    if (!files) return;
-
-    setUploadError(null);
+  // WebSocket connection with auto-reconnect
+  useEffect(() => {
+    let reconnectTimeout: NodeJS.Timeout;
     
-    Array.from(files).forEach(file => {
-      if (file.size > 5 * 1024 * 1024) {
-        setUploadError('图片大小不能超过5MB');
-        return;
+    const connectWebSocket = () => {
+      const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+      const wsUrl = `${protocol}//${window.location.host}/ws`;
+      const socket = new WebSocket(wsUrl);
+
+      socket.onopen = () => {
+        console.log('📡 WebSocket connected for broadcaster');
+        setIsConnected(true);
+        setWs(socket);
+        setRetryCount(0);
+      };
+
+      socket.onclose = () => {
+        console.log('❌ WebSocket disconnected');
+        setIsConnected(false);
+        setWs(null);
+        
+        // Auto-reconnect after 3 seconds
+        if (retryCount < 5) {
+          console.log(`🔄 Reconnecting in 3s... (attempt ${retryCount + 1}/5)`);
+          reconnectTimeout = setTimeout(() => {
+            setRetryCount(prev => prev + 1);
+            connectWebSocket();
+          }, 3000);
+        }
+      };
+
+      socket.onerror = (error) => {
+        console.error('❌ WebSocket error:', error);
+        setError('Connection failed - retrying...');
+      };
+
+      return () => {
+        socket.close();
+        if (reconnectTimeout) clearTimeout(reconnectTimeout);
+      };
+    };
+
+    const cleanup = connectWebSocket();
+    return cleanup;
+  }, [retryCount]);
+
+  const startStream = async () => {
+    try {
+      setError(null);
+      console.log('🎬 Starting stream with camera:', facingMode);
+      
+      // Clean up existing stream
+      if (stream) {
+        console.log('🧹 Cleaning up existing stream...');
+        stream.getTracks().forEach(track => {
+          console.log(`⏹️ Stopping ${track.kind} track`);
+          track.stop();
+        });
+        setStream(null);
       }
 
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const result = e.target?.result as string;
-        setImages(prev => [...prev, result]);
+      // Enhanced camera constraints for better stability
+      const constraints = {
+        video: {
+          facingMode: facingMode,
+          width: { min: 640, ideal: 1280, max: 1920 },
+          height: { min: 480, ideal: 720, max: 1080 },
+          frameRate: { min: 15, ideal: 30, max: 30 }
+        },
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          sampleRate: 44100
+        }
       };
-      reader.readAsDataURL(file);
-    });
-  };
 
-  const startService = () => {
-    if (images.length === 0) {
-      setUploadError('请至少上传一张图片');
-      return;
+      const mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
+      console.log('✅ MediaStream obtained:', {
+        id: mediaStream.id,
+        videoTracks: mediaStream.getVideoTracks().length,
+        audioTracks: mediaStream.getAudioTracks().length
+      });
+
+      // Monitor tracks for stability
+      mediaStream.getTracks().forEach((track, index) => {
+        console.log(`🎯 Track ${index}: ${track.kind} - ${track.readyState} - ${track.enabled ? 'enabled' : 'disabled'}`);
+        
+        // Enhanced track event monitoring
+        track.addEventListener('ended', () => {
+          console.error(`❌ Track ${track.kind} ended unexpectedly!`);
+          setError(`Camera ${track.kind} stopped. Please restart the stream.`);
+        });
+
+        track.addEventListener('mute', () => {
+          console.warn(`🔇 Track ${track.kind} muted`);
+        });
+
+        track.addEventListener('unmute', () => {
+          console.log(`🔊 Track ${track.kind} unmuted`);
+        });
+      });
+
+      setStream(mediaStream);
+      
+      if (videoRef.current) {
+        // Enhanced video element setup
+        const video = videoRef.current;
+        video.srcObject = mediaStream;
+        video.muted = true; // Critical for autoplay
+        video.playsInline = true; // Critical for mobile
+        video.autoplay = true;
+        
+        console.log('📹 Video element configured');
+        
+        // Enhanced video element monitoring
+        const setupVideoEvents = () => {
+          video.addEventListener('loadedmetadata', () => {
+            console.log('📊 Video metadata loaded:', {
+              duration: video.duration,
+              videoWidth: video.videoWidth,
+              videoHeight: video.videoHeight
+            });
+          });
+
+          video.addEventListener('canplay', () => {
+            console.log('▶️ Video can play');
+          });
+
+          video.addEventListener('playing', () => {
+            console.log('✅ Video is playing');
+          });
+
+          video.addEventListener('pause', () => {
+            console.warn('⏸️ Video paused - attempting resume');
+            if (!video.ended) {
+              video.play().catch(err => console.error('❌ Resume failed:', err));
+            }
+          });
+
+          video.addEventListener('ended', () => {
+            console.error('❌ Video ended');
+          });
+
+          video.addEventListener('error', (e) => {
+            console.error('❌ Video error:', e);
+            setError('Video playback error. Please try again.');
+          });
+        };
+
+        setupVideoEvents();
+        
+        // Force play with better error handling
+        try {
+          await video.play();
+          console.log('✅ Video playing successfully');
+        } catch (playError) {
+          console.error('❌ Initial play failed:', playError);
+          
+          // Try again after a short delay
+          setTimeout(async () => {
+            try {
+              await video.play();
+              console.log('✅ Video playing on retry');
+            } catch (retryError) {
+              console.error('❌ Retry play failed:', retryError);
+              setError('Unable to start video. Please check camera permissions.');
+            }
+          }, 1000);
+        }
+      }
+
+      // WebSocket signaling
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({
+          type: 'join',
+          role: 'broadcaster',
+          streamId: orderId
+        }));
+
+        ws.send(JSON.stringify({
+          type: 'broadcaster-ready',
+          streamId: orderId
+        }));
+        
+        console.log('📡 WebSocket signals sent');
+      }
+
+      setIsStreaming(true);
+      onStreamStart();
+      console.log('🎉 Stream started successfully!');
+    } catch (err: any) {
+      console.error('❌ Stream start failed:', err);
+      
+      // Provide specific error messages
+      if (err.name === 'NotAllowedError') {
+        setError('Camera permission denied. Please allow camera access and try again.');
+      } else if (err.name === 'NotFoundError') {
+        setError('No camera found. Please check your device and try again.');
+      } else if (err.name === 'NotReadableError') {
+        setError('Camera is in use by another application. Please close other apps and try again.');
+      } else {
+        setError(`Camera error: ${err.message || 'Unknown error'}`);
+      }
     }
-    setIsActive(true);
-    onStreamStart();
   };
 
-  const stopService = () => {
-    setIsActive(false);
+  const stopStream = () => {
+    console.log('⏹️ Stopping stream...');
+    
+    if (stream) {
+      console.log('🧹 Cleaning up MediaStream...');
+      stream.getTracks().forEach(track => {
+        console.log(`⏹️ Stopping ${track.kind} track`);
+        track.stop();
+      });
+      setStream(null);
+    }
+
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+      console.log('📹 Video element cleared');
+    }
+
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({
+        type: 'broadcaster-end',
+        streamId: orderId
+      }));
+    }
+
+    setIsStreaming(false);
     onStreamEnd();
+    setError(null);
+    console.log('✅ Stream stopped');
   };
 
-  const removeImage = (index: number) => {
-    setImages(prev => prev.filter((_, i) => i !== index));
+  const switchCamera = async () => {
+    const newFacingMode = facingMode === 'user' ? 'environment' : 'user';
+    console.log(`🔄 Switching camera: ${facingMode} → ${newFacingMode}`);
+    setFacingMode(newFacingMode);
+    
+    if (isStreaming) {
+      // Smoothly restart with new camera
+      stopStream();
+      setTimeout(() => {
+        setFacingMode(newFacingMode);
+        startStream();
+      }, 1000);
+    }
   };
+
+  const restartStream = () => {
+    console.log('🔄 Restarting stream...');
+    stopStream();
+    setTimeout(() => startStream(), 2000);
+  };
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (stream) {
+        console.log('🧹 Component cleanup - stopping stream');
+        stream.getTracks().forEach(track => track.stop());
+      }
+      if (ws) {
+        ws.close();
+      }
+    };
+  }, [stream, ws]);
 
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
-          <TranslatedText>服务展示</TranslatedText>
+          <TranslatedText>实时直播</TranslatedText>
           <div className="flex items-center gap-2">
-            {isActive && (
-              <Badge variant="default">
-                <CheckCircle className="w-3 h-3 mr-1" />
-                <TranslatedText>服务中</TranslatedText>
+            <Badge variant={isConnected ? "default" : "secondary"}>
+              {isConnected ? <Wifi className="w-3 h-3 mr-1" /> : <WifiOff className="w-3 h-3 mr-1" />}
+              <TranslatedText>{isConnected ? '已连接' : '连接中...'}</TranslatedText>
+            </Badge>
+            {isStreaming && (
+              <Badge variant="destructive">
+                <div className="w-2 h-2 bg-white rounded-full animate-pulse mr-1" />
+                <TranslatedText>直播中</TranslatedText>
               </Badge>
             )}
           </div>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Image Display */}
-        <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden relative">
-          {images.length > 0 ? (
-            <div className="grid grid-cols-2 gap-2 p-2 h-full">
-              {images.slice(0, 4).map((image, index) => (
-                <div key={index} className="relative group">
-                  <img
-                    src={image}
-                    alt={`服务图片 ${index + 1}`}
-                    className="w-full h-full object-cover rounded"
-                  />
-                  {!isActive && (
-                    <button
-                      onClick={() => removeImage(index)}
-                      className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
-                  )}
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="text-center text-gray-500">
-                <Image className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                <p className="text-sm">
-                  <TranslatedText>上传服务相关图片</TranslatedText>
+        {/* Video Preview */}
+        <div className="aspect-video bg-black rounded-lg overflow-hidden relative">
+          <video
+            ref={videoRef}
+            autoPlay
+            playsInline
+            muted
+            className="w-full h-full object-cover"
+          />
+          {!isStreaming && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+              <div className="text-center text-white">
+                <Camera className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                <p className="text-sm opacity-75">
+                  <TranslatedText>点击开始直播</TranslatedText>
                 </p>
               </div>
             </div>
           )}
         </div>
 
-        {/* Upload Section */}
-        {!isActive && (
-          <div className="space-y-3">
-            <label className="flex flex-col items-center justify-center w-full h-20 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
-              <div className="flex items-center gap-2 text-gray-500">
-                <Upload className="w-5 h-5" />
-                <span className="text-sm">
-                  <TranslatedText>选择图片 (最多4张, 每张≤5MB)</TranslatedText>
-                </span>
-              </div>
-              <input
-                type="file"
-                multiple
-                accept="image/*"
-                onChange={handleImageUpload}
-                className="hidden"
-                disabled={images.length >= 4}
-              />
-            </label>
-            
-            {images.length > 0 && (
-              <p className="text-sm text-gray-600 text-center">
-                <TranslatedText>{`已上传 ${images.length} 张图片`}</TranslatedText>
-              </p>
-            )}
+        {/* Error Display with Enhanced Guidance */}
+        {error && (
+          <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
+            <p className="text-destructive text-sm mb-3">{error}</p>
+            <div className="flex gap-2">
+              <Button 
+                onClick={restartStream} 
+                variant="outline" 
+                size="sm"
+                data-testid="retry-stream-button"
+              >
+                <RefreshCw className="w-4 h-4 mr-2" />
+                <TranslatedText>重试</TranslatedText>
+              </Button>
+              {error.includes('permission') && (
+                <Button 
+                  onClick={() => window.location.reload()} 
+                  variant="outline" 
+                  size="sm"
+                >
+                  <RotateCcw className="w-4 h-4 mr-2" />
+                  <TranslatedText>刷新页面</TranslatedText>
+                </Button>
+              )}
+            </div>
+            <div className="mt-3 text-xs text-muted-foreground">
+              <TranslatedText>
+                提示: 如果问题持续，请刷新页面或检查摄像头权限
+              </TranslatedText>
+            </div>
           </div>
         )}
 
-        {/* Error Display */}
-        {uploadError && (
-          <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-red-600 text-sm">{uploadError}</p>
-          </div>
-        )}
-
-        {/* Controls */}
+        {/* Enhanced Controls */}
         <div className="flex gap-2">
-          {!isActive ? (
+          {!isStreaming ? (
             <Button 
-              onClick={startService} 
+              onClick={startStream} 
+              disabled={!isConnected}
               className="flex-1"
-              disabled={images.length === 0}
-              data-testid="start-service-button"
+              data-testid="start-stream-button"
             >
-              <CheckCircle className="w-4 h-4 mr-2" />
-              <TranslatedText>开始服务</TranslatedText>
+              <Play className="w-4 h-4 mr-2" />
+              <TranslatedText>开始直播</TranslatedText>
             </Button>
           ) : (
             <Button 
-              onClick={stopService} 
+              onClick={stopStream} 
               variant="destructive"
               className="flex-1"
-              data-testid="stop-service-button"
+              data-testid="stop-stream-button"
             >
-              <TranslatedText>结束服务</TranslatedText>
+              <Square className="w-4 h-4 mr-2" />
+              <TranslatedText>结束直播</TranslatedText>
             </Button>
           )}
+          
+          <Button 
+            onClick={switchCamera}
+            variant="outline"
+            disabled={!isConnected}
+            data-testid="switch-camera-button"
+          >
+            <Camera className="w-4 h-4" />
+          </Button>
         </div>
 
-        <p className="text-xs text-gray-500 text-center">
-          <TranslatedText>
-            {isActive 
-              ? '服务进行中，客户可以查看您提供的服务内容'
-              : '上传相关图片来展示您的服务内容，替代不稳定的视频直播'}
-          </TranslatedText>
-        </p>
+        <div className="text-center space-y-1">
+          <p className="text-xs text-muted-foreground">
+            <TranslatedText>
+              {`摄像头: ${facingMode === 'user' ? '前置' : '后置'}`}
+            </TranslatedText>
+          </p>
+          {retryCount > 0 && (
+            <p className="text-xs text-yellow-600">
+              <TranslatedText>{`正在重连... (${retryCount}/5)`}</TranslatedText>
+            </p>
+          )}
+        </div>
       </CardContent>
     </Card>
   );
