@@ -154,10 +154,22 @@ export function StreamBroadcaster({ orderId, onStreamStart, onStreamEnd }: Strea
             console.log('✅ Video is playing');
           });
 
-          video.addEventListener('pause', () => {
-            console.warn('⏸️ Video paused - attempting resume');
-            if (!video.ended) {
-              video.play().catch(err => console.error('❌ Resume failed:', err));
+          video.addEventListener('pause', (e) => {
+            console.warn('⏸️ Video paused');
+            
+            // Only attempt resume if:
+            // 1. Video is not ended
+            // 2. Video has a valid source
+            // 3. Not manually paused by user
+            if (!video.ended && video.srcObject && !video.paused) {
+              setTimeout(() => {
+                if (video.paused && !video.ended && video.srcObject) {
+                  console.log('🔄 Attempting to resume paused video after delay');
+                  video.play().catch(err => {
+                    console.error('❌ Auto-resume failed:', err.name, err.message);
+                  });
+                }
+              }, 500); // Wait 500ms before attempting resume
             }
           });
 
@@ -173,24 +185,50 @@ export function StreamBroadcaster({ orderId, onStreamStart, onStreamEnd }: Strea
 
         setupVideoEvents();
         
-        // Force play with better error handling
-        try {
-          await video.play();
-          console.log('✅ Video playing successfully');
-        } catch (playError) {
-          console.error('❌ Initial play failed:', playError);
-          
-          // Try again after a short delay
-          setTimeout(async () => {
-            try {
-              await video.play();
-              console.log('✅ Video playing on retry');
-            } catch (retryError) {
-              console.error('❌ Retry play failed:', retryError);
-              setError('Unable to start video. Please check camera permissions.');
+        // Enhanced play logic with user interaction detection
+        const startVideoPlayback = async () => {
+          try {
+            // Set video properties before play
+            video.muted = true; // Essential for autoplay
+            video.setAttribute('playsinline', 'true');
+            video.setAttribute('webkit-playsinline', 'true');
+            
+            await video.play();
+            console.log('✅ Video playing successfully');
+            
+            // Verify it's actually playing after a delay
+            setTimeout(() => {
+              if (video.paused && !video.ended) {
+                console.warn('⚠️ Video auto-paused after start');
+              } else {
+                console.log('✅ Video confirmed playing');
+              }
+            }, 2000);
+            
+          } catch (playError) {
+            console.error('❌ Play failed:', playError.name, '-', playError.message);
+            
+            if (playError.name === 'NotAllowedError') {
+              setError('需要用户交互才能开始播放。请点击视频区域。');
+              
+              // Add click handler for user interaction
+              const clickHandler = async () => {
+                try {
+                  await video.play();
+                  console.log('✅ Video started after user interaction');
+                  video.removeEventListener('click', clickHandler);
+                } catch (err) {
+                  console.error('❌ User interaction play failed:', err);
+                }
+              };
+              video.addEventListener('click', clickHandler);
+            } else {
+              setError('视频播放失败。请检查摄像头权限。');
             }
-          }, 1000);
-        }
+          }
+        };
+
+        await startVideoPlayback();
       }
 
       // WebSocket signaling
