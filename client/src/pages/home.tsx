@@ -252,8 +252,8 @@ export default function Home() {
 
             <TabsContent value="nearby" className="mt-6">
               <div className="grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
-                {/* Show nearby streams */}
-                {filteredOrders.filter(order => order.status === 'pending').slice(0, 6).map((order) => (
+                {/* Show nearby streams - orders that can be accepted */}
+                {filteredOrders.filter(order => order.status === 'open' || order.status === 'pending').slice(0, 6).map((order) => (
                   <LiveStreamCard
                     key={order.id}
                     stream={order}
