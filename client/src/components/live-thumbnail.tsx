@@ -6,9 +6,17 @@ interface LiveThumbnailProps {
   streamId: string;
   className?: string;
   showViewerCount?: boolean;
+  enableWebSocket?: boolean; // 控制是否启用WebSocket
+  lowPerformance?: boolean;  // 低性能模式
 }
 
-export function LiveThumbnail({ streamId, className = "", showViewerCount = true }: LiveThumbnailProps) {
+export function LiveThumbnail({ 
+  streamId, 
+  className = "", 
+  showViewerCount = true, 
+  enableWebSocket = true,
+  lowPerformance = false 
+}: LiveThumbnailProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wsRef = useRef<WebSocket | null>(null);
@@ -17,8 +25,12 @@ export function LiveThumbnail({ streamId, className = "", showViewerCount = true
 
   useEffect(() => {
     let animationFrame: number;
+    let animationInterval: NodeJS.Timeout | null = null;
     
     const connectWebSocket = () => {
+      // 只在启用WebSocket且不是低性能模式时才连接
+      if (!enableWebSocket || lowPerformance) return;
+      
       const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
       const wsUrl = `${protocol}//${window.location.host}/ws`;
       
@@ -58,8 +70,10 @@ export function LiveThumbnail({ streamId, className = "", showViewerCount = true
       
       wsRef.current.onclose = () => {
         setIsConnected(false);
-        // 3秒后重连
-        setTimeout(connectWebSocket, 3000);
+        // 低性能模式下不重连
+        if (!lowPerformance) {
+          setTimeout(connectWebSocket, 3000);
+        }
       };
       
       wsRef.current.onerror = () => {
@@ -68,7 +82,7 @@ export function LiveThumbnail({ streamId, className = "", showViewerCount = true
       };
     };
 
-    // 模拟实时画面效果（在真实WebRTC连接之前）
+    // 模拟实时画面效果
     const simulatePreview = () => {
       const canvas = canvasRef.current;
       if (!canvas) return;
@@ -97,19 +111,32 @@ export function LiveThumbnail({ streamId, className = "", showViewerCount = true
       ctx.fillText('LIVE', canvas.width / 2, canvas.height / 2);
       
       ctx.globalAlpha = 1;
-      
-      animationFrame = requestAnimationFrame(simulatePreview);
     };
 
-    // 开始模拟预览
-    simulatePreview();
+    // 根据性能模式选择动画方式
+    if (lowPerformance) {
+      // 低性能模式：使用定时器，降低帧率
+      animationInterval = setInterval(simulatePreview, 200); // 5fps instead of 60fps
+    } else {
+      // 正常模式：使用requestAnimationFrame
+      const animate = () => {
+        simulatePreview();
+        animationFrame = requestAnimationFrame(animate);
+      };
+      animate();
+    }
     
-    // 尝试连接WebSocket
-    connectWebSocket();
+    // 尝试连接WebSocket（仅在非低性能模式下）
+    if (!lowPerformance) {
+      connectWebSocket();
+    }
 
     return () => {
       if (animationFrame) {
         cancelAnimationFrame(animationFrame);
+      }
+      if (animationInterval) {
+        clearInterval(animationInterval);
       }
       if (wsRef.current) {
         wsRef.current.close();

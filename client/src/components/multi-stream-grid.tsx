@@ -31,6 +31,11 @@ export function MultiStreamGrid({ streams, onStreamClick }: MultiStreamGridProps
   // 获取当前直播流
   const liveStreams = streams.filter(stream => stream.status === 'live');
   
+  // 性能保护机制
+  const isLowPerformance = currentConfig.count >= 64; // 64分屏以上进入低性能模式
+  const isUltraLowPerformance = currentConfig.count >= 128; // 128分屏以上进入超低性能模式
+  const enableWebSocketLimit = Math.min(currentConfig.count, 16); // 最多16个WebSocket连接
+  
   // 生成足够的流来填满网格（复制现有流或创建模拟流）
   const gridStreams = [];
   for (let i = 0; i < currentConfig.count; i++) {
@@ -125,20 +130,32 @@ export function MultiStreamGrid({ streams, onStreamClick }: MultiStreamGridProps
           </Button>
         </div>
         
-        {/* 统计信息 */}
-        <div className="mt-3 flex items-center gap-6 text-sm">
-          <div className="flex items-center gap-1">
-            <div className="w-2 h-2 bg-red-400 rounded-full animate-pulse" />
-            <span>真实直播: {liveStreams.length}</span>
+        {/* 统计信息和性能提示 */}
+        <div className="mt-3 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2">
+          <div className="flex items-center gap-6 text-sm">
+            <div className="flex items-center gap-1">
+              <div className="w-2 h-2 bg-red-400 rounded-full animate-pulse" />
+              <span>真实直播: {liveStreams.length}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <Grid className="w-3 h-3" />
+              <span>网格: {currentConfig.cols} × {currentConfig.rows}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <Users className="w-3 h-3" />
+              <span>总画面: {currentConfig.count}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <span>WebSocket连接: {Math.min(enableWebSocketLimit, liveStreams.length)}</span>
+            </div>
           </div>
-          <div className="flex items-center gap-1">
-            <Grid className="w-3 h-3" />
-            <span>网格: {currentConfig.cols} × {currentConfig.rows}</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <Users className="w-3 h-3" />
-            <span>总画面: {currentConfig.count}</span>
-          </div>
+          
+          {/* 性能提示 */}
+          {isLowPerformance && (
+            <div className="text-xs text-orange-200 flex items-center gap-1">
+              ⚡ 低性能模式已启用 {isUltraLowPerformance ? '(超低)' : ''}
+            </div>
+          )}
         </div>
       </div>
 
@@ -154,7 +171,9 @@ export function MultiStreamGrid({ streams, onStreamClick }: MultiStreamGridProps
         {gridStreams.map((stream, index) => (
           <div
             key={stream.displayId}
-            className="relative group cursor-pointer transform transition-all duration-200 hover:scale-105 hover:z-10 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden"
+            className={`relative group cursor-pointer border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden ${
+              isUltraLowPerformance ? '' : 'transform transition-all duration-200 hover:scale-105 hover:z-10'
+            }`}
             onClick={() => handleStreamClick(stream)}
           >
             {/* 实时画面或演示画面 */}
@@ -162,22 +181,30 @@ export function MultiStreamGrid({ streams, onStreamClick }: MultiStreamGridProps
               <LiveThumbnail 
                 streamId={stream.id} 
                 className="w-full h-full aspect-video"
-                showViewerCount={selectedGrid <= 16} // 只在16分屏以下显示观看人数
+                showViewerCount={currentConfig.count <= 16} // 只在16分屏以下显示观看人数
+                enableWebSocket={index < enableWebSocketLimit} // 限制WebSocket数量
+                lowPerformance={isLowPerformance} // 启用低性能模式
               />
             ) : (
               /* 演示画面 */
-              <div className="w-full aspect-video bg-gradient-to-br from-purple-500 via-pink-500 to-red-500 flex items-center justify-center text-white relative">
+              <div className={`w-full aspect-video bg-gradient-to-br from-purple-500 via-pink-500 to-red-500 flex items-center justify-center text-white relative ${
+                isUltraLowPerformance ? 'bg-gray-600' : ''
+              }`}>
                 <div className="text-center">
-                  <Play className="w-8 h-8 mx-auto mb-2 animate-pulse" />
-                  <div className="text-xs font-bold">演示直播</div>
+                  <Play className={`w-8 h-8 mx-auto mb-2 ${isLowPerformance ? '' : 'animate-pulse'}`} />
+                  {currentConfig.count <= 32 && (
+                    <div className="text-xs font-bold">演示直播</div>
+                  )}
                 </div>
                 
-                {/* DEMO 标识 */}
-                <Badge className="absolute top-1 left-1 bg-orange-500 text-white text-xs">
-                  DEMO
-                </Badge>
+                {/* DEMO 标识 - 只在小网格时显示 */}
+                {currentConfig.count <= 32 && (
+                  <Badge className="absolute top-1 left-1 bg-orange-500 text-white text-xs">
+                    DEMO
+                  </Badge>
+                )}
                 
-                {selectedGrid <= 16 && (
+                {currentConfig.count <= 16 && (
                   <Badge className="absolute top-1 right-1 bg-black/50 text-white text-xs">
                     <Users className="w-2 h-2 mr-1" />
                     {Math.floor(Math.random() * 200) + 10}
@@ -186,20 +213,26 @@ export function MultiStreamGrid({ streams, onStreamClick }: MultiStreamGridProps
               </div>
             )}
             
-            {/* 悬停信息 */}
-            {selectedGrid <= 32 && (
+            {/* 悬停信息 - 只在小网格时显示 */}
+            {currentConfig.count <= 32 && !isUltraLowPerformance && (
               <div className="absolute bottom-0 left-0 right-0 bg-black/70 text-white p-2 transform translate-y-full group-hover:translate-y-0 transition-transform duration-200">
                 <div className="text-xs font-medium truncate">{stream.title}</div>
                 <div className="text-xs text-gray-300">${stream.price}</div>
               </div>
             )}
             
-            {/* 播放按钮覆盖层 */}
-            <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-              <div className="w-8 h-8 lg:w-12 lg:h-12 bg-white/90 rounded-full flex items-center justify-center">
-                <Play className="w-4 h-4 lg:w-6 lg:h-6 text-primary ml-0.5" />
+            {/* 播放按钮覆盖层 - 大网格时简化 */}
+            {!isUltraLowPerformance && (
+              <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className={`bg-white/90 rounded-full flex items-center justify-center ${
+                  currentConfig.count <= 32 ? 'w-8 h-8 lg:w-12 lg:h-12' : 'w-4 h-4'
+                }`}>
+                  <Play className={`text-primary ml-0.5 ${
+                    currentConfig.count <= 32 ? 'w-4 h-4 lg:w-6 lg:h-6' : 'w-2 h-2'
+                  }`} />
+                </div>
               </div>
-            </div>
+            )}
           </div>
         ))}
       </div>
