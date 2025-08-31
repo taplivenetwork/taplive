@@ -95,13 +95,17 @@ export default function Home() {
     try {
       await api.orders.update(orderId, { status: 'accepted' });
       toast({
-        title: "Success",
-        description: "Order accepted successfully!",
+        title: "接单成功！",
+        description: "正在跳转到直播页面...",
       });
+      // 接单成功后跳转到直播页面
+      setTimeout(() => {
+        window.location.href = `/stream/${orderId}`;
+      }, 1000);
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to accept order",
+        title: "接单失败",
+        description: "请重试",
         variant: "destructive",
       });
     }
@@ -253,47 +257,33 @@ export default function Home() {
             <TabsContent value="nearby" className="mt-6">
               {(() => {
                 const availableOrders = orders.filter(order => order.status === 'open' || order.status === 'pending');
-                console.log('Debug - All orders:', orders);
-                console.log('Debug - Available orders:', availableOrders);
-                console.log('Debug - Available orders count:', availableOrders.length);
                 
-                return (
-                  <div className="space-y-4">
-                    {/* Debug info */}
-                    <div className="bg-muted/50 p-4 rounded-lg text-sm">
-                      <p>📊 总订单数: {orders.length}</p>
-                      <p>✅ 可接单数: {availableOrders.length}</p>
-                      <p>🔍 订单状态: {orders.map(o => `${o.title}(${o.status})`).join(', ')}</p>
+                return availableOrders.length > 0 ? (
+                  <div className="grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
+                    {availableOrders.slice(0, 6).map((order) => (
+                      <LiveStreamCard
+                        key={order.id}
+                        stream={order}
+                        onAccept={handleAcceptOrder}
+                        isPending={true}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <div className="w-16 h-16 mx-auto mb-4 bg-muted rounded-full flex items-center justify-center">
+                      <MapPin className="w-8 h-8 text-muted-foreground" />
                     </div>
-                    
-                    {availableOrders.length > 0 ? (
-                      <div className="grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
-                        {availableOrders.slice(0, 6).map((order) => (
-                          <LiveStreamCard
-                            key={order.id}
-                            stream={order}
-                            onAccept={handleAcceptOrder}
-                            isPending={true}
-                          />
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="text-center py-12">
-                        <div className="w-16 h-16 mx-auto mb-4 bg-muted rounded-full flex items-center justify-center">
-                          <MapPin className="w-8 h-8 text-muted-foreground" />
-                        </div>
-                        <h3 className="text-lg font-medium text-foreground mb-2">
-                          <TranslatedText>No Available Orders</TranslatedText>
-                        </h3>
-                        <p className="text-muted-foreground mb-4">
-                          <TranslatedText>Create a new order to get started!</TranslatedText>
-                        </p>
-                        <Button onClick={() => setCreateModalOpen(true)}>
-                          <Plus className="w-4 h-4 mr-2" />
-                          <TranslatedText>Create Order</TranslatedText>
-                        </Button>
-                      </div>
-                    )}
+                    <h3 className="text-lg font-medium text-foreground mb-2">
+                      <TranslatedText>No Available Orders</TranslatedText>
+                    </h3>
+                    <p className="text-muted-foreground mb-4">
+                      <TranslatedText>Create a new order to get started!</TranslatedText>
+                    </p>
+                    <Button onClick={() => setCreateModalOpen(true)}>
+                      <Plus className="w-4 h-4 mr-2" />
+                      <TranslatedText>Create Order</TranslatedText>
+                    </Button>
                   </div>
                 );
               })()}
