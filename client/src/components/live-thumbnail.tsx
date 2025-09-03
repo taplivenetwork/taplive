@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Users } from 'lucide-react';
+import { TranslatedText } from '@/components/translated-text';
 
 interface LiveThumbnailProps {
   streamId: string;
@@ -166,7 +167,7 @@ export function LiveThumbnail({
       {/* LIVE 指示器 */}
       <Badge className="absolute top-2 left-2 bg-red-500 text-white animate-pulse">
         <div className="w-2 h-2 bg-white rounded-full mr-1 animate-ping" />
-        LIVE
+        <TranslatedText>LIVE</TranslatedText>
       </Badge>
       
       {/* 观看人数 */}

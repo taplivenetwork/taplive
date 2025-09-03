@@ -5,15 +5,14 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { TranslatedText, useTranslatedText } from "@/components/translated-text";
+import { TranslatedText } from "@/components/translated-text";
 import { LanguageSelector } from "@/components/language-selector";
 import { useTranslation } from "@/hooks/use-translation";
 import { User, Bell, Shield, Globe, Camera, Save } from "lucide-react";
 
 export default function Settings() {
   const { currentLanguage, setCurrentLanguage } = useTranslation();
-  const placeholderText = useTranslatedText('Tell viewers about yourself...');
-  const bioText = useTranslatedText('Professional content creator specializing in travel and lifestyle streaming.');
+  // Remove the incorrect hook usage
 
   const handleSaveProfile = () => {
     // TODO: Implement save profile functionality
