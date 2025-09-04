@@ -1572,12 +1572,43 @@ export class DatabaseStorage implements IStorage {
   }
 
   async processOrderPayment(orderId: string, paymentId: string): Promise<void> {
-    // Implementation for order payment processing
+    const order = await this.getOrderById(orderId);
+    const payment = await this.getPaymentById(paymentId);
+    
+    if (!order || !payment) {
+      throw new Error('Order or payment not found');
+    }
+
+    // Update order as paid
+    await db.update(orders).set({
+      isPaid: true,
+      updatedAt: new Date(),
+    }).where(eq(orders.id, orderId));
   }
 
   async calculateAndCreatePayout(orderId: string, paymentId: string): Promise<Payout | undefined> {
-    // Implementation for payout calculation
-    return undefined;
+    const order = await this.getOrderById(orderId);
+    const payment = await this.getPaymentById(paymentId);
+    
+    if (!order || !payment || !order.providerId) {
+      return undefined;
+    }
+
+    // Calculate commission using the updated 80/20 split
+    const commission = calculateCommission(parseFloat(payment.amount.toString()));
+    
+    // Create payout record
+    const payout = await this.createPayout({
+      userId: order.providerId,
+      orderId: orderId,
+      paymentId: paymentId,
+      amount: commission.providerEarnings.toString(),
+      currency: payment.currency,
+      status: 'pending',
+      payoutMethod: 'stripe', // Default for demo
+    });
+    
+    return payout;
   }
 
   // Stub implementations for other methods
@@ -1586,10 +1617,19 @@ export class DatabaseStorage implements IStorage {
   async updateDispute(id: string, updates: Partial<Dispute>): Promise<Dispute | undefined> { return undefined; }
   async getDisputesByOrder(orderId: string): Promise<Dispute[]> { return []; }
   async getDisputesByStatus(status: string): Promise<Dispute[]> { return []; }
-  async createOrderApproval(approval: InsertOrderApproval): Promise<OrderApproval> { throw new Error("Not implemented"); }
+  async createOrderApproval(approval: InsertOrderApproval): Promise<OrderApproval> {
+    const [newApproval] = await db.insert(orderApprovals).values(approval).returning();
+    return newApproval;
+  }
   async getOrderApprovalById(id: string): Promise<OrderApproval | undefined> { return undefined; }
-  async updateOrderApproval(id: string, updates: Partial<OrderApproval>): Promise<OrderApproval | undefined> { return undefined; }
-  async getOrderApprovalByOrder(orderId: string): Promise<OrderApproval | undefined> { return undefined; }
+  async updateOrderApproval(id: string, updates: Partial<OrderApproval>): Promise<OrderApproval | undefined> {
+    const [approval] = await db.update(orderApprovals).set({ ...updates, updatedAt: new Date() }).where(eq(orderApprovals.id, id)).returning();
+    return approval || undefined;
+  }
+  async getOrderApprovalByOrder(orderId: string): Promise<OrderApproval | undefined> {
+    const [approval] = await db.select().from(orderApprovals).where(eq(orderApprovals.orderId, orderId));
+    return approval || undefined;
+  }
   async createGeoRiskZone(zone: InsertGeoRiskZone): Promise<GeoRiskZone> { throw new Error("Not implemented"); }
   async getGeoRiskZones(): Promise<GeoRiskZone[]> { return []; }
   async checkLocationRisk(latitude: number, longitude: number): Promise<{ riskLevel: string; restrictions: string[] }> { return { riskLevel: "safe", restrictions: [] }; }

@@ -128,7 +128,7 @@ export function DemoControls() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          customerId: 'demo-customer-id',
+          customerId: 'demo-user-id',
           customerRating: 5,
           customerFeedback: 'Excellent demo service!'
         }),
