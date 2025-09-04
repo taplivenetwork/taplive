@@ -1,0 +1,343 @@
+{
+  "languages": {
+    "zh": {
+      "name": "中文",
+      "flag": "🇨🇳"
+    },
+    "en": {
+      "name": "English", 
+      "flag": "🇺🇸"
+    },
+    "ja": {
+      "name": "日本語",
+      "flag": "🇯🇵"
+    },
+    "es": {
+      "name": "Español",
+      "flag": "🇪🇸"
+    },
+    "fr": {
+      "name": "Français", 
+      "flag": "🇫🇷"
+    }
+  },
+  
+  "translations": {
+    "navigation": {
+      "zh": {
+        "Dashboard": "控制台",
+        "Live Streams": "直播流", 
+        "Orders": "订单",
+        "Earnings": "收入",
+        "Settings": "设置",
+        "Smart Dispatch": "智能派单",
+        "Safety & AA": "安全与AA",
+        "TapLive": "TapLive",
+        "MVP Platform": "MVP平台",
+        "Discover": "发现",
+        "My Orders": "我的订单"
+      },
+      "en": {
+        "Dashboard": "Dashboard",
+        "Live Streams": "Live Streams",
+        "Orders": "Orders", 
+        "Earnings": "Earnings",
+        "Settings": "Settings",
+        "Smart Dispatch": "Smart Dispatch",
+        "Safety & AA": "Safety & AA",
+        "TapLive": "TapLive",
+        "MVP Platform": "MVP Platform",
+        "Discover": "Discover",
+        "My Orders": "My Orders"
+      },
+      "ja": {
+        "Dashboard": "ダッシュボード",
+        "Live Streams": "ライブストリーム",
+        "Orders": "注文",
+        "Earnings": "収益", 
+        "Settings": "設定",
+        "Smart Dispatch": "スマート配車",
+        "Safety & AA": "安全とAA",
+        "TapLive": "TapLive",
+        "MVP Platform": "MVPプラットフォーム",
+        "Discover": "発見",
+        "My Orders": "私の注文"
+      },
+      "es": {
+        "Dashboard": "Panel",
+        "Live Streams": "Transmisiones",
+        "Orders": "Pedidos",
+        "Earnings": "Ganancias",
+        "Settings": "Configuración", 
+        "Smart Dispatch": "Despacho Inteligente",
+        "Safety & AA": "Seguridad y AA",
+        "TapLive": "TapLive",
+        "MVP Platform": "Plataforma MVP",
+        "Discover": "Descubrir",
+        "My Orders": "Mis Pedidos"
+      },
+      "fr": {
+        "Dashboard": "Tableau de bord",
+        "Live Streams": "Flux en direct",
+        "Orders": "Commandes",
+        "Earnings": "Revenus",
+        "Settings": "Paramètres",
+        "Smart Dispatch": "Répartition intelligente", 
+        "Safety & AA": "Sécurité et AA",
+        "TapLive": "TapLive",
+        "MVP Platform": "Plateforme MVP",
+        "Discover": "Découvrir",
+        "My Orders": "Mes Commandes"
+      }
+    },
+    
+    "main_content": {
+      "zh": {
+        "LIVE": "直播中",
+        "Scheduled": "已安排",
+        "Connected": "已连接", 
+        "Connecting...": "连接中...",
+        "Watch Stream": "观看直播",
+        "Set Reminder": "设置提醒",
+        "Live Now": "正在直播",
+        "Join Stream": "加入直播",
+        "viewers": "观看者",
+        "Upcoming Streams": "即将开始的直播",
+        "No upcoming streams": "没有即将开始的直播",
+        "No Upcoming Streams": "没有即将开始的直播",
+        "No streams are scheduled yet.": "还没有安排直播。",
+        "Watch and manage your live streaming sessions": "观看和管理您的直播会话"
+      },
+      "en": {
+        "LIVE": "LIVE",
+        "Scheduled": "Scheduled", 
+        "Connected": "Connected",
+        "Connecting...": "Connecting...",
+        "Watch Stream": "Watch Stream",
+        "Set Reminder": "Set Reminder", 
+        "Live Now": "Live Now",
+        "Join Stream": "Join Stream",
+        "viewers": "viewers",
+        "Upcoming Streams": "Upcoming Streams",
+        "No upcoming streams": "No upcoming streams",
+        "No Upcoming Streams": "No Upcoming Streams",
+        "No streams are scheduled yet.": "No streams are scheduled yet.",
+        "Watch and manage your live streaming sessions": "Watch and manage your live streaming sessions"
+      },
+      "ja": {
+        "LIVE": "ライブ",
+        "Scheduled": "予定済み",
+        "Connected": "接続済み",
+        "Connecting...": "接続中...",
+        "Watch Stream": "ストリーム視聴",
+        "Set Reminder": "リマインダー設定",
+        "Live Now": "現在ライブ配信中",
+        "Join Stream": "ストリーム参加",
+        "viewers": "視聴者",
+        "Upcoming Streams": "予定されたストリーム", 
+        "No upcoming streams": "予定されたストリームなし",
+        "No Upcoming Streams": "予定されたストリームなし",
+        "No streams are scheduled yet.": "まだストリームが予定されていません。",
+        "Watch and manage your live streaming sessions": "ライブストリーミングセッションを視聴・管理"
+      },
+      "es": {
+        "LIVE": "EN VIVO",
+        "Scheduled": "Programado",
+        "Connected": "Conectado",
+        "Connecting...": "Conectando...",
+        "Watch Stream": "Ver Transmisión",
+        "Set Reminder": "Establecer Recordatorio",
+        "Live Now": "En Vivo Ahora", 
+        "Join Stream": "Unirse a la Transmisión",
+        "viewers": "espectadores",
+        "Upcoming Streams": "Próximas Transmisiones",
+        "No upcoming streams": "No hay próximas transmisiones",
+        "No Upcoming Streams": "No hay Próximas Transmisiones",
+        "No streams are scheduled yet.": "Aún no hay transmisiones programadas.",
+        "Watch and manage your live streaming sessions": "Mira y gestiona tus sesiones de transmisión en vivo"
+      },
+      "fr": {
+        "LIVE": "EN DIRECT",
+        "Scheduled": "Programmé",
+        "Connected": "Connecté",
+        "Connecting...": "Connexion...",
+        "Watch Stream": "Regarder le flux",
+        "Set Reminder": "Définir un rappel",
+        "Live Now": "En Direct Maintenant",
+        "Join Stream": "Rejoindre le flux",
+        "viewers": "spectateurs", 
+        "Upcoming Streams": "Flux à venir",
+        "No upcoming streams": "Aucun flux à venir",
+        "No Upcoming Streams": "Aucun Flux à Venir", 
+        "No streams are scheduled yet.": "Aucun flux n'est encore programmé.",
+        "Watch and manage your live streaming sessions": "Regardez et gérez vos sessions de diffusion en direct"
+      }
+    },
+    
+    "forms_buttons": {
+      "zh": {
+        "Join": "加入",
+        "View": "查看",
+        "Edit": "编辑",
+        "Cancel": "取消",
+        "Save": "保存",
+        "Delete": "删除", 
+        "Close": "关闭",
+        "Search by location or description...": "搜索位置或描述...",
+        "All Categories": "所有类别",
+        "Any Price": "任何价格",
+        "Available": "可用",
+        "Unavailable": "不可用",
+        "Active": "活跃",
+        "Inactive": "非活跃",
+        "Complete": "完成", 
+        "Pending": "待处理",
+        "In Progress": "进行中"
+      },
+      "en": {
+        "Join": "Join",
+        "View": "View",
+        "Edit": "Edit",
+        "Cancel": "Cancel",
+        "Save": "Save",
+        "Delete": "Delete",
+        "Close": "Close",
+        "Search by location or description...": "Search by location or description...",
+        "All Categories": "All Categories",
+        "Any Price": "Any Price",
+        "Available": "Available", 
+        "Unavailable": "Unavailable",
+        "Active": "Active",
+        "Inactive": "Inactive",
+        "Complete": "Complete",
+        "Pending": "Pending",
+        "In Progress": "In Progress"
+      },
+      "ja": {
+        "Join": "参加",
+        "View": "表示", 
+        "Edit": "編集",
+        "Cancel": "キャンセル",
+        "Save": "保存",
+        "Delete": "削除",
+        "Close": "閉じる",
+        "Search by location or description...": "場所または説明で検索...",
+        "All Categories": "全カテゴリー",
+        "Any Price": "任意の価格",
+        "Available": "利用可能",
+        "Unavailable": "利用不可",
+        "Active": "アクティブ", 
+        "Inactive": "非アクティブ",
+        "Complete": "完了",
+        "Pending": "保留中",
+        "In Progress": "進行中"
+      },
+      "es": {
+        "Join": "Unirse",
+        "View": "Ver",
+        "Edit": "Editar",
+        "Cancel": "Cancelar",
+        "Save": "Guardar",
+        "Delete": "Eliminar",
+        "Close": "Cerrar",
+        "Search by location or description...": "Buscar por ubicación o descripción...",
+        "All Categories": "Todas las categorías", 
+        "Any Price": "Cualquier precio",
+        "Available": "Disponible",
+        "Unavailable": "No disponible",
+        "Active": "Activo",
+        "Inactive": "Inactivo",
+        "Complete": "Completo",
+        "Pending": "Pendiente",
+        "In Progress": "En progreso"
+      },
+      "fr": {
+        "Join": "Rejoindre",
+        "View": "Voir",
+        "Edit": "Modifier",
+        "Cancel": "Annuler", 
+        "Save": "Sauvegarder",
+        "Delete": "Supprimer",
+        "Close": "Fermer",
+        "Search by location or description...": "Rechercher par lieu ou description...",
+        "All Categories": "Toutes les catégories",
+        "Any Price": "Tout prix",
+        "Available": "Disponible",
+        "Unavailable": "Indisponible",
+        "Active": "Actif",
+        "Inactive": "Inactif",
+        "Complete": "Terminé",
+        "Pending": "En attente", 
+        "In Progress": "En cours"
+      }
+    },
+    
+    "demo_content": {
+      "zh": {
+        "Real-Time Commission Demo": "实时佣金演示",
+        "Run Complete Demo Flow": "运行完整演示流程",
+        "Test the complete flow: Order → Payment → Service Completion → Customer Approval → Instant Commission Payout (80% to provider)": "测试完整流程：订单 → 支付 → 服务完成 → 客户批准 → 即时佣金分配（80%给接单者）",
+        "80% Provider Share": "接单者分成80%",
+        "Payment Processing": "支付处理",
+        "Customer Approval": "客户批准",
+        "Real-Time Payout": "实时分账",
+        "Step 1: Creating Order": "步骤1：创建订单",
+        "Step 2: Accepting Order": "步骤2：接受订单",
+        "Step 3: Processing Payment": "步骤3：处理付款",
+        "Running Demo...": "运行演示中..."
+      },
+      "en": {
+        "Real-Time Commission Demo": "Real-Time Commission Demo",
+        "Run Complete Demo Flow": "Run Complete Demo Flow", 
+        "Test the complete flow: Order → Payment → Service Completion → Customer Approval → Instant Commission Payout (80% to provider)": "Test the complete flow: Order → Payment → Service Completion → Customer Approval → Instant Commission Payout (80% to provider)",
+        "80% Provider Share": "80% Provider Share",
+        "Payment Processing": "Payment Processing",
+        "Customer Approval": "Customer Approval",
+        "Real-Time Payout": "Real-Time Payout",
+        "Step 1: Creating Order": "Step 1: Creating Order",
+        "Step 2: Accepting Order": "Step 2: Accepting Order",
+        "Step 3: Processing Payment": "Step 3: Processing Payment", 
+        "Running Demo...": "Running Demo..."
+      },
+      "ja": {
+        "Real-Time Commission Demo": "リアルタイム手数料デモ",
+        "Run Complete Demo Flow": "完全デモフローを実行",
+        "Test the complete flow: Order → Payment → Service Completion → Customer Approval → Instant Commission Payout (80% to provider)": "完全なフロー：注文 → 支払い → サービス完了 → 顧客承認 → 即時手数料支払い（接単者に80%）",
+        "80% Provider Share": "接単者分配80%",
+        "Payment Processing": "支払い処理", 
+        "Customer Approval": "顧客承認",
+        "Real-Time Payout": "リアルタイム支払い",
+        "Step 1: Creating Order": "ステップ1：注文作成",
+        "Step 2: Accepting Order": "ステップ2：注文受理",
+        "Step 3: Processing Payment": "ステップ3：支払い処理",
+        "Running Demo...": "デモ実行中..."
+      },
+      "es": {
+        "Real-Time Commission Demo": "Demo de Comisión en Tiempo Real",
+        "Run Complete Demo Flow": "Ejecutar Flujo de Demo Completo",
+        "Test the complete flow: Order → Payment → Service Completion → Customer Approval → Instant Commission Payout (80% to provider)": "Prueba el flujo completo: Pedido → Pago → Finalización del Servicio → Aprobación del Cliente → Pago Instantáneo de Comisión (80% al proveedor)",
+        "80% Provider Share": "80% Participación del Proveedor",
+        "Payment Processing": "Procesamiento de Pago",
+        "Customer Approval": "Aprobación del Cliente", 
+        "Real-Time Payout": "Pago en Tiempo Real",
+        "Step 1: Creating Order": "Paso 1: Creando Pedido",
+        "Step 2: Accepting Order": "Paso 2: Aceptando Pedido",
+        "Step 3: Processing Payment": "Paso 3: Procesando Pago",
+        "Running Demo...": "Ejecutando Demo..."
+      },
+      "fr": {
+        "Real-Time Commission Demo": "Démo de Commission en Temps Réel",
+        "Run Complete Demo Flow": "Exécuter le Flux de Démo Complet",
+        "Test the complete flow: Order → Payment → Service Completion → Customer Approval → Instant Commission Payout (80% to provider)": "Testez le flux complet : Commande → Paiement → Finalisation du Service → Approbation Client → Paiement Instantané de Commission (80% au fournisseur)",
+        "80% Provider Share": "80% Part Fournisseur",
+        "Payment Processing": "Traitement du Paiement",
+        "Customer Approval": "Approbation Client",
+        "Real-Time Payout": "Paiement en Temps Réel",
+        "Step 1: Creating Order": "Étape 1 : Création de Commande", 
+        "Step 2: Accepting Order": "Étape 2 : Acceptation de Commande",
+        "Step 3: Processing Payment": "Étape 3 : Traitement du Paiement",
+        "Running Demo...": "Exécution de la Démo..."
+      }
+    }
+  }
+}

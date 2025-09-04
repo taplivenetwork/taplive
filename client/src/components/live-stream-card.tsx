@@ -3,7 +3,7 @@ import { Play, Users, MapPin, Clock, Heart, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { TranslatedText } from "@/components/translated-text";
+import { T } from "@/components/T";
 import { LiveThumbnail } from "@/components/live-thumbnail";
 import type { Order } from "@shared/schema";
 
@@ -77,7 +77,7 @@ export function LiveStreamCard({ stream, onJoin, onAccept, onCancel, isPending =
         {stream.status === 'live' && (
           <Badge className="absolute top-3 left-3 bg-red-500 text-white animate-pulse">
             <div className="w-2 h-2 bg-white rounded-full mr-2" />
-            <TranslatedText>LIVE</TranslatedText>
+            <T category="main_content" k="LIVE" />
           </Badge>
         )}
         
@@ -85,7 +85,7 @@ export function LiveStreamCard({ stream, onJoin, onAccept, onCancel, isPending =
         {isPending && (
           <Badge className="absolute top-3 left-3 bg-orange-500 text-white">
             <Clock className="w-3 h-3 mr-1" />
-            <TranslatedText>Waiting</TranslatedText>
+            <T category="main_content" k="Scheduled" />
           </Badge>
         )}
 
@@ -197,7 +197,7 @@ export function LiveStreamCard({ stream, onJoin, onAccept, onCancel, isPending =
                   className="text-red-600 border-red-600 hover:bg-red-600 hover:text-white"
                   data-testid={`button-cancel-order-${stream.id}`}
                 >
-                  <TranslatedText>Cancel</TranslatedText>
+                  <T category="forms_buttons" k="Cancel" />
                 </Button>
               )}
 
@@ -212,17 +212,17 @@ export function LiveStreamCard({ stream, onJoin, onAccept, onCancel, isPending =
                   {isPending ? (
                     <>
                       <Play className="w-4 h-4 mr-2" />
-                      <TranslatedText>Start Stream</TranslatedText>
+                      <T category="main_content" k="Live Now" />
                     </>
                   ) : stream.status === 'live' ? (
                     <>
                       <Play className="w-4 h-4 mr-2" />
-                      <TranslatedText>Watch Live</TranslatedText>
+                      <T category="main_content" k="Watch Stream" />
                     </>
                   ) : (
                     <>
                       <Play className="w-4 h-4 mr-2" />
-                      <TranslatedText>View Order</TranslatedText>
+                      <T category="forms_buttons" k="View" />
                     </>
                   )}
                 </Button>

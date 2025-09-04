@@ -1,13 +1,13 @@
 import { Video, MapPin, List, Wallet, Settings, LogOut, User, TrendingUp, BarChart3, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "wouter";
-import { LanguageSelector } from "@/components/language-selector";
-import { TranslatedText } from "@/components/translated-text";
-import { useTranslation } from "@/hooks/use-translation";
+import { SimpleLanguageSelector } from "@/components/SimpleLanguageSelector";
+import { T } from "@/components/T";
+import { useSimpleTranslation } from "@/hooks/useSimpleTranslation";
 
 export function Sidebar() {
   const [location] = useLocation();
-  const { currentLanguage, setCurrentLanguage } = useTranslation();
+  const { currentLanguage, changeLanguage } = useSimpleTranslation();
 
   const navigation = [
     { name: "Discover", href: "/", icon: MapPin, current: location === "/" },
@@ -28,8 +28,8 @@ export function Sidebar() {
           <Video className="w-6 h-6 text-primary-foreground" />
         </div>
         <div>
-          <h1 className="text-xl font-bold text-foreground"><TranslatedText>TapLive</TranslatedText></h1>
-          <p className="text-xs text-muted-foreground"><TranslatedText>MVP Platform</TranslatedText></p>
+          <h1 className="text-xl font-bold text-foreground"><T category="navigation" k="TapLive" /></h1>
+          <p className="text-xs text-muted-foreground"><T category="navigation" k="MVP Platform" /></p>
         </div>
       </div>
 
@@ -50,7 +50,7 @@ export function Sidebar() {
               >
                 <Icon className="w-5 h-5" />
                 <span>
-                  <TranslatedText>{item.name}</TranslatedText>
+                  <T category="navigation" k={item.name} />
                 </span>
               </Button>
             </Link>
@@ -59,6 +59,11 @@ export function Sidebar() {
       </nav>
 
 
+      {/* Language Selector */}
+      <div className="pt-4 border-t border-border">
+        <SimpleLanguageSelector className="w-full" />
+      </div>
+
       {/* User Profile */}
       <div className="pt-4 border-t border-border">
         <div className="flex items-center gap-3">
@@ -66,9 +71,9 @@ export function Sidebar() {
             <User className="w-5 h-5 text-primary" />
           </div>
           <div className="flex-1">
-            <p className="text-sm font-medium" data-testid="user-name"><TranslatedText>Sarah Chen</TranslatedText></p>
+            <p className="text-sm font-medium" data-testid="user-name">Sarah Chen</p>
             <p className="text-xs text-muted-foreground" data-testid="user-role">
-              <TranslatedText>Content Creator</TranslatedText>
+              Content Creator
             </p>
           </div>
           <Button

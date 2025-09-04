@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { TranslatedText } from "@/components/translated-text";
+import { T } from "@/components/T";
 import { DollarSign, PlayCircle, CheckCircle, CreditCard } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -165,32 +165,32 @@ export function DemoControls() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <PlayCircle className="w-5 h-5 text-primary" />
-          <TranslatedText>Real-Time Commission Demo</TranslatedText>
+          <T category="demo_content" k="Real-Time Commission Demo" />
           <Badge variant="secondary">MVP Feature</Badge>
         </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
           <p className="text-sm text-muted-foreground">
-            <TranslatedText>Test the complete flow: Order → Payment → Service Completion → Customer Approval → Instant Commission Payout (80% to provider)</TranslatedText>
+            <T category="demo_content" k="Test the complete flow: Order → Payment → Service Completion → Customer Approval → Instant Commission Payout (80% to provider)" />
           </p>
           
           <div className="flex flex-wrap gap-2 text-xs">
             <div className="flex items-center gap-1 px-2 py-1 bg-blue-100 dark:bg-blue-900/30 rounded">
               <CreditCard className="w-3 h-3" />
-              <span><TranslatedText>Payment Processing</TranslatedText></span>
+              <span><T category="demo_content" k="Payment Processing" /></span>
             </div>
             <div className="flex items-center gap-1 px-2 py-1 bg-green-100 dark:bg-green-900/30 rounded">
               <DollarSign className="w-3 h-3" />
-              <span><TranslatedText>80% Provider Share</TranslatedText></span>
+              <span><T category="demo_content" k="80% Provider Share" /></span>
             </div>
             <div className="flex items-center gap-1 px-2 py-1 bg-purple-100 dark:bg-purple-900/30 rounded">
               <CheckCircle className="w-3 h-3" />
-              <span><TranslatedText>Customer Approval</TranslatedText></span>
+              <span><T category="demo_content" k="Customer Approval" /></span>
             </div>
             <div className="flex items-center gap-1 px-2 py-1 bg-orange-100 dark:bg-orange-900/30 rounded">
               <CheckCircle className="w-3 h-3" />
-              <span><TranslatedText>Real-Time Payout</TranslatedText></span>
+              <span><T category="demo_content" k="Real-Time Payout" /></span>
             </div>
           </div>
 
@@ -203,12 +203,12 @@ export function DemoControls() {
             {loading ? (
               <div className="flex items-center gap-2">
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                <TranslatedText>Running Demo...</TranslatedText>
+                <T category="demo_content" k="Running Demo..." />
               </div>
             ) : (
               <>
                 <PlayCircle className="w-4 h-4 mr-2" />
-                <TranslatedText>Run Complete Demo Flow</TranslatedText>
+                <T category="demo_content" k="Run Complete Demo Flow" />
               </>
             )}
           </Button>
