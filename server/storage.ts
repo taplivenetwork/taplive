@@ -285,8 +285,8 @@ export class MemStorage implements IStorage {
       // Live streaming orders for demonstration
       {
         id: randomUUID(),
-        title: "埃菲尔铁塔日落直播",
-        description: "巴黎标志性景点埃菲尔铁塔日落时分的美景直播，展现浪漫的巴黎夜色",
+        title: "Eiffel Tower Sunset Stream",
+        description: "Live streaming of the iconic Eiffel Tower during sunset, showcasing the romantic Parisian evening atmosphere",
         type: "group",
         status: "live",
         latitude: "48.8584",
@@ -332,8 +332,8 @@ export class MemStorage implements IStorage {
       },
       {
         id: randomUUID(),
-        title: "富士山樱花季直播",
-        description: "日本富士山周边樱花盛开的美景，感受春日本最美丽的自然风光",
+        title: "Mount Fuji Cherry Blossom Stream",
+        description: "Beautiful cherry blossoms around Mount Fuji in Japan, experiencing the most beautiful natural scenery of spring",
         type: "single",
         status: "live",
         latitude: "35.3606",
@@ -379,8 +379,8 @@ export class MemStorage implements IStorage {
       },
       {
         id: randomUUID(),
-        title: "金字塔黄昏探索",
-        description: "埃及吉萨金字塔群的黄昏时光，探索古老文明的神秘魅力",
+        title: "Pyramids Sunset Exploration",
+        description: "Exploring the Great Pyramids of Giza during sunset, discovering the mysterious charm of ancient civilization",
         type: "group",
         status: "live",
         latitude: "29.9792",
@@ -427,8 +427,8 @@ export class MemStorage implements IStorage {
       // Upcoming streams
       {
         id: randomUUID(),
-        title: "泰姬陵月光之夜",
-        description: "印度阿格拉泰姬陵在月光下的绝美景象，感受爱情永恒的力量",
+        title: "Taj Mahal Moonlight Night",
+        description: "The stunning beauty of the Taj Mahal in Agra, India under moonlight, feeling the eternal power of love",
         type: "group",
         status: "open",
         latitude: "27.1751",
@@ -474,8 +474,8 @@ export class MemStorage implements IStorage {
       },
       {
         id: randomUUID(),
-        title: "马丘比丘云海日出",
-        description: "秘鲁马丘比丘古遗址的壮观日出，云海缭绕中的神秘古城",
+        title: "Machu Picchu Sunrise Above Clouds",
+        description: "Spectacular sunrise at the ancient ruins of Machu Picchu in Peru, mysterious ancient city surrounded by sea of clouds",
         type: "single",
         status: "open",
         latitude: "-13.1631",
@@ -521,8 +521,8 @@ export class MemStorage implements IStorage {
       },
       {
         id: randomUUID(),
-        title: "悉尼歌剧院夜景",
-        description: "澳大利亚悉尼歌剧院在夜色中的璀璨灯光表演，现代建筑之美",
+        title: "Sydney Opera House Night View",
+        description: "Brilliant light show of Sydney Opera House in Australia during the night, showcasing the beauty of modern architecture",
         type: "group",
         status: "open",
         latitude: "-33.8568",
