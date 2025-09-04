@@ -284,7 +284,7 @@ export class MemStorage implements IStorage {
     const sampleOrders: Order[] = [
       // Live streaming orders for demonstration
       {
-        id: randomUUID(),
+        id: "eiffel-tower-stream",
         title: "Eiffel Tower Sunset Stream",
         description: "Live streaming of the iconic Eiffel Tower during sunset, showcasing the romantic Parisian evening atmosphere",
         type: "group",
@@ -331,7 +331,7 @@ export class MemStorage implements IStorage {
         recordingDuration: null,
       },
       {
-        id: randomUUID(),
+        id: "mount-fuji-stream",
         title: "Mount Fuji Cherry Blossom Stream",
         description: "Beautiful cherry blossoms around Mount Fuji in Japan, experiencing the most beautiful natural scenery of spring",
         type: "single",
@@ -378,7 +378,7 @@ export class MemStorage implements IStorage {
         recordingDuration: null,
       },
       {
-        id: randomUUID(),
+        id: "pyramids-stream",
         title: "Pyramids Sunset Exploration",
         description: "Exploring the Great Pyramids of Giza during sunset, discovering the mysterious charm of ancient civilization",
         type: "group",
@@ -426,7 +426,7 @@ export class MemStorage implements IStorage {
       },
       // Upcoming streams
       {
-        id: randomUUID(),
+        id: "taj-mahal-stream",
         title: "Taj Mahal Moonlight Night",
         description: "The stunning beauty of the Taj Mahal in Agra, India under moonlight, feeling the eternal power of love",
         type: "group",
@@ -473,7 +473,7 @@ export class MemStorage implements IStorage {
         recordingDuration: null,
       },
       {
-        id: randomUUID(),
+        id: "machu-picchu-stream",
         title: "Machu Picchu Sunrise Above Clouds",
         description: "Spectacular sunrise at the ancient ruins of Machu Picchu in Peru, mysterious ancient city surrounded by sea of clouds",
         type: "single",
@@ -520,7 +520,7 @@ export class MemStorage implements IStorage {
         recordingDuration: null,
       },
       {
-        id: randomUUID(),
+        id: "sydney-opera-stream",
         title: "Sydney Opera House Night View",
         description: "Brilliant light show of Sydney Opera House in Australia during the night, showcasing the beauty of modern architecture",
         type: "group",
