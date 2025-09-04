@@ -293,6 +293,34 @@ export default function Home() {
     }
   };
 
+  // Delete order mutation for live streams
+  const deleteOrderMutation = useMutation({
+    mutationFn: async (orderId: string) => {
+      return api.orders.delete(orderId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/orders'] });
+      toast({
+        title: "Stream Deleted",
+        description: "The live stream has been deleted successfully.",
+        variant: "default",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Delete Failed",
+        description: error.message || "Failed to delete stream. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleDeleteStream = async (orderId: string) => {
+    if (window.confirm("Are you sure you want to delete this live stream? This action cannot be undone.")) {
+      deleteOrderMutation.mutate(orderId);
+    }
+  };
+
   if (error) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -463,6 +491,7 @@ export default function Home() {
                       stream={stream}
                       onJoin={handleJoinStream}
                       onCancel={handleCancelOrder}
+                      onDelete={handleDeleteStream}
                       isMyOrder={false}
                     />
                   ))}
@@ -495,6 +524,7 @@ export default function Home() {
                     stream={order}
                     onJoin={handleJoinStream}
                     onCancel={handleCancelOrder}
+                    onDelete={handleDeleteStream}
                     isMyOrder={false}
                   />
                 ))}
@@ -513,6 +543,7 @@ export default function Home() {
                         stream={order}
                         onAccept={handleAcceptOrder}
                         onCancel={handleCancelOrder}
+                        onDelete={handleDeleteStream}
                         isPending={true}
                         isMyOrder={true}
                       />

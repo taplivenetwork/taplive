@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Play, Users, MapPin, Clock, Heart, Share2 } from "lucide-react";
+import { Play, Users, MapPin, Clock, Heart, Share2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -12,12 +12,13 @@ interface LiveStreamCardProps {
   onJoin?: (streamId: string) => void;
   onAccept?: (streamId: string) => void;
   onCancel?: (streamId: string) => void;
+  onDelete?: (streamId: string) => void;
   isPending?: boolean;
   showActions?: boolean;
   isMyOrder?: boolean;
 }
 
-export function LiveStreamCard({ stream, onJoin, onAccept, onCancel, isPending = false, showActions = true, isMyOrder = false }: LiveStreamCardProps) {
+export function LiveStreamCard({ stream, onJoin, onAccept, onCancel, onDelete, isPending = false, showActions = true, isMyOrder = false }: LiveStreamCardProps) {
   const [isLiked, setIsLiked] = useState(false);
   
   const handleLike = (e: React.MouseEvent) => {
@@ -28,6 +29,13 @@ export function LiveStreamCard({ stream, onJoin, onAccept, onCancel, isPending =
   const handleShare = (e: React.MouseEvent) => {
     e.stopPropagation();
     // TODO: Implement share functionality
+  };
+
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onDelete) {
+      onDelete(stream.id);
+    }
   };
 
   const handleAction = () => {
@@ -89,9 +97,23 @@ export function LiveStreamCard({ stream, onJoin, onAccept, onCancel, isPending =
           </Badge>
         )}
 
+        {/* Delete button for live streams - positioned at top-right corner */}
+        {stream.status === 'live' && onDelete && (
+          <Button
+            size="icon"
+            variant="ghost"
+            className="absolute top-2 right-2 w-7 h-7 bg-red-500/90 hover:bg-red-600 text-white border border-white/20 shadow-lg opacity-80 hover:opacity-100 transition-all z-10"
+            onClick={handleDelete}
+            data-testid={`button-delete-stream-${stream.id}`}
+            title="Delete this live stream"
+          >
+            <X className="w-4 h-4" />
+          </Button>
+        )}
+
         {/* Viewer count for live streams */}
         {stream.status === 'live' && (
-          <Badge className="absolute top-3 right-3 bg-black/70 text-white">
+          <Badge className={`absolute top-3 ${onDelete ? 'right-12' : 'right-3'} bg-black/70 text-white`}>
             <Users className="w-3 h-3 mr-1" />
             {viewerCount}
           </Badge>

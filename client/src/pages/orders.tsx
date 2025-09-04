@@ -1,5 +1,7 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
+import { queryClient } from "@/lib/queryClient";
 import { OrderCard } from "@/components/order-card";
 import { LiveStreamCard } from "@/components/live-stream-card";
 import { TranslatedText } from "@/components/translated-text";
@@ -14,6 +16,7 @@ import { Search, Filter, Calendar, TrendingUp, Plus } from "lucide-react";
 import type { Order } from "@shared/schema";
 
 export default function Orders() {
+  const { toast } = useToast();
   const [searchFilter, setSearchFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [sortBy, setSortBy] = useState("recent");
@@ -53,6 +56,38 @@ export default function Orders() {
   const acceptedOrders = orders.filter((order: Order) => order.status === 'accepted');
   const liveOrders = orders.filter((order: Order) => order.status === 'live');
   const completedOrders = orders.filter((order: Order) => order.status === 'done');
+
+  // Delete order mutation for live streams
+  const deleteOrderMutation = useMutation({
+    mutationFn: async (orderId: string) => {
+      return api.orders.delete(orderId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/orders'] });
+      toast({
+        title: "Stream Deleted",
+        description: "The live stream has been deleted successfully.",
+        variant: "default",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Delete Failed",
+        description: error.message || "Failed to delete stream. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleDeleteStream = async (orderId: string) => {
+    if (window.confirm("Are you sure you want to delete this live stream? This action cannot be undone.")) {
+      deleteOrderMutation.mutate(orderId);
+    }
+  };
+
+  const handleJoinStream = (orderId: string) => {
+    window.location.href = `/stream/${orderId}?mode=viewer`;
+  };
 
   const renderOrderList = (orderList: Order[], emptyMessage: string) => {
     if (isLoading) {
@@ -101,7 +136,8 @@ export default function Orders() {
               <LiveStreamCard
                 key={order.id}
                 stream={order}
-                onJoin={() => console.log('Join stream:', order.id)}
+                onJoin={handleJoinStream}
+                onDelete={handleDeleteStream}
               />
             );
           }
