@@ -80,7 +80,7 @@ export default function Orders() {
   });
 
   const handleDeleteStream = async (orderId: string) => {
-    if (window.confirm("Are you sure you want to delete this live stream? This action cannot be undone.")) {
+    if (window.confirm("Delete this live stream?")) {
       // Check if this is a mock order (starts with 'mock-')
       if (orderId.startsWith('mock-')) {
         // Mock orders can't be deleted from orders page since they don't appear here

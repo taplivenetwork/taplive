@@ -288,7 +288,7 @@ export default function Home() {
   };
 
   const handleCancelOrder = async (orderId: string) => {
-    if (window.confirm("Are you sure you want to cancel this order?")) {
+    if (window.confirm("Cancel this order?")) {
       cancelOrderMutation.mutate(orderId);
     }
   };
@@ -316,7 +316,7 @@ export default function Home() {
   });
 
   const handleDeleteStream = async (orderId: string) => {
-    if (window.confirm("Are you sure you want to delete this live stream? This action cannot be undone.")) {
+    if (window.confirm("Delete this live stream?")) {
       // Check if this is a mock order (starts with 'mock-')
       if (orderId.startsWith('mock-')) {
         // Handle mock orders locally - add to dismissed orders
