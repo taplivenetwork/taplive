@@ -3,11 +3,11 @@ import translationsData from '@/lib/translations.json';
 
 // 简单的翻译Hook
 export function useSimpleTranslation() {
-  const [currentLanguage, setCurrentLanguage] = useState<string>('zh');
+  const [currentLanguage, setCurrentLanguage] = useState<string>('en');
   
   // 从localStorage加载语言设置
   useEffect(() => {
-    const savedLang = localStorage.getItem('app-language') || 'zh';
+    const savedLang = localStorage.getItem('app-language') || 'en';
     setCurrentLanguage(savedLang);
   }, []);
   

@@ -147,7 +147,7 @@ export function LiveStreamCard({ stream, onJoin, onAccept, onCancel, isPending =
               </div>
               {stream.status === 'live' && (
                 <div className="text-xs text-green-600">
-                  <TranslatedText>Earning Live</TranslatedText>
+                  <T category="main_content" k="Live Now" />
                 </div>
               )}
             </div>
@@ -175,13 +175,11 @@ export function LiveStreamCard({ stream, onJoin, onAccept, onCancel, isPending =
                 'bg-gray-500 text-white'
               }
             >
-              <TranslatedText>
-                {stream.status === 'live' ? 'Live Now' :
-                 stream.status === 'pending' ? 'Waiting for Streamer' :
-                 stream.status === 'accepted' ? 'Starting Soon' :
-                 stream.status === 'cancelled' ? 'Cancelled' :
-                 'Available'}
-              </TranslatedText>
+              {stream.status === 'live' ? <T category="main_content" k="Live Now" /> :
+               stream.status === 'pending' ? <T category="main_content" k="Scheduled" /> :
+               stream.status === 'accepted' ? <T category="main_content" k="Connected" /> :
+               stream.status === 'cancelled' ? <T category="forms_buttons" k="Cancel" /> :
+               <T category="forms_buttons" k="Available" />}
             </Badge>
 
             <div className="flex gap-2">
