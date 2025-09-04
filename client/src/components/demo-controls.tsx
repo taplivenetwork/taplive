@@ -71,10 +71,11 @@ export function DemoControls() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          orderId: order.data.id,
           amount: 25.00,
           currency: 'USD',
           paymentMethod: 'stripe',
-          payerId: 'demo-customer-id',
+          payerId: 'demo-user-id',
         }),
       });
 
