@@ -168,7 +168,7 @@ export class MemStorage implements IStorage {
     // Create sample users
     const sampleUsers: User[] = [
       {
-        id: randomUUID(),
+        id: "user-sarah-chen",
         username: "sarah_chen",
         password: "hashed_password",
         email: "sarah@example.com",
@@ -195,7 +195,7 @@ export class MemStorage implements IStorage {
         createdAt: new Date(),
       },
       {
-        id: randomUUID(),
+        id: "user-mike-rodriguez",
         username: "mike_rodriguez",
         password: "hashed_password", 
         email: "mike@example.com",
@@ -223,7 +223,7 @@ export class MemStorage implements IStorage {
       },
       // Additional provider samples with different metrics
       {
-        id: randomUUID(),
+        id: "user-alex-kim",
         username: "alex_kim",
         password: "hashed_password",
         email: "alex@example.com",
@@ -250,7 +250,7 @@ export class MemStorage implements IStorage {
         createdAt: new Date(),
       },
       {
-        id: randomUUID(),
+        id: "user-emma-wilson",
         username: "emma_wilson",
         password: "hashed_password",
         email: "emma@example.com",
@@ -1664,4 +1664,4 @@ export class DatabaseStorage implements IStorage {
   async updateLocationTimezone(id: string, updates: Partial<LocationTimezone>): Promise<LocationTimezone | undefined> { return undefined; }
 }
 
-export const storage = new DatabaseStorage();
+export const storage = new MemStorage();
