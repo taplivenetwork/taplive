@@ -81,7 +81,19 @@ export default function Orders() {
 
   const handleDeleteStream = async (orderId: string) => {
     if (window.confirm("Are you sure you want to delete this live stream? This action cannot be undone.")) {
-      deleteOrderMutation.mutate(orderId);
+      // Check if this is a mock order (starts with 'mock-')
+      if (orderId.startsWith('mock-')) {
+        // Mock orders can't be deleted from orders page since they don't appear here
+        // But add logic for safety
+        toast({
+          title: "Cannot Delete",
+          description: "This is a demo stream that cannot be deleted from this page.",
+          variant: "destructive",
+        });
+      } else {
+        // Handle real orders via API
+        deleteOrderMutation.mutate(orderId);
+      }
     }
   };
 

@@ -317,7 +317,19 @@ export default function Home() {
 
   const handleDeleteStream = async (orderId: string) => {
     if (window.confirm("Are you sure you want to delete this live stream? This action cannot be undone.")) {
-      deleteOrderMutation.mutate(orderId);
+      // Check if this is a mock order (starts with 'mock-')
+      if (orderId.startsWith('mock-')) {
+        // Handle mock orders locally - add to dismissed orders
+        setDismissedOrders(prev => new Set([...Array.from(prev), orderId]));
+        toast({
+          title: "Stream Deleted",
+          description: "The live stream has been removed from display.",
+          variant: "default",
+        });
+      } else {
+        // Handle real orders via API
+        deleteOrderMutation.mutate(orderId);
+      }
     }
   };
 
