@@ -371,7 +371,7 @@ export function MultiStreamGrid({ streams, onStreamClick }: MultiStreamGridProps
           {closedStreams.size > 0 && ` • 已关闭: ${closedStreams.size}`}
         </p>
         <p className="text-xs mt-1">
-          💡 关闭不感兴趣的视频自动补充新源 • 未来将有无限实时直播源 • 当前MVP阶段视频源有限
+          💡 关闭不感兴趣的视频自动补充新源 • 将来项目商业化后将有更多直播源 • 当前MVP阶段视频源有限
         </p>
       </div>
     </div>
