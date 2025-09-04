@@ -1582,7 +1582,6 @@ export class DatabaseStorage implements IStorage {
     // Update order as paid
     await db.update(orders).set({
       isPaid: true,
-      updatedAt: new Date(),
     }).where(eq(orders.id, orderId));
   }
 
@@ -1599,12 +1598,12 @@ export class DatabaseStorage implements IStorage {
     
     // Create payout record
     const payout = await this.createPayout({
-      userId: order.providerId,
+      recipientId: order.providerId,
       orderId: orderId,
       paymentId: paymentId,
       amount: commission.providerEarnings.toString(),
+      platformFee: commission.platformFee.toString(),
       currency: payment.currency,
-      status: 'pending',
       payoutMethod: 'stripe', // Default for demo
     });
     
@@ -1623,7 +1622,7 @@ export class DatabaseStorage implements IStorage {
   }
   async getOrderApprovalById(id: string): Promise<OrderApproval | undefined> { return undefined; }
   async updateOrderApproval(id: string, updates: Partial<OrderApproval>): Promise<OrderApproval | undefined> {
-    const [approval] = await db.update(orderApprovals).set({ ...updates, updatedAt: new Date() }).where(eq(orderApprovals.id, id)).returning();
+    const [approval] = await db.update(orderApprovals).set(updates).where(eq(orderApprovals.id, id)).returning();
     return approval || undefined;
   }
   async getOrderApprovalByOrder(orderId: string): Promise<OrderApproval | undefined> {
