@@ -171,7 +171,7 @@ export function DemoControls() {
       <CardContent>
         <div className="space-y-4">
           <p className="text-sm text-muted-foreground">
-            <TranslatedText>Test the complete flow: Order → Payment → Service Completion → Customer Approval → Instant Commission Payout (90% to provider)</TranslatedText>
+            <TranslatedText>Test the complete flow: Order → Payment → Service Completion → Customer Approval → Instant Commission Payout (80% to provider)</TranslatedText>
           </p>
           
           <div className="flex flex-wrap gap-2 text-xs">
@@ -181,7 +181,7 @@ export function DemoControls() {
             </div>
             <div className="flex items-center gap-1 px-2 py-1 bg-green-100 dark:bg-green-900/30 rounded">
               <DollarSign className="w-3 h-3" />
-              <span><TranslatedText>90% Provider Share</TranslatedText></span>
+              <span><TranslatedText>80% Provider Share</TranslatedText></span>
             </div>
             <div className="flex items-center gap-1 px-2 py-1 bg-purple-100 dark:bg-purple-900/30 rounded">
               <CheckCircle className="w-3 h-3" />

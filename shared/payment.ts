@@ -47,7 +47,7 @@ export interface PayoutResult {
 }
 
 // Platform commission calculation
-export function calculateCommission(totalAmount: number, platformFeePercentage: number = 10) {
+export function calculateCommission(totalAmount: number, platformFeePercentage: number = 20) {
   const platformFee = (totalAmount * platformFeePercentage) / 100;
   const providerEarnings = totalAmount - platformFee;
   

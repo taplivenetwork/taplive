@@ -53,6 +53,12 @@ export const translations = {
     'Step 3: Processing Payment': 'Step 3: Processing Payment',
     'Running Demo...': 'Running Demo...',
     'Run Complete Demo Flow': 'Run Complete Demo Flow',
+    'Test the complete flow: Order → Payment → Service Completion → Customer Approval → Instant Commission Payout (80% to provider)': 'Test the complete flow: Order → Payment → Service Completion → Customer Approval → Instant Commission Payout (80% to provider)',
+    '80% Provider Share': '80% Provider Share',
+    'Payment Processing': 'Payment Processing',
+    'Customer Approval': 'Customer Approval',
+    'Real-Time Payout': 'Real-Time Payout',
+    'Real-Time Commission Demo': 'Real-Time Commission Demo',
     
     // Empty states
     'No Upcoming Streams': 'No Upcoming Streams',
@@ -157,6 +163,12 @@ export const translations = {
     'Step 3: Processing Payment': '步骤3：处理付款',
     'Running Demo...': '运行演示中...',
     'Run Complete Demo Flow': '运行完整演示流程',
+    'Test the complete flow: Order → Payment → Service Completion → Customer Approval → Instant Commission Payout (80% to provider)': '测试完整流程：订单 → 支付 → 服务完成 → 客户批准 → 即时佣金分配（80%给接单者）',
+    '80% Provider Share': '接单者分成80%',
+    'Payment Processing': '支付处理',
+    'Customer Approval': '客户批准',
+    'Real-Time Payout': '实时分账',
+    'Real-Time Commission Demo': '实时佣金演示',
     
     // Empty states
     'No Upcoming Streams': '没有即将开始的直播',
@@ -261,6 +273,12 @@ export const translations = {
     'Step 3: Processing Payment': 'ステップ3：支払い処理',
     'Running Demo...': 'デモ実行中...',
     'Run Complete Demo Flow': '完全デモフローを実行',
+    'Test the complete flow: Order → Payment → Service Completion → Customer Approval → Instant Commission Payout (80% to provider)': '完全なフロー：注文 → 支払い → サービス完了 → 顧客承認 → 即時手数料支払い（接単者に80%）',
+    '80% Provider Share': '接単者分配80%',
+    'Payment Processing': '支払い処理',
+    'Customer Approval': '顧客承認',
+    'Real-Time Payout': 'リアルタイム支払い',
+    'Real-Time Commission Demo': 'リアルタイム手数料デモ',
     
     // Empty states
     'No Upcoming Streams': '予定されたストリームなし',
