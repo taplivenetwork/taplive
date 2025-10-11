@@ -57,3 +57,12 @@ This project officially started development during the [ETHOnline 2025](https://
 Started on October 10, 2025  
 All commits, documentation, and prototypes are being built during the hackathon period.  
 Earlier drafts only reflect conceptual discussions and do **not** include pre-built product code.
+
+---
+
+## Contact & Feedback
+
+If you identify any security risks, have suggestions for improvements, or want to report an issue, please feel free to:
+- Submit your feedback through our [GitHub Issues](https://github.com/taplivenetwork/taplive/issues)
+- Or, send us an email at [taplive.team@outlook.com](mailto:taplive.team@outlook.com)
+
