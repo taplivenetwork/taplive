@@ -15,3 +15,17 @@
 - 🤝 Open, modular developer ecosystem  
 - ⚖️ Compliant: no token, no assetization
 
+# TapLive Documentation
+
+Welcome to the TapLive project documentation!
+
+In this folder, you'll find detailed information about:
+- Project Overview
+- Roadmap
+- MVP Architecture
+- Contribution Guide
+- Risk Control and Legal Notices
+
+If you identify any security risks, have suggestions for improvements, or want to report an issue, please feel free to:
+- Submit your feedback through our [GitHub Issues](https://github.com/taplivenetwork/taplive/issues)
+- Or, send us an email at [taplive.team@outlook.com](mailto:taplive.team@outlook.com)
