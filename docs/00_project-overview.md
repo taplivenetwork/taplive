@@ -37,6 +37,6 @@ I’m fully aware that I may not be the best developer for this, but I believe I
 
 TapLive is a starting point, an attempt at a new type of network service.
 
-I don’t know where it will ultimately lead, and I’m not sure if it will succeed, but I’m willing to give it a genuine try with the passion I have left.
+I don’t know where it will ultimately lead, and I’m not sure if it will succeed, But I am willing to give it a sincere try with my enthusiasm.
 
 TapLive is not just a platform; it’s a redefinition of “human collaboration boundaries.”
