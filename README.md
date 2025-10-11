@@ -69,5 +69,9 @@ Platform credits are **non‑financial activity markers** only.
 ## ⏳ Project Timeline Notice
 
 This project officially started development during the [ETHOnline 2025](https://ethglobal.com/events/ethonline2025) hackathon.  
+Started on October 10,2025
 All commits, documentation, and prototypes are being built during the hackathon period.  
 Earlier drafts only reflect conceptual discussions and do **not** include pre-built product code.
+
+
+
