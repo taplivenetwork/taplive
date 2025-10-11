@@ -65,3 +65,9 @@ Platform credits are **non‑financial activity markers** only.
 - 📝 Notion Project Page: _add your link here_
 - 💬 Telegram: https://t.me/taplive_global
 - 💻 Discord: _add your invite link here_
+
+## ⏳ Project Timeline Notice
+
+This project officially started development during the [ETHOnline 2025](https://ethglobal.com/events/ethonline2025) hackathon.  
+All commits, documentation, and prototypes are being built during the hackathon period.  
+Earlier drafts only reflect conceptual discussions and do **not** include pre-built product code.
