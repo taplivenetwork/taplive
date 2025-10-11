@@ -20,6 +20,7 @@ An open, globally collaborative project building a **real-time human presence ne
 4. Join community chats (Telegram/Discord)
 
 ## Channels
-- Notion: _add your link_
-- Telegram: https://t.me/taplive_global
-- Discord: _add your invite link_
+- **Notion**: [TapLive Project Pitch](https://www.notion.so/TapLive-Project-Pitch-289943c0201980249cafd292b7d904d8)
+- **Notion**: [TapLive Roadmap Phase 1–2](https://www.notion.so/TapLive-Roadmap-Phase-1-2-289943c0201980f4a78aeb7cc191c17a)
+- **Telegram**: [TapLive Global](https://t.me/taplive_global)
+- **Discord**: [Join our Discord](https://discord.gg/bJfcHpvwBw)
