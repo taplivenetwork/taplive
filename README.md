@@ -2,6 +2,9 @@
 
 > “Connecting people to real-world actions through on-demand live collaboration.”
 
+📘 Notion project page will be published soon.
+💬 [Telegram](https://t.me/taplive_global)
+
 **Last updated:** 2025-10-11
 
 ## 🪄 Overview
