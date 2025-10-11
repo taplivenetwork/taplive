@@ -18,5 +18,7 @@ At TapLive, we prioritize the safety, trust, and integrity of the platform. Belo
 - **Automated fraud detection** mechanisms will be developed to identify suspicious activities.
 - We are exploring the implementation of AI-based fraud protection systems for better prevention.
 
-If you identify any security risks or have suggestions for improvements, please report them through our [GitHub Issues](https://github.com/taplivenetwork/taplive/issues).
+If you identify any security risks or have suggestions for improvements, please report them through our [GitHub Issues](https://github.com/taplivenetwork/taplive/issues) (coming soon).
+
+
 
