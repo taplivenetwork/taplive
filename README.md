@@ -15,28 +15,13 @@
 - 🤝 Open, modular developer ecosystem  
 - ⚖️ Compliant: no token, no assetization
 
-**Last updated:** 2025-10-11
-
-## 🪄 Overview
-TapLive is a decentralized, location-based live streaming dispatch platform.  
-It allows anyone to request **real-time, on-site livestreams** from people anywhere in the world.
-
-**Why it matters**
-- 🌐 Real-time, on-demand collaboration
-- 📍 LBS-based task dispatch
-- 🤝 Open, modular collaboration
-- ✅ Compliant: no tokens, no asset trading
-
-👉 [📖 Project Pitch](./docs/articles/project-pitch.md)
-
 ---
 
-## 🛣 Roadmap (Public)
+## 🧭 Roadmap (Public)
 | Phase | Description                                    | Status          |
 |------:|-----------------------------------------------|-----------------|
 | 1     | MVP & on-demand live order system             | 🚧 In progress  |
 | 2     | Trust layer & geo-verification mechanisms     | 🧭 Planned      |
-| 3+    | Advanced modules (private)                    | 🔒 Hidden       |
 
 👉 [🧭 View Roadmap](./docs/articles/roadmap-phase1-2.md)
 
