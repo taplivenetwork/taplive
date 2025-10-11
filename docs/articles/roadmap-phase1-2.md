@@ -25,8 +25,3 @@
 - Access control layer
 - Webhook integration
 - Reputation / trust scoring
-
----
-
-## Not in public scope
-XR collaboration, plugin ecosystem, token/asset layers, and other advanced modules are kept private until later phases.
