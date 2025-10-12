@@ -1,3 +1,5 @@
+TapLive is committed to building an open collaborative platform that supports fair participation and long-term co-construction by global collaborators. We encourage real contributions and collaborative spirit, and provide incentive exploration mechanisms based on records and community recognition for continuous participation.
+
 # TapLive Collaborator Contribution Policy
 
 ## 1. Open Collaboration (Open Participation without Barriers)
