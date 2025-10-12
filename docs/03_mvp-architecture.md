@@ -1,13 +1,15 @@
-# 🔹 What are we building?
+# What are we building?
 
 For this hackathon, we aim to focus on one or more of the following modules:
 
-- ✅ Real-time order acceptance/grabbing system prototype  
-- ✅ Video on demand & payment interface process  
-- ✅ Geolocation verification & anti-counterfeiting live streaming SDK  
-- ✅ Content access control and playback record scoring mechanism (optional)  
-- ✅ Group order model (AA ordering) (optional)  
+- ✅ Real-time order acceptance/grabbing system prototype
+- ✅ Video on demand & payment interface process
+- ✅ Geolocation verification & anti-counterfeiting live streaming SDK
+- ✅ Video acceleration technology, CDN acceleration optimization technology (optional)
+- ✅ Content access control and playback record scoring mechanism (optional)
+- ✅ Group order model (AA ordering) (optional)
 - ✅ Decentralized cache node access (PCDN) (optional)
+
 
 # Roadmap: Phase 1 & Phase 2
 
