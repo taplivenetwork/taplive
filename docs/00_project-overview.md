@@ -9,6 +9,12 @@ TapLive is a real-time human collaboration network that allows anyone, anywhere,
 
 👉 [Project Pitch on Notion](https://www.notion.so/TapLive-Project-Pitch-289943c0201980249cafd292b7d904d8)
 
+# 🔹 What is TapLive?
+
+**TapLive is a decentralized, location-based, video-on-demand collaboration network.**
+Users can initiate a livestream request, "Please film this place," from anywhere in the world at any time. Real people in the field can respond and accept the request, completing the livestream, collaboration, and recording and uploading the video, ultimately creating a trusted, real-time record that can be shared.
+We are committed to making livestreaming no longer exclusive to influencers, but a tool for real-world collaboration and information sharing. TapLive is not a content platform, but a trusted, collaborative infrastructure that connects people and places.
+
 # TapLive Project Origin: A Non-Technical Person’s Long-Term Vision
 
 The initial idea for TapLive didn’t come from a moment of sudden inspiration, but from repeated experiences of information asymmetry: When I wanted to see what was happening in a certain place, feel the temperature, humidity, crowd, and atmosphere of a corner, I could only rely on delayed snippets, blurry short videos, or even deliberately edited content on social media platforms.
