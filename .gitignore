@@ -1,0 +1,20 @@
+# Node / TypeScript
+node_modules/
+dist/
+coverage/
+*.log
+.env
+.env.*
+
+# Editor
+.vscode/
+.idea/
+
+# Mac / Windows
+.DS_Store
+Thumbs.db
+
+# Python (if used)
+__pycache__/
+*.pyc
+.venv/
