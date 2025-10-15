@@ -8,7 +8,7 @@
 
 ## Non-Goals
 - No tokens, NFTs, assetization or “store/value balance”.
-- No Phase 3+ features (e.g., advanced marketplace, robotics, etc.).
+- No Phase 3+ features.
 - No sensitive risk rules/weights, no production secrets.
 
 ## Deliverables
