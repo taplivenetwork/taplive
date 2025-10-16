@@ -31,6 +31,10 @@ TapLive is a location-based livestream collaboration platform that allows users 
 ---
 
 ## 👥 Collaboration
+We’re currently looking for:
+- 🧑‍💻 Backend / Full-stack developers
+- 🛰️ WebRTC / real-time communication engineers
+- 🧭 UI/UX designers (optional)
 We welcome developers, designers, and contributors worldwide.
 
 - Tech: WebRTC / Node.js / GraphQL
