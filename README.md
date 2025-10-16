@@ -47,7 +47,8 @@ We welcome developers, designers, and contributors worldwide.
 
 ## ⚖️ Legal & Compliance
 TapLive does **not** issue or trade any tokens or assets.  
-Platform credits are **non‑financial activity markers** only.
+Platform credits are **non-financial activity markers** only.  
+⚠️ This project should not be interpreted as financial advice or a financial product.
 
 👉 [📜 Legal Notice](./LEGAL_NOTICE.md)
 
