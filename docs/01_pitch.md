@@ -1,5 +1,11 @@
 # TapLive Project Pitch
 
+📄 For a structured summary of the pitch (vision, problem, solution), see:  
+👉 [Pitch Summary (GitHub)](./docs/pitch-summary.md)  
+👉 [Original Notion Draft](https://www.notion.so/TapLive-Project-Pitch-289943c0201980249cafd292b7d904d8)
+
+# TapLive Project Pitch
+
 TapLive aims to connect people to real-world actions through on-demand, real-time collaboration. The platform focuses on **location-based** live dispatch, **human trust**, and **decentralized interaction**.
 
 ### Why It Matters
