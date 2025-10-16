@@ -1,6 +1,4 @@
-# **TapLive Project Pitch**
-
-? ... see [02_Pitch.md](../02_Pitch.md)
+# **TapLive Project Pitch
 
 **# 🪄 TapLive Project Pitch**
 
