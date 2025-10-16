@@ -1,4 +1,11 @@
+
+
+
 # Roadmap — Phase 1–2 (Public)
+
+📄 For a detailed feature breakdown, see  
+- [Phase 1–2 Detailed Roadmap (GitHub)](./phase-1-2-detailed.md)  
+- [Phase 1–2 Original Draft (Notion)](https://www.notion.so/TapLive-Roadmap-Phase-1-2-289943c0201980f4a78aeb7cc191c17a?source=copy_link)
 
 ## Objectives
 - MVP: on-demand livestream order → accept → deliver → minimal replay access controls.
