@@ -1,5 +1,7 @@
 # **TapLive Project Pitch**
 
+? ... see [02_Pitch.md](../02_Pitch.md)
+
 **# 🪄 TapLive Project Pitch**
 
 - ***Last updated:**** 2025-10-11
