@@ -60,9 +60,10 @@ This project officially started development during the [ETHOnline 2025](https://
 🗓️ Started on October 10, 2025
 
 Development Plan:
-- Day 1: Documentation structure and project overview
-- Day 2+: MVP code modules
-- Final Submission: Functional prototype and risk-control logic
+##Development plan
+ -Phase 1: File structure and project overview
+ -Second phase: MVP code module and documentation updates
+Final submission of integrated features
 
 Earlier drafts only reflect conceptual discussions and do **not** include pre-built product code.
 ---
