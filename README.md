@@ -5,7 +5,17 @@
 TapLive is a location-based livestream collaboration platform that allows users to place and respond to on-demand livestream tasks in real time, enabling trusted human presence anywhere in the world.
 
 
-📘 [TapLive Project Pitch](https://www.notion.so/TapLive-Project-Pitch-289943c0201980249cafd292b7d904d8)  
+📘 [TapLive Project
+## 📚 Documentation
+
+- [00 Project Overview](./docs/00_project-overview.md)
+- [01 Pitch Summary](./docs/01_pitch-summary.md)
+- [02 Founder Pitch](./docs/02_pitch.md)
+- [03 Roadmap Phase 1–2](./docs/03_roadmap-phase-1-2.md)
+- [04 MVP Architecture](./docs/04_mvp-architecture.md)
+- [05 Contribution Guide](./docs/05_contribution-guide.md)
+- [06 Legal Notice](./docs/06_legal-notice.md)
+- [07 Risk Control Basics](./docs/07_risk-control-basics.md) Pitch](https://www.notion.so/TapLive-Project-Pitch-289943c0201980249cafd292b7d904d8)  
 🧭 [TapLive Roadmap Phase 1–2](https://www.notion.so/TapLive-Roadmap-Phase-1-2-289943c0201980f4a78aeb7cc191c17a)  
 💬 [Telegram](https://t.me/taplive_global)  
 🎧 [Discord](https://discord.gg/bJfcHpvwBw)
