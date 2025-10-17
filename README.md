@@ -12,6 +12,7 @@ TapLive is a location-based livestream collaboration platform that allows users 
 - [05 Contribution Guide](./docs/05_contribution-guide.md)
 - [06 Legal Notice](./docs/06_legal-notice.md)
 - [07 Risk Control Basics](./docs/07_risk-control-basics.md)
+
 📘 [TapLive Project
 ## 📚 Documentation Pitch](https://www.notion.so/TapLive-Project-Pitch-289943c0201980249cafd292b7d904d8)  
 🧭 [TapLive Roadmap Phase 1–2](https://www.notion.so/TapLive-Roadmap-Phase-1-2-289943c0201980f4a78aeb7cc191c17a)  
