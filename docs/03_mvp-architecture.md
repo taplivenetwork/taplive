@@ -10,6 +10,10 @@ For this hackathon, we aim to focus on one or more of the following modules:
 - ✅ Group order model (AA ordering) (optional)
 - ✅ Decentralized cache node access (PCDN) (optional)
 
+## 🔄 Workflow Diagram
+The diagram below illustrates the MVP system flow from **order placement**, **WebRTC connection**, **real-time livestreaming**, to **optional replay hook**.
+
+![WebRTC Order Flow](../assets/architecture/webrtc-order-flow.png)
 
 # Roadmap: Phase 1 & Phase 2
 
