@@ -35,8 +35,8 @@ It integrates livestreaming, location-based risk control, multi-currency payment
 | React + Vite                    | ✅      | Core UI framework & dev environment |
 | Tailwind + Radix UI + shadcn/ui | ✅      | Component library & styling         |
 | Framer Motion                   | 🧪     | Basic animation structure planned   |
-| i18n EN and so on                  | ✅      | Language switching                  |
-| i18n (extra 5 languages)        | 🧪     | Planned for global access           |
+| i18n (EN and more)              | ✅      | Language switching                  |
+| Additional languages            | 🧪     | Planned for global access           |
 | Responsive Navigation           | ✅      | Mobile & desktop support            |
 
 ---
@@ -115,12 +115,14 @@ Order Payment → Platform Fee → Provider Earnings → Payout
 * ✅ SQL injection prevention (ORM)
 * 🧪 Enhanced secret management (planned for later scale)
 
+**Access Control:** Each request includes an **access credential**, which the server verifies to authenticate the user. This enables a stateless backend where no previous session data is required.
+
 ---
 
 ## 🌍 Internationalization (i18n)
 
-* ✅ English and so on supported in MVP
-* 🧪 5 additional languages planned (FR, DE, JP, KR, ES)
+* ✅ English supported in MVP
+* 🧪 Additional languages planned
 * 🛣️ Auto language detection & full localization in Phase 3+
 
 ---
