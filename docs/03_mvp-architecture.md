@@ -16,6 +16,10 @@ The diagram below illustrates the MVP system flow from **order placement**, **We
 _This diagram shows the MVP flow: from order placement → WebRTC connection → live streaming → replay hook._
 ![WebRTC Order Flow](../assets/architecture/webrtc-order-flow.png)
 
+_This diagram illustrates the MVP architecture of TapLive during the hackathon.  
+The flow starts from **order placement**, followed by **real-time WebRTC connection**, **live streaming**, and **optional replay recording**.  
+This simple end-to-end flow highlights how a user request can quickly trigger a verified livestream session._
+
 # Roadmap: Phase 1 & Phase 2
 
 ## Phase 1
