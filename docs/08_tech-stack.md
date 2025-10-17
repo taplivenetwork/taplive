@@ -35,7 +35,7 @@ It integrates livestreaming, location-based risk control, multi-currency payment
 | React + Vite                    | ✅      | Core UI framework & dev environment |
 | Tailwind + Radix UI + shadcn/ui | ✅      | Component library & styling         |
 | Framer Motion                   | 🧪     | Basic animation structure planned   |
-| i18n (EN + CN)                  | ✅      | Language switching                  |
+| i18n EN and so on                  | ✅      | Language switching                  |
 | i18n (extra 5 languages)        | 🧪     | Planned for global access           |
 | Responsive Navigation           | ✅      | Mobile & desktop support            |
 
