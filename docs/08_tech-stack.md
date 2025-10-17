@@ -1,227 +1,187 @@
-📄 TapLive MVP — Technical Stack (Hackathon Version)
-📋 Executive Summary
+# 📄 TapLive MVP — Technical Stack (Phase 1–2)
 
-TapLive is a global real-time video streaming marketplace platform.
-It connects on-demand livestreaming requests with local executors, integrating real-time communication, intelligent geo-safety risk control, multi-currency payment, and automated moderation.
+## 📋 Executive Summary
 
-Tech Philosophy: Modern, scalable, compliance-first architecture with real-time streaming and intelligent verification.
+TapLive is a **real-time video streaming marketplace** that connects on-demand livestreaming requests with local executors.
+It integrates livestreaming, location-based risk control, multi-currency payments, and automated moderation to build a global “real-world presence” network.
 
-🏗️ System Architecture
-Core Stack
+**Tech Philosophy:** modern, scalable, compliance-first architecture with real-time streaming and intelligent verification.
 
-Frontend: React + Vite (hot reload)
+---
 
-Backend: Node.js + Express.js (REST API)
+## 🏗️ System Architecture
 
-Realtime: WebSocket + WebRTC
+* **Frontend**: React + Vite
+* **Backend**: Node.js + Express.js
+* **Realtime**: WebSocket + WebRTC
+* **Database**: PostgreSQL (serverless)
+* **Deployment**: Cloud-based runtime environment
+* **Language**: Full TypeScript stack with shared schemas
 
-Database: PostgreSQL (serverless hosting)
+### Feature Layering
 
-Deployment: Cloud-based runtime environment
+| Status                | Meaning                                  |
+| --------------------- | ---------------------------------------- |
+| ✅ Implemented         | Fully functional in MVP demo             |
+| 🧪 Planned / Optional | Partially designed, not required for MVP |
+| 🛣️ Future Roadmap    | Scheduled for later development          |
 
-Type Safety: Full TypeScript stack with shared schemas
+---
 
-Architecture Highlights
+## 🎨 Frontend Stack
 
-Single-page application + unified backend
+| Feature                         | Status | Description                         |
+| ------------------------------- | ------ | ----------------------------------- |
+| React + Vite                    | ✅      | Core UI framework & dev environment |
+| Tailwind + Radix UI + shadcn/ui | ✅      | Component library & styling         |
+| Framer Motion                   | 🧪     | Basic animation structure planned   |
+| i18n (EN + CN)                  | ✅      | Language switching                  |
+| i18n (extra 5 languages)        | 🧪     | Planned for global access           |
+| Responsive Navigation           | ✅      | Mobile & desktop support            |
 
-Low-latency livestreaming
+---
 
-LBS (location-based services) with risk control
+## ⚙️ Backend Stack
 
-Modular design for rapid iteration
+| Feature              | Status | Description                     |
+| -------------------- | ------ | ------------------------------- |
+| Node.js + Express    | ✅      | Core backend                    |
+| WebSocket signaling  | ✅      | Realtime communication          |
+| RESTful API          | ✅      | Order / Payment / Geo endpoints |
+| Session management   | ✅      | Authentication & security       |
+| Scaling architecture | 🛣️    | Planned multi-region deployment |
 
-🎨 Frontend Stack
-Layer	Technologies
-UI Framework	React, Tailwind CSS, Radix UI, shadcn/ui
-Animations	Framer Motion
-Routing	Wouter
-Forms & Validation	React Hook Form + Zod
-Data Fetching	React Query
-i18n	Context-based translation (7 languages)
+---
 
-✅ Key Features
+## 🌐 Realtime Communication
 
-Responsive design (mobile-first)
+| Feature                    | Status | Description                        |
+| -------------------------- | ------ | ---------------------------------- |
+| WebRTC P2P                 | ✅      | Core livestreaming                 |
+| WebSocket signaling server | ✅      | Real-time session management       |
+| STUN                       | ✅      | Basic NAT traversal                |
+| TURN fallback              | 🧪     | Reliability improvement (Phase 2+) |
+| Multi-peer optimization    | 🛣️    | Advanced streaming (Phase 3+)      |
 
-Real-time UI updates with optimistic caching
-
-Multi-language support
-
-Dark mode & modern UX
-
-⚙️ Backend Stack
-Layer	Technologies
-Framework	Express.js
-Runtime	Node.js
-Realtime	WebSocket + WebRTC
-ORM & DB	Drizzle ORM + PostgreSQL
-Hosting	Cloud-based environment
-
-✅ Key Features
-
-Stateless, scalable backend
-
-Type-safe APIs with validation
-
-Clear separation of business logic and data layer
-
-🌐 Real-Time Communication
-
-Protocol: Native WebRTC (P2P)
-
-Signaling: WebSocket server
-
-STUN/TURN: Public STUN services (fallback TURN planned)
-
-Features:
-
-One-to-many livestreaming
-
-Front/back camera switching
-
-Auto-reconnect for unstable networks
-
-Low-latency direct streaming
-
+```
 Broadcaster → WebRTC (P2P) → WebSocket Signaling → Viewer
+```
 
-📍 Geo-Location & Risk Engine
-Component	Function
-Geolocation API	Real-time user location tracking
-Leaflet.js	Interactive map visualization
-Geo-Safety Engine	Zone validation & risk assessment
+---
 
-✅ Risk Analysis
+## 📍 Geo-Location & Risk Engine
 
-Geofence validation
+| Feature                        | Status | Description              |
+| ------------------------------ | ------ | ------------------------ |
+| Geolocation API                | ✅      | Location tracking        |
+| Leaflet.js map                 | ✅      | Interactive maps         |
+| Geofence validation            | ✅      | Core risk check          |
+| Real-time weather alerts       | 🧪     | Planned risk enhancement |
+| Full multi-factor risk scoring | 🛣️    | Advanced engine Phase 3+ |
 
-High-risk zone detection
+---
 
-Real-time weather alerts
+## 💳 Payment System
 
-Content & keyword filtering
+| Feature                    | Status | Description             |
+| -------------------------- | ------ | ----------------------- |
+| Stripe integration         | ✅      | Core payment processing |
+| Crypto payments (ETH/USDT) | 🧪     | Optional gateway        |
+| Escrow 80/20 split         | ✅      | Payment structure       |
+| Automated payouts          | 🛣️    | Scalable payout system  |
 
-Multi-level risk scoring (safe → forbidden)
-
-💳 Payment System
-
-Payment Providers: Stripe, PayPal, Crypto (BTC, ETH, USDT)
-
-Architecture: Escrow-based split (80/20 model)
-
-Features:
-
-Instant order payment
-
-Automated payout tracking
-
-Multi-currency support
-
-Dispute & refund handling
-
+```
 Order Payment → Platform Fee → Provider Earnings → Payout
+```
 
-🛡️ Moderation & Compliance
+---
 
-AI-powered content moderation
+## 🛡️ Moderation & Compliance
 
-Real-time keyword & voice detection
+| Feature           | Status | Description                |
+| ----------------- | ------ | -------------------------- |
+| Keyword detection | ✅      | Real-time text scanning    |
+| Voice flagging    | 🧪     | Planned Phase 2            |
+| Geo-compliance    | ✅      | Restricted area detection  |
+| AI risk labeling  | 🛣️    | Future moderation pipeline |
 
-Geographical content compliance
+---
 
-Automated violation tagging
+## 🔐 Security
 
-Dispute resolution flow (AI + human review)
+* ✅ Session management
+* ✅ Zod input validation
+* ✅ CORS & XSS protection
+* ✅ SQL injection prevention (ORM)
+* 🧪 Enhanced secret management (planned for later scale)
 
-🔐 Security
+---
 
-Session management
+## 🌍 Internationalization (i18n)
 
-Input validation (Zod)
+* ✅ English & Chinese supported in MVP
+* 🧪 5 additional languages planned (FR, DE, JP, KR, ES)
+* 🛣️ Auto language detection & full localization in Phase 3+
 
-CORS & XSS protection
+---
 
-SQL injection prevention (ORM)
+## 📈 Scalability Considerations
 
-Secret management with environment variables
+| Layer                        | Status | Description          |
+| ---------------------------- | ------ | -------------------- |
+| Serverless DB auto-scaling   | ✅      | Neon hosting         |
+| Stateless backend            | ✅      | Horizontal ready     |
+| Redis caching                | 🧪     | Optional enhancement |
+| Message queue & multi-region | 🛣️    | Future scaling plan  |
 
-🌍 Internationalization (i18n)
+---
 
-Languages: English, Chinese, French, German, Japanese, Korean, Spanish
+## 🧪 Dev Workflow & Tools
 
-Dynamic language switching
+* ESLint + TypeScript + Vite
+* Hot reload dev environment
+* Shared schema between client/server
+* Drizzle ORM + database migrations
 
-Centralized i18n management
-
-LocalStorage persistence
-
-📈 Scalability Considerations
-
-Serverless DB auto-scaling
-
-Stateless backend
-
-CDN-ready frontend
-
-Horizontal scaling with WebSocket clustering (planned)
-
-Future enhancements: Redis caching, message queues, load balancing
-
-🧪 Dev Workflow & Tools
-
-Tooling: ESLint, TypeScript, Vite, Drizzle Studio
-
-Build: ESBuild optimized bundling
-
-Scripts:
-
-npm run dev      # local dev
+```
+npm run dev      # local development
 npm run build    # production build
 npm start        # run server
+```
 
+---
 
-Repo Structure:
+## 📝 API Overview (Phase 1–2)
 
-client/     → React frontend
-server/     → Express backend
-shared/     → TypeScript schemas
-db/         → Migrations
+| Endpoint                                              | Status | Description              |
+| ----------------------------------------------------- | ------ | ------------------------ |
+| `GET /api/orders`                                     | ✅      | List orders with filters |
+| `POST /api/orders`                                    | ✅      | Create order             |
+| `POST /api/payments`                                  | ✅      | Payment                  |
+| `POST /api/geo-check`                                 | ✅      | Risk assessment          |
+| WebSocket events (`offer`, `answer`, `ice-candidate`) | ✅      | Realtime signaling       |
+| Dispute handling endpoints                            | 🛣️    | Planned (Phase 3+)       |
 
-📝 API Overview
-Endpoint	Description
-GET /api/orders	Fetch orders (with filters)
-POST /api/orders	Create new order
-POST /api/payments	Payment processing
-POST /api/geo-check	Risk assessment
-WebSocket events	offer, answer, ice-candidate, viewer-joined
-🎯 Technical Highlights for Judges
+---
 
-✅ Native WebRTC livestreaming — no third-party SDK
+## 🎯 Technical Highlights for Judges
 
-✅ Geo-Safety Engine with live risk assessment
+* ✅ **Native WebRTC livestreaming** — no third-party SDK
+* ✅ **Geo-Safety Engine** with live risk validation
+* ✅ **Multi-currency Payment System** (Stripe + optional crypto)
+* ✅ **AI-assisted Moderation** (basic keyword detection, future escalation)
+* ✅ **i18n ready** for global accessibility
+* 🧪 Optional components and 🛣️ Future roadmap clearly separated
+* 🧠 Type-safe full-stack with real-time architecture
 
-✅ Multi-currency Payments (fiat + crypto)
+---
 
-✅ AI Content Moderation
+## 📅 Project Status
 
-✅ 7-language i18n for global reach
+* **Stage**: MVP (Phase 1–2)
+* **Hosting**: Cloud runtime environment
+* **Core features**: Live order placement, LBS + Risk Engine, Real-time streaming, Payment, Basic moderation
+* **Optional features**: Crypto payment, weather alert, voice flagging
+* **Future**: Full risk engine, advanced moderation, multi-region scaling
 
-✅ Type-Safe Full-Stack with shared schemas
-
-✅ 80/20 Commission Model for fairness
-
-✅ Real-Time Dispute Resolution workflow
-
-📅 Project Status
-
-Stage: MVP (Phase 1)
-
-Hosting: Cloud runtime environment
-
-API Version: 1.0.0
-
-Last Updated: October 2025
-
-
-Demonstrating modern full-stack architecture with real-time streaming, intelligent risk control, and global accessibility.
+*Demonstrating a clear architecture, real-time functionality, and planned scalability.*
