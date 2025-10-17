@@ -14,7 +14,7 @@ It integrates livestreaming, location-based risk control, multi-currency payment
 * **Frontend**: React + Vite
 * **Backend**: Node.js + Express.js
 * **Realtime**: WebSocket + WebRTC
-* **Database**: PostgreSQL (serverless)
+* **Database**: Cloud-hosted PostgreSQL (auto-scaling, powered by Neon)
 * **Deployment**: Cloud-based runtime environment
 * **Language**: Full TypeScript stack with shared schemas
 
@@ -127,12 +127,12 @@ Order Payment → Platform Fee → Provider Earnings → Payout
 
 ## 📈 Scalability Considerations
 
-| Layer                        | Status | Description          |
-| ---------------------------- | ------ | -------------------- |
-| Serverless DB auto-scaling   | ✅      | Neon hosting         |
-| Stateless backend            | ✅      | Horizontal ready     |
-| Redis caching                | 🧪     | Optional enhancement |
-| Message queue & multi-region | 🛣️    | Future scaling plan  |
+| Layer                          | Status | Description          |
+| ------------------------------ | ------ | -------------------- |
+| Cloud-hosted PostgreSQL (Neon) | ✅      | Auto-scaling enabled |
+| Stateless backend              | ✅      | Horizontal ready     |
+| Redis caching                  | 🧪     | Optional enhancement |
+| Message queue & multi-region   | 🛣️    | Future scaling plan  |
 
 ---
 
@@ -183,5 +183,3 @@ npm start        # run server
 * **Core features**: Live order placement, LBS + Risk Engine, Real-time streaming, Payment, Basic moderation
 * **Optional features**: Crypto payment, weather alert, voice flagging
 * **Future**: Full risk engine, advanced moderation, multi-region scaling
-
-*Demonstrating a clear architecture, real-time functionality, and planned scalability.*
