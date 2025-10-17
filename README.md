@@ -84,3 +84,4 @@ If you identify any security risks, have suggestions for improvements, or want t
 - Submit your feedback through our [GitHub Issues](https://github.com/taplivenetwork/taplive/issues)
 - Or, send us an email at [taplive.team@outlook.com](mailto:taplive.team@outlook.com)
 
+A limited live demo (Phase 1–2) is available upon request for reviewers and collaborators.
