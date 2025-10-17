@@ -119,7 +119,7 @@ Order Payment → Platform Fee → Provider Earnings → Payout
 
 ## 🌍 Internationalization (i18n)
 
-* ✅ English & Chinese supported in MVP
+* ✅ English and so on supported in MVP
 * 🧪 5 additional languages planned (FR, DE, JP, KR, ES)
 * 🛣️ Auto language detection & full localization in Phase 3+
 
