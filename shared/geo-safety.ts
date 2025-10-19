@@ -340,18 +340,18 @@ function calculateDistance(lat1: number, lng1: number, lat2: number, lng2: numbe
 export function formatRiskLevel(riskLevel: string): { color: string; label: string; icon: string } {
   switch (riskLevel) {
     case 'safe':
-      return { color: 'green', label: '安全区域', icon: '✅' };
+      return { color: 'green', label: 'Safe Zone', icon: '✅' };
     case 'low':
-      return { color: 'blue', label: '低风险', icon: 'ℹ️' };
+      return { color: 'blue', label: 'Low Risk', icon: 'ℹ️' };
     case 'medium':
-      return { color: 'yellow', label: '中等风险', icon: '⚠️' };
+      return { color: 'yellow', label: 'Medium Risk', icon: '⚠️' };
     case 'high':
-      return { color: 'orange', label: '高风险', icon: '🚨' };
+      return { color: 'orange', label: 'High Risk', icon: '🚨' };
     case 'extreme':
-      return { color: 'red', label: '极端风险', icon: '❌' };
+      return { color: 'red', label: 'Extreme Risk', icon: '❌' };
     case 'forbidden':
-      return { color: 'darkred', label: '禁止区域', icon: '🚫' };
+      return { color: 'darkred', label: 'Forbidden Zone', icon: '🚫' };
     default:
-      return { color: 'gray', label: '未知', icon: '❓' };
+      return { color: 'gray', label: 'Unknown', icon: '❓' };
   }
 }
