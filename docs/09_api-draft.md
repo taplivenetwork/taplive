@@ -1,6 +1,6 @@
 > **Purpose:**  
-> Demonstrate TapLive’s real backend capability and payment flow during hackathon evaluation.  
-> REST + WebSocket | JSON UTF-8 | Auth required for write operations.
+> Demonstrates TapLive's real-world backend functionality and payment flow.
+> REST + WebSocket | JSON UTF-8 | Write operations require authentication.
 
 ---
 
