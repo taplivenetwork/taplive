@@ -28,14 +28,14 @@ json
 { "userId":"usr_123", "accessToken":"<session>", "expiresIn":3600 }
 POST /v1/auth/login
 json
-复制代码
+
 { "email":"a@b.com", "password":"******" }
 json
-复制代码
+
 { "userId":"usr_123", "accessToken":"<session>", "expiresIn":3600 }
 GET /v1/me (Auth)
 json
-复制代码
+
 { "userId":"usr_123","name":"Alice","roles":["customer"],"wallets":{"evm":"0xabc..."} }
 3. Orders
 ts
