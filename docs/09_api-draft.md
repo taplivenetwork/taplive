@@ -8,6 +8,7 @@
 
 - **Base URL (example)**  
   - Dev: `http://localhost:5000`  
+  - Prod: `https://api.taplive.tv`
 
 - **Authentication**  
   `Authorization: Bearer <session-credential>`
@@ -28,16 +29,16 @@ json
 { "userId":"usr_123", "accessToken":"<session>", "expiresIn":3600 }
 POST /v1/auth/login
 json
-
+复制代码
 { "email":"a@b.com", "password":"******" }
 json
-
+复制代码
 { "userId":"usr_123", "accessToken":"<session>", "expiresIn":3600 }
 GET /v1/me (Auth)
 json
-
+复制代码
 { "userId":"usr_123","name":"Alice","roles":["customer"],"wallets":{"evm":"0xabc..."} }
-2. Orders
+3. Orders
 ts
 
 type Order = {
@@ -67,7 +68,7 @@ GET /v1/orders/:id
 json
 
 { "id":"ord_1001","status":"pending_payment","amount":{"currency":"USD","value":"19.99"} }
-3. Payments (PayPal)
+4. Payments (PayPal)
 POST /v1/payments/intent
 json
 
@@ -160,7 +161,27 @@ paths:
   /v1/tips:
     post:
       summary: Create tip
-10. Local Test Examples
+10. GraphQL Example (Optional)
+graphql
+
+# Example query for orders and payments
+query {
+  orders(limit: 5) {
+    id
+    title
+    status
+    amount {
+      currency
+      value
+    }
+  }
+  payments(limit: 5) {
+    id
+    method
+    status
+  }
+}
+11. Local Test Examples
 bash
 
 # Create order
@@ -178,14 +199,15 @@ curl -X POST http://localhost:5000/v1/orders \
 curl -X POST http://localhost:5000/v1/payments/intent \
   -H "Content-Type: application/json" \
   -d '{ "orderId":"ord_1001", "preferred":"paypal" }'
-11. Environment Variables
+12. Environment Variables
 makefile
 
 DATABASE_URL=
 JWT_SECRET=
 PAYPAL_CLIENT_ID=
 PAYPAL_SECRET=
-12. MVP Scope
+13. MVP Scope
 ✅ Now: Order creation, PayPal one-time payment, WebSocket signaling, tip events.
 
 🚀 Future: Auto-settlement for subscriptions and advanced risk control hooks.
+
