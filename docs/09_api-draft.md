@@ -4,7 +4,7 @@
 
 ---
 
-## 0. API Specification
+## API Specification
 
 - **Base URL (example)**  
   - Dev: `http://localhost:5000`  
