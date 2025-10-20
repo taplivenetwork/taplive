@@ -8,7 +8,6 @@
 
 - **Base URL (example)**  
   - Dev: `http://localhost:5000`  
-  - Prod: `https://api.taplive.tv`
 
 - **Authentication**  
   `Authorization: Bearer <session-credential>`
