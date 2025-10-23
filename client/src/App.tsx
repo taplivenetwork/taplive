@@ -1,35 +1,57 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { Switch, Route } from "wouter";
+import { queryClient } from "./lib/queryclient";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { Toaster } from "@/components/ui/toaster";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { Sidebar } from "@/components/layout/sidebar";
+import { MobileNavigation } from "@/components/layout/mobile-nav";
+import Home from "@/pages/home";
+import Orders from "@/pages/orders";
+import Earnings from "@/pages/earnings";
+import Streams from "@/pages/streams";
+import Settings from "@/pages/settings";
+import { DispatchPage } from "@/pages/dispatch";
+import { Dashboard } from "@/pages/dashboard";
+import SafetyPage from "@/pages/safety";
+import Payment from "@/pages/payment";
+import LiveStreamPage from "@/pages/live-stream";
+import NotFound from "@/pages/not-found";
 
-function App() {
-  const [count, setCount] = useState(0)
-
+function Router() {
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <Switch>
+      <Route path="/" component={Home} />
+      <Route path="/orders" component={Orders} />
+      <Route path="/earnings" component={Earnings} />
+      <Route path="/streams" component={Streams} />
+      <Route path="/dispatch" component={DispatchPage} />
+      <Route path="/dashboard" component={Dashboard} />
+      <Route path="/safety" component={SafetyPage} />
+      <Route path="/payment/:orderId" component={Payment} />
+      <Route path="/stream/:orderId" component={LiveStreamPage} />
+      <Route path="/settings" component={Settings} />
+      <Route component={NotFound} />
+    </Switch>
+  );
 }
 
-export default App
+function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <div className="min-h-screen bg-background text-foreground">
+          <div className="flex min-h-screen">
+            <Sidebar />
+            <main className="flex-1 flex flex-col">
+              <Router />
+            </main>
+          </div>
+          <MobileNavigation />
+        </div>
+        <Toaster />
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+}
+
+export default App;

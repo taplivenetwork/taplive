@@ -1,4 +1,4 @@
-import { queryClient } from "./queryClient";
+import { queryClient } from "./queryclient";
 import type { Order, InsertOrder } from "@shared/schema";
 
 export interface ApiResponse<T> {
