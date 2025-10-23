@@ -28,7 +28,7 @@ export default function Settings() {
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-3xl font-bold mb-2">
+          <h1 className="text-4xl font-bold mb-2">
             Settings
           </h1>
           <p className="text-muted-foreground">
@@ -145,7 +145,7 @@ export default function Settings() {
                   <Label>
                     Auto-start recording
                   </Label>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-base text-muted-foreground">
                     Automatically record all your streams
                   </p>
                 </div>
@@ -157,7 +157,7 @@ export default function Settings() {
                   <Label>
                     HD Quality
                   </Label>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-base text-muted-foreground">
                     Stream in high definition (uses more data)
                   </p>
                 </div>
@@ -183,7 +183,7 @@ export default function Settings() {
                   <Label>
                     New Order Alerts
                   </Label>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-base text-muted-foreground">
                     Get notified when someone places a new order
                   </p>
                 </div>
@@ -195,7 +195,7 @@ export default function Settings() {
                   <Label>
                     Stream Reminders
                   </Label>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-base text-muted-foreground">
                     Remind you before scheduled streams
                   </p>
                 </div>
@@ -207,7 +207,7 @@ export default function Settings() {
                   <Label>
                     Payment Notifications
                   </Label>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-base text-muted-foreground">
                     Get notified when you receive payments
                   </p>
                 </div>
@@ -219,7 +219,7 @@ export default function Settings() {
                   <Label>
                     Marketing Emails
                   </Label>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-base text-muted-foreground">
                     Receive tips and updates about the platform
                   </p>
                 </div>
@@ -245,7 +245,7 @@ export default function Settings() {
                   <Label>
                     Profile Visibility
                   </Label>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-base text-muted-foreground">
                     Make your profile visible to other users
                   </p>
                 </div>
@@ -257,7 +257,7 @@ export default function Settings() {
                   <Label>
                     Location Sharing
                   </Label>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-base text-muted-foreground">
                     Allow sharing your location during streams
                   </p>
                 </div>

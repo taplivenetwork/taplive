@@ -165,6 +165,61 @@ export default function Home() {
     }
   ];
 
+  // Mock live streams for MVP demo
+  const mockLiveStreams = [
+    {
+      id: 'live-eiffel-tower',
+      title: 'Eiffel Tower Sunset Stream',
+      description: 'Live streaming of the iconic Eiffel Tower during sunset, showcasing the beautiful Paris skyline',
+      price: '35.00',
+      status: 'live' as const,
+      category: 'travel',
+      address: 'Eiffel Tower, Paris, France',
+      latitude: "48.8584",
+      longitude: "2.2945",
+      type: 'single' as const,
+      creatorId: 'streamer-paris',
+      providerId: 'provider-paris',
+      viewerCount: 400,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    },
+    {
+      id: 'live-mount-fuji',
+      title: 'Mount Fuji Cherry Blossom Stream',
+      description: 'Beautiful cherry blossoms around Mount Fuji in Japan, experiencing the spring season',
+      price: '45.00',
+      status: 'live' as const,
+      category: 'nature',
+      address: 'Mount Fuji, Shizuoka, Japan',
+      latitude: "35.3606",
+      longitude: "138.7274",
+      type: 'single' as const,
+      creatorId: 'streamer-japan',
+      providerId: 'provider-japan',
+      viewerCount: 132,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    },
+    {
+      id: 'live-pyramids',
+      title: 'Pyramids Sunset Exploration',
+      description: 'Exploring the Great Pyramids of Giza during sunset, discovering ancient Egyptian history',
+      price: '50.00',
+      status: 'live' as const,
+      category: 'history',
+      address: 'Giza Pyramids, Cairo, Egypt',
+      latitude: "29.9792",
+      longitude: "31.1342",
+      type: 'single' as const,
+      creatorId: 'streamer-egypt',
+      providerId: 'provider-egypt',
+      viewerCount: 660,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }
+  ];
+
   // Deduplicate orders - filter by order ID, then add mock orders
   const allOrders = ordersResponse?.data || [];
   const realOrders = allOrders.filter((order: Order, index: number, arr: Order[]) => 
@@ -251,8 +306,12 @@ export default function Home() {
     return matchesSearch && matchesCategory && matchesPrice;
   });
 
-  // Active streams (live orders)
-  const activeStreams = orders.filter((order: Order) => order.status === 'live');
+  // Active streams (live orders + mock live streams)
+  const activeStreams = [...orders.filter((order: Order) => order.status === 'live'), ...mockLiveStreams] as Order[];
+  
+  // Debug logging
+  console.log('Active streams:', activeStreams);
+  console.log('Mock live streams:', mockLiveStreams);
 
   const handleAcceptOrder = async (orderId: string) => {
     try {
@@ -333,7 +392,7 @@ export default function Home() {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-foreground mb-2">Connection Error</h2>
+          <h2 className="text-4xl font-bold text-foreground mb-2">Connection Error</h2>
           <p className="text-muted-foreground">Failed to connect to the server</p>
         </div>
       </div>
@@ -346,7 +405,7 @@ export default function Home() {
       <header className="p-4 lg:p-6 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 circuit-bg relative">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex-1">
-            <h1 className="text-2xl lg:text-3xl font-bold text-foreground mb-2 neon-text">
+            <h1 className="text-4xl lg:text-4xl font-bold text-foreground mb-2 neon-text">
               Live Streaming Hub
             </h1>
             <p className="text-muted-foreground">
@@ -491,7 +550,7 @@ export default function Home() {
                   <div className="w-16 h-16 mx-auto mb-4 bg-muted rounded-full flex items-center justify-center">
                     <Play className="w-8 h-8 text-muted-foreground" />
                   </div>
-                  <h3 className="text-lg font-medium text-foreground mb-2">
+                  <h3 className="text-xl font-medium text-foreground mb-2">
                     No Live Streams
                   </h3>
                   <p className="text-muted-foreground mb-4">
@@ -544,7 +603,7 @@ export default function Home() {
                     <div className="w-16 h-16 mx-auto mb-4 bg-muted rounded-full flex items-center justify-center">
                       <MapPin className="w-8 h-8 text-muted-foreground" />
                     </div>
-                    <h3 className="text-lg font-medium text-foreground mb-2">
+                    <h3 className="text-xl font-medium text-foreground mb-2">
                       No Available Orders
                     </h3>
                     <p className="text-muted-foreground mb-4">
@@ -579,7 +638,7 @@ export default function Home() {
                 <Plus className="w-5 h-5 mr-2" />
                 Create Live Stream
               </Button>
-              <p className="text-xs text-muted-foreground text-center">
+              <p className="text-base text-muted-foreground text-center">
                 Request live content from anywhere
               </p>
             </div>
@@ -636,7 +695,7 @@ export default function Home() {
                     size="sm"
                     variant="outline"
                     onClick={handleResetDismissedOrders}
-                    className="h-6 px-2 text-xs"
+                    className="h-6 px-2 text-base"
                   >
                     Restore All ({dismissedOrders.size})
                   </Button>
@@ -672,23 +731,23 @@ export default function Home() {
 
                       <div className="space-y-2">
                         <div className="flex items-center justify-between">
-                          <Badge variant="secondary" className="text-xs">
+                          <Badge variant="secondary" className="text-base">
                             {order.category || 'General'}
                           </Badge>
-                          <span className="text-sm font-medium text-primary">
+                          <span className="text-base font-medium text-primary">
                             ${order.price}
                           </span>
                         </div>
-                        <h4 className="font-medium text-sm line-clamp-1 pr-6">
+                        <h4 className="font-medium text-base line-clamp-1 pr-6">
                           {order.title}
                         </h4>
-                        <p className="text-xs text-muted-foreground line-clamp-2">
+                        <p className="text-base text-muted-foreground line-clamp-2">
                           {order.address}
                         </p>
                         
                         {/* Mock order identifier */}
                         {order.id.startsWith('mock-') && (
-                          <Badge className="text-xs bg-blue-500 text-white">
+                          <Badge className="text-base bg-blue-500 text-white">
                             🌍 International Attraction
                           </Badge>
                         )}
@@ -702,10 +761,10 @@ export default function Home() {
                 </div>
               ) : dismissedOrders.size > 0 ? (
                 <div className="text-center py-6">
-                  <p className="text-sm text-muted-foreground mb-3">
+                  <p className="text-base text-muted-foreground mb-3">
                     All orders closed
                   </p>
-                  <p className="text-xs text-muted-foreground mb-3">
+                  <p className="text-base text-muted-foreground mb-3">
                     📺 Limited orders in MVP phase, unlimited order sources in future
                   </p>
                   <Button size="sm" variant="outline" onClick={handleResetDismissedOrders}>
@@ -714,7 +773,7 @@ export default function Home() {
                 </div>
               ) : (
                 <div className="text-center py-6">
-                  <p className="text-sm text-muted-foreground mb-3">
+                  <p className="text-base text-muted-foreground mb-3">
                     No Active Requests
                   </p>
                   <Button size="sm" variant="outline" onClick={() => setCreateModalOpen(true)}>

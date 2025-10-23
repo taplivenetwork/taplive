@@ -130,7 +130,7 @@ export const payments = pgTable("payments", {
   status: paymentStatusEnum("status").notNull().default('pending'),
   
   // External payment provider data
-  externalPaymentId: text("external_payment_id"), // Stripe/PayPal payment ID
+  externalPaymentId: text("external_payment_id"), // External payment ID
   externalTransactionHash: text("external_transaction_hash"), // Crypto transaction hash
   paymentGatewayResponse: text("payment_gateway_response"), // JSON response from gateway
   
@@ -167,7 +167,7 @@ export const payouts = pgTable("payouts", {
   recipientWallet: text("recipient_wallet"), // Crypto wallet or payment account
   
   // External payout data
-  externalPayoutId: text("external_payout_id"), // Stripe/PayPal payout ID
+  externalPayoutId: text("external_payout_id"), // External payout ID
   externalTransactionHash: text("external_transaction_hash"), // Crypto transaction hash
   payoutGatewayResponse: text("payout_gateway_response"), // JSON response from gateway
   
@@ -264,7 +264,7 @@ export const paymentValidationSchema = z.object({
   orderId: z.string(),
   amount: z.number().positive(),
   currency: z.enum(['USD', 'USDT', 'BTC', 'ETH']),
-  paymentMethod: z.enum(['stripe', 'paypal', 'usdt_trc20', 'usdt_erc20', 'bitcoin', 'ethereum']),
+  paymentMethod: z.enum(['pyusd', 'usdt_trc20', 'usdt_erc20', 'bitcoin', 'ethereum', 'yellow_swap']),
   paymentMetadata: z.object({}).optional(),
 });
 

@@ -124,7 +124,7 @@ export default function Orders() {
           <div className="w-16 h-16 mx-auto mb-4 bg-muted rounded-full flex items-center justify-center">
             <Calendar className="w-8 h-8 text-muted-foreground" />
           </div>
-          <h3 className="text-lg font-medium text-foreground mb-2">
+          <h3 className="text-xl font-medium text-foreground mb-2">
             {emptyMessage}
           </h3>
           <p className="text-muted-foreground mb-4">
@@ -171,7 +171,7 @@ export default function Orders() {
       <header className="p-4 lg:p-6 border-b border-border bg-background/95 backdrop-blur">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <h2 className="text-2xl lg:text-3xl font-bold text-foreground mb-2">
+            <h2 className="text-4xl lg:text-4xl font-bold text-foreground mb-2">
               My Orders Dashboard
             </h2>
             <p className="text-muted-foreground">
@@ -183,20 +183,20 @@ export default function Orders() {
           <div className="flex gap-4">
             <Card className="p-3">
               <div className="text-center">
-                <div className="text-2xl font-bold text-primary">{orders.length}</div>
-                <div className="text-xs text-muted-foreground">Total</div>
+                <div className="text-4xl font-bold text-primary">{orders.length}</div>
+                <div className="text-base text-muted-foreground">Total</div>
               </div>
             </Card>
             <Card className="p-3">
               <div className="text-center">
-                <div className="text-2xl font-bold text-green-600">{liveOrders.length}</div>
-                <div className="text-xs text-muted-foreground">Live</div>
+                <div className="text-4xl font-bold text-green-600">{liveOrders.length}</div>
+                <div className="text-base text-muted-foreground">Live</div>
               </div>
             </Card>
             <Card className="p-3">
               <div className="text-center">
-                <div className="text-2xl font-bold text-orange-600">{pendingOrders.length}</div>
-                <div className="text-xs text-muted-foreground">Pending</div>
+                <div className="text-4xl font-bold text-orange-600">{pendingOrders.length}</div>
+                <div className="text-base text-muted-foreground">Pending</div>
               </div>
             </Card>
           </div>

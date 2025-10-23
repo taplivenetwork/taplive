@@ -51,7 +51,7 @@ export function DispatchPage() {
     <div className="container mx-auto px-4 py-6 space-y-6">
       {/* Page Header */}
       <div className="space-y-2">
-        <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
+        <h1 className="text-3xl font-bold text-foreground flex items-center gap-2">
           <TrendingUp className="w-6 h-6" />
           Smart Dispatch System
         </h1>
@@ -70,8 +70,8 @@ export function DispatchPage() {
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
             {Object.entries(algorithm.weights).map(([factor, weight]) => (
               <div key={factor} className="text-center">
-                <div className="text-2xl font-bold text-primary">{weight as number}%</div>
-                <div className="text-xs text-muted-foreground capitalize">
+                <div className="text-3xl font-bold text-primary">{weight as number}%</div>
+                <div className="text-base text-muted-foreground capitalize">
                   {factor}
                 </div>
               </div>
@@ -86,8 +86,8 @@ export function DispatchPage() {
           <div className="flex items-center gap-2">
             <MapPin className="w-4 h-4 text-primary" />
             <div>
-              <div className="text-2xl font-bold text-foreground">{openOrders.length}</div>
-              <div className="text-sm text-muted-foreground">
+              <div className="text-3xl font-bold text-foreground">{openOrders.length}</div>
+              <div className="text-base text-muted-foreground">
                 Active Orders
               </div>
             </div>
@@ -98,8 +98,8 @@ export function DispatchPage() {
           <div className="flex items-center gap-2">
             <Users className="w-4 h-4 text-primary" />
             <div>
-              <div className="text-2xl font-bold text-foreground">{providers.length}</div>
-              <div className="text-sm text-muted-foreground">
+              <div className="text-3xl font-bold text-foreground">{providers.length}</div>
+              <div className="text-base text-muted-foreground">
                 Available Providers
               </div>
             </div>
@@ -110,13 +110,13 @@ export function DispatchPage() {
           <div className="flex items-center gap-2">
             <TrendingUp className="w-4 h-4 text-primary" />
             <div>
-              <div className="text-2xl font-bold text-foreground">
+              <div className="text-3xl font-bold text-foreground">
                 {providers.length > 0 ? 
                   (providers.reduce((sum: number, p: any) => sum + parseFloat(p.dispatchScore || '0'), 0) / providers.length).toFixed(1)
                   : '0.0'
                 }
               </div>
-              <div className="text-sm text-muted-foreground">
+              <div className="text-base text-muted-foreground">
                 Avg Dispatch Score
               </div>
             </div>
@@ -128,7 +128,7 @@ export function DispatchPage() {
       <Card className="p-4">
         <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
           <div className="space-y-2 flex-1">
-            <label className="text-sm font-medium text-foreground">
+            <label className="text-base font-medium text-foreground">
               Select Order for Provider Ranking
             </label>
             <Select value={selectedOrderId} onValueChange={setSelectedOrderId}>
@@ -146,7 +146,7 @@ export function DispatchPage() {
           </div>
 
           <div className="flex items-center gap-2">
-            <label className="text-sm text-foreground">
+            <label className="text-base text-foreground">
               Show Details
             </label>
             <Switch 
@@ -160,8 +160,8 @@ export function DispatchPage() {
         {selectedOrder && (
           <div className="mt-4 p-3 bg-muted rounded-lg">
             <h4 className="font-medium text-foreground">{selectedOrder.title}</h4>
-            <p className="text-sm text-muted-foreground mt-1">{selectedOrder.description}</p>
-            <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
+            <p className="text-base text-muted-foreground mt-1">{selectedOrder.description}</p>
+            <div className="flex items-center gap-4 mt-2 text-base text-muted-foreground">
               <span>📍 {selectedOrder.address}</span>
               <span>💰 ${selectedOrder.price}</span>
               <span>⏱️ {selectedOrder.duration}min</span>
@@ -193,7 +193,7 @@ export function DispatchPage() {
               <div className="text-muted-foreground">
                 <Users className="w-12 h-12 mx-auto mb-3 opacity-50" />
                 <p>No available providers found for this order</p>
-                <p className="text-sm mt-1">
+                <p className="text-base mt-1">
                   Providers need to be online and have location data
                 </p>
               </div>

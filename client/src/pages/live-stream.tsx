@@ -115,7 +115,7 @@ export default function LiveStreamPage() {
       <div className="flex-1 p-6 flex items-center justify-center">
         <Card className="w-full max-w-md">
           <CardContent className="text-center py-8">
-            <h3 className="text-lg font-medium mb-2">
+            <h3 className="text-xl font-medium mb-2">
               Order Not Found
             </h3>
             <p className="text-muted-foreground mb-4">
@@ -149,7 +149,7 @@ export default function LiveStreamPage() {
           
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold mb-2">{order.title}</h1>
+              <h1 className="text-4xl font-bold mb-2">{order.title}</h1>
               <div className="flex items-center gap-4 text-muted-foreground">
                 <div className="flex items-center gap-2">
                   <MapPin className="w-4 h-4" />
@@ -185,9 +185,9 @@ export default function LiveStreamPage() {
         {/* Mode Switch Controls */}
         <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
           <div className="flex items-center justify-between">
-            <div className="text-sm">
+            <div className="text-base">
               <strong>Current Mode:</strong>
-              <span className={`ml-2 px-2 py-1 rounded text-xs font-semibold ${
+              <span className={`ml-2 px-2 py-1 rounded text-base font-semibold ${
                 userRole === 'broadcaster' ? 'bg-green-500 text-white' : 'bg-purple-500 text-white'
               }`}>
                 {userRole === 'broadcaster' ? '🎬 Broadcaster Mode' : '👥 Viewer Mode'}
@@ -231,7 +231,7 @@ export default function LiveStreamPage() {
             {userRole === 'broadcaster' ? (
               <div className="space-y-4">
                 {/* Broadcaster Interface - Native WebRTC Streaming */}
-                <div className="text-sm text-green-600 bg-green-50 p-3 rounded border font-semibold">
+                <div className="text-base text-green-600 bg-green-50 p-3 rounded border font-semibold">
                   🎬 Broadcaster Mode: You are live streaming
                 </div>
                 <NativeWebRTCBroadcaster
@@ -243,7 +243,7 @@ export default function LiveStreamPage() {
                 {/* Provider cancel order button */}
                 {(order.status === 'accepted' || order.status === 'live') && (
                   <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                    <p className="text-sm text-yellow-800 mb-3">
+                    <p className="text-base text-yellow-800 mb-3">
                       As a service provider, you can cancel this order, but it will reduce your credit score
                     </p>
                     <Button 
@@ -262,7 +262,7 @@ export default function LiveStreamPage() {
             ) : (
               <div className="space-y-4">
                 {/* Viewer Interface */}
-                <div className="text-sm text-purple-600 bg-purple-50 p-3 rounded border font-semibold">
+                <div className="text-base text-purple-600 bg-purple-50 p-3 rounded border font-semibold">
                   👥 Viewer Mode: Watching live stream
                 </div>
                 <StreamViewer
@@ -288,7 +288,7 @@ export default function LiveStreamPage() {
                   <h4 className="font-medium mb-1">
                     Description
                   </h4>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-base text-muted-foreground">
                     {order.description}
                   </p>
                 </div>
@@ -307,7 +307,7 @@ export default function LiveStreamPage() {
                     <h4 className="font-medium mb-1">
                       Current Viewers
                     </h4>
-                    <div className="text-2xl font-bold text-primary">
+                    <div className="text-4xl font-bold text-primary">
                       {viewerCount}
                     </div>
                   </div>
@@ -325,7 +325,7 @@ export default function LiveStreamPage() {
               <CardContent>
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">
+                    <span className="text-base text-muted-foreground">
                       Status
                     </span>
                     <Badge variant={isLive ? 'default' : 'secondary'}>
@@ -336,17 +336,17 @@ export default function LiveStreamPage() {
                   </div>
                   
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">
+                    <span className="text-base text-muted-foreground">
                       Order ID
                     </span>
-                    <span className="text-xs font-mono">
+                    <span className="text-base font-mono">
                       {orderId.slice(0, 8)}...
                     </span>
                   </div>
 
                   {userRole === 'broadcaster' && (
                     <div className="pt-2 border-t">
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-base text-muted-foreground">
                         You are the streamer for this order. Use the controls to start your broadcast.
                       </p>
                     </div>

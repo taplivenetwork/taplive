@@ -39,7 +39,7 @@ export function MobileNavigation() {
                     <div className="absolute -top-1 -right-1 w-2 h-2 bg-primary rounded-full animate-pulse" />
                   )}
                 </div>
-                <span className={`text-xs font-medium ${
+                <span className={`text-sm font-medium ${
                   isActive ? "text-primary" : "text-muted-foreground"
                 }`}>
                   {item.name}

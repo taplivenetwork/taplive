@@ -7,7 +7,13 @@
     "doc": "docs"
   },
   "scripts": {
-    "dev": "tsx server/index.ts"
+    "dev": "tsx server/index.ts",
+    "dev:client": "cd client && npm run dev",
+    "dev:all": "concurrently \"npm run dev\" \"npm run dev:client\"",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio"
   },
   "repository": {
     "type": "git",
@@ -23,22 +29,27 @@
   "homepage": "https://github.com/taplivenetwork/taplive#readme",
   "dependencies": {
     "@erc7824/nitrolite": "^0.4.0",
+    "@neondatabase/serverless": "^1.0.2",
     "@tanstack/react-query": "^5.90.5",
     "clsx": "^2.1.1",
     "dotenv": "^17.2.3",
     "drizzle-orm": "^0.44.6",
+    "drizzle-zod": "^0.8.3",
     "ethers": "^6.15.0",
     "express": "^5.1.0",
     "nanoid": "^5.1.6",
     "tailwind-merge": "^3.3.1",
     "viem": "^2.38.3",
     "vite": "^7.1.11",
-    "ws": "^8.18.3"
+    "ws": "^8.18.3",
+    "zod": "^4.1.12"
   },
   "devDependencies": {
     "@types/express": "^5.0.3",
     "@types/node": "^24.8.1",
     "@types/ws": "^8.18.1",
+    "concurrently": "^9.2.1",
+    "drizzle-kit": "^0.31.5",
     "tsx": "^4.20.6",
     "typescript": "^5.9.3"
   }

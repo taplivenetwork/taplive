@@ -94,7 +94,7 @@ export const api = {
 
   health: {
     check: async () => {
-      const response = await fetch('/healthz');
+      const response = await fetch('/api/health');
       if (!response.ok) {
         throw new Error('Health check failed');
       }
