@@ -6,9 +6,9 @@ import { z } from "zod";
 export const orderStatusEnum = pgEnum('order_status', ['pending', 'open', 'accepted', 'live', 'completed', 'awaiting_approval', 'disputed', 'under_review', 'done', 'cancelled']);
 export const orderTypeEnum = pgEnum('order_type', ['single', 'group']);
 export const paymentStatusEnum = pgEnum('payment_status', ['pending', 'processing', 'completed', 'failed', 'refunded']);
-export const paymentMethodEnum = pgEnum('payment_method', ['stripe', 'paypal', 'usdt_trc20', 'usdt_erc20', 'bitcoin', 'ethereum']);
-export const transactionTypeEnum = pgEnum('transaction_type', ['payment', 'payout', 'refund', 'commission']);
-export const currencyEnum = pgEnum('currency', ['USD', 'USDT', 'BTC', 'ETH']);
+export const paymentMethodEnum = pgEnum('payment_method', ['pyusd', 'usdt_trc20', 'usdt_erc20', 'bitcoin', 'ethereum', 'yellow_swap']);
+export const transactionTypeEnum = pgEnum('transaction_type', ['payment', 'payout', 'refund', 'commission', 'swap']);
+export const currencyEnum = pgEnum('currency', ['PYUSD', 'USDT', 'BTC', 'ETH', 'USD']);
 export const disputeStatusEnum = pgEnum('dispute_status', ['submitted', 'ai_review', 'human_review', 'resolved_approved', 'resolved_rejected']);
 export const disputeTypeEnum = pgEnum('dispute_type', ['quality_issue', 'content_mismatch', 'technical_issue', 'service_incomplete', 'other']);
 export const riskLevelEnum = pgEnum('risk_level', ['safe', 'low', 'medium', 'high', 'extreme', 'forbidden']);
@@ -43,6 +43,11 @@ export const users = pgTable("users", {
   totalEarnings: decimal("total_earnings", { precision: 12, scale: 2 }).default('0.00'), // Total lifetime earnings
   walletAddress: text("wallet_address"), // Crypto wallet address for payouts
   preferredPaymentMethod: paymentMethodEnum("preferred_payment_method"), // Preferred payout method
+  
+  // Web3 fields
+  isWeb3Enabled: boolean("is_web3_enabled").default(false), // Provider has Web3 wallet connected
+  walletProvider: text("wallet_provider"), // MetaMask, WalletConnect, etc.
+  lastWalletActivity: timestamp("last_wallet_activity"), // Last Web3 transaction
   
   createdAt: timestamp("created_at").defaultNow(),
 });
@@ -128,6 +133,15 @@ export const payments = pgTable("payments", {
   externalPaymentId: text("external_payment_id"), // Stripe/PayPal payment ID
   externalTransactionHash: text("external_transaction_hash"), // Crypto transaction hash
   paymentGatewayResponse: text("payment_gateway_response"), // JSON response from gateway
+  
+  // Web3 specific fields
+  web3TransactionHash: text("web3_transaction_hash"), // PYUSD transaction hash
+  pyusdAmount: decimal("pyusd_amount", { precision: 18, scale: 0 }), // PYUSD amount (18 decimals)
+  yellowSwapHash: text("yellow_swap_hash"), // Yellow Network swap transaction
+  originalToken: text("original_token"), // Original token received
+  originalAmount: decimal("original_amount", { precision: 18, scale: 0 }), // Original token amount
+  gasUsed: decimal("gas_used", { precision: 10, scale: 0 }), // Gas used for transaction
+  gasPrice: decimal("gas_price", { precision: 18, scale: 0 }), // Gas price in wei
   
   // Metadata
   paymentMetadata: text("payment_metadata"), // JSON metadata

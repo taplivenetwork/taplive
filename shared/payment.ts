@@ -59,49 +59,55 @@ export function calculateCommission(totalAmount: number, platformFeePercentage: 
   };
 }
 
-// Payment method configurations
+// Payment method configurations (Web3 only)
 export const PAYMENT_METHODS = {
-  STRIPE: {
-    name: 'Stripe',
-    type: 'fiat',
-    currencies: ['USD'],
-    icon: '💳',
-    description: 'Credit/Debit Card'
-  },
-  PAYPAL: {
-    name: 'PayPal',
-    type: 'fiat',
-    currencies: ['USD'],
-    icon: '🏦',
-    description: 'PayPal Account'
+  PYUSD: {
+    name: 'PYUSD',
+    type: 'web3',
+    currencies: ['PYUSD'],
+    icon: '₮',
+    description: 'PayPal USD (Ethereum)',
+    requiresWallet: true
   },
   USDT_TRC20: {
     name: 'USDT (TRC20)',
     type: 'crypto',
     currencies: ['USDT'],
     icon: '₮',
-    description: 'Tether (TRON Network)'
+    description: 'Tether (TRON Network)',
+    requiresWallet: true
   },
   USDT_ERC20: {
     name: 'USDT (ERC20)',
     type: 'crypto',
     currencies: ['USDT'],
     icon: '₮',
-    description: 'Tether (Ethereum Network)'
+    description: 'Tether (Ethereum Network)',
+    requiresWallet: true
   },
   BITCOIN: {
     name: 'Bitcoin',
     type: 'crypto',
     currencies: ['BTC'],
     icon: '₿',
-    description: 'Bitcoin Network'
+    description: 'Bitcoin Network',
+    requiresWallet: true
   },
   ETHEREUM: {
     name: 'Ethereum',
     type: 'crypto',
     currencies: ['ETH'],
     icon: 'Ξ',
-    description: 'Ethereum Network'
+    description: 'Ethereum Network',
+    requiresWallet: true
+  },
+  YELLOW_SWAP: {
+    name: 'Yellow Network Swap',
+    type: 'swap',
+    currencies: ['PYUSD', 'USDT', 'USDC', 'DAI'],
+    icon: '🔄',
+    description: 'Swap any token to PYUSD via Yellow Network',
+    requiresWallet: true
   }
 } as const;
 

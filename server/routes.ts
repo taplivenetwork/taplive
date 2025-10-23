@@ -29,6 +29,96 @@ export function registerRoutes(app: Express): Server {
     });
   });
 
+  // Web3 Payment Endpoints
+  app.post("/api/payments/pyusd", (req, res) => {
+    const { orderId, amount, payerId, web3TransactionHash, pyusdAmount } = req.body;
+    
+    console.log("PYUSD Payment:", { orderId, amount, payerId, web3TransactionHash, pyusdAmount });
+    
+    // In a real app, you would:
+    // 1. Verify the transaction on-chain
+    // 2. Store the payment in database
+    // 3. Update order status
+    
+    res.json({
+      success: true,
+      message: "PYUSD payment processed",
+      data: {
+        paymentId: `pay_${Date.now()}`,
+        transactionHash: web3TransactionHash,
+        amount: pyusdAmount,
+        status: "completed"
+      }
+    });
+  });
+
+  app.post("/api/payments/yellow-swap", (req, res) => {
+    const { 
+      orderId, 
+      amount, 
+      payerId, 
+      web3TransactionHash, 
+      yellowSwapHash, 
+      originalToken, 
+      originalAmount, 
+      pyusdAmount 
+    } = req.body;
+    
+    console.log("Yellow Network Swap:", { 
+      orderId, 
+      amount, 
+      payerId, 
+      web3TransactionHash, 
+      yellowSwapHash, 
+      originalToken, 
+      originalAmount, 
+      pyusdAmount 
+    });
+    
+    // In a real app, you would:
+    // 1. Verify both transactions on-chain
+    // 2. Store the swap details in database
+    // 3. Update order status
+    
+    res.json({
+      success: true,
+      message: "Yellow Network swap completed",
+      data: {
+        paymentId: `pay_${Date.now()}`,
+        transactionHash: web3TransactionHash,
+        swapHash: yellowSwapHash,
+        originalToken,
+        originalAmount,
+        pyusdAmount,
+        status: "completed"
+      }
+    });
+  });
+
+  app.get("/api/payments/methods", (req, res) => {
+    res.json({
+      success: true,
+      data: {
+        pyusd: {
+          name: 'PYUSD',
+          type: 'web3',
+          icon: '₮',
+          description: 'PayPal USD (Ethereum)',
+          currencies: ['PYUSD'],
+          requiresWallet: true
+        },
+        yellow_swap: {
+          name: 'Yellow Network Swap',
+          type: 'swap',
+          icon: '🔄',
+          description: 'Swap any token to PYUSD',
+          currencies: ['PYUSD', 'USDT', 'USDC', 'DAI'],
+          requiresWallet: true
+        }
+      }
+    });
+  });
+
   // Create HTTP server
   const server = createServer(app);
 
