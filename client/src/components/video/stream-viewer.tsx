@@ -36,7 +36,7 @@ export function StreamViewer({ streamId, isLive, onViewerCountChange }: StreamVi
 
     // WebSocket connection with enhanced error handling
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    const wsUrl = `${protocol}//${window.location.host}/ws`;
+    const wsUrl = `${protocol}//localhost:5000/ws`;
     const websocket = new WebSocket(wsUrl);
 
     websocket.onopen = () => {
@@ -65,7 +65,7 @@ export function StreamViewer({ streamId, isLive, onViewerCountChange }: StreamVi
             }
             break;
           case 'stream-started':
-            console.log('✅ Stream started signal received');
+            console.log('Stream started signal received');
             setIsConnected(true);
             break;
           case 'user-joined':
@@ -81,7 +81,7 @@ export function StreamViewer({ streamId, isLive, onViewerCountChange }: StreamVi
     };
 
     websocket.onclose = (event) => {
-      console.log('❌ WebSocket connection closed:', event.code, event.reason);
+      console.log('WebSocket connection closed:', event.code, event.reason);
       setWs(null);
       setIsConnected(false);
       
@@ -93,13 +93,13 @@ export function StreamViewer({ streamId, isLive, onViewerCountChange }: StreamVi
           connectToStream();
         }, 3000);
       } else {
-        setConnectionError('连接已断开。请刷新页面重试。');
+        setConnectionError('Connection lost. Please refresh the page and try again.');
       }
     };
 
     websocket.onerror = (error) => {
-      console.error('❌ WebSocket error:', error);
-      setConnectionError('连接失败，正在重试...');
+      console.error('WebSocket error:', error);
+      setConnectionError('Connection failed, retrying...');
     };
 
     return websocket;
@@ -158,18 +158,18 @@ export function StreamViewer({ streamId, isLive, onViewerCountChange }: StreamVi
     });
 
     newPeer.on('connect', () => {
-      console.log('✅ Peer connected');
+      console.log('Peer connected');
       setIsConnected(true);
     });
 
     newPeer.on('error', (err) => {
-      console.error('❌ Peer error:', err);
-      setConnectionError(`连接错误: ${err.message}`);
+      console.error('Peer error:', err);
+      setConnectionError(`Connection error: ${err.message}`);
       setIsConnected(false);
     });
 
     newPeer.on('close', () => {
-      console.log('❌ Peer connection closed');
+      console.log('Peer connection closed');
       setIsConnected(false);
     });
 
@@ -177,8 +177,8 @@ export function StreamViewer({ streamId, isLive, onViewerCountChange }: StreamVi
       newPeer.signal(offer);
       setPeer(newPeer);
     } catch (error) {
-      console.error('❌ Failed to process offer:', error);
-      setConnectionError('处理连接信号失败');
+      console.error('Failed to process offer:', error);
+      setConnectionError('Failed to process connection signal');
     }
   };
 
@@ -287,7 +287,7 @@ export function StreamViewer({ streamId, isLive, onViewerCountChange }: StreamVi
                     </div>
                     {retryCount > 0 && (
                       <div className="text-sm opacity-75">
-                        {`重试中... (${retryCount}/3)`}
+                        {`Retrying... (${retryCount}/3)`}
                       </div>
                     )}
                   </>

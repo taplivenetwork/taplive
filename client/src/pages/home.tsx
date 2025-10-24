@@ -61,8 +61,10 @@ export default function Home() {
 
   // Fetch orders
   const { data: ordersResponse, isLoading, error } = useQuery({
-    queryKey: ['/api/orders'],
+    queryKey: ['/api/orders', Date.now()], // Add timestamp to force refresh
     queryFn: () => api.orders.getAll(),
+    staleTime: 0, // Always fetch fresh data
+    cacheTime: 0, // Don't cache
   });
 
   // Mock tourist orders for MVP demo
@@ -165,60 +167,6 @@ export default function Home() {
     }
   ];
 
-  // Mock live streams for MVP demo
-  const mockLiveStreams = [
-    {
-      id: 'live-eiffel-tower',
-      title: 'Eiffel Tower Sunset Stream',
-      description: 'Live streaming of the iconic Eiffel Tower during sunset, showcasing the beautiful Paris skyline',
-      price: '35.00',
-      status: 'live' as const,
-      category: 'travel',
-      address: 'Eiffel Tower, Paris, France',
-      latitude: "48.8584",
-      longitude: "2.2945",
-      type: 'single' as const,
-      creatorId: 'streamer-paris',
-      providerId: 'provider-paris',
-      viewerCount: 400,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    },
-    {
-      id: 'live-mount-fuji',
-      title: 'Mount Fuji Cherry Blossom Stream',
-      description: 'Beautiful cherry blossoms around Mount Fuji in Japan, experiencing the spring season',
-      price: '45.00',
-      status: 'live' as const,
-      category: 'nature',
-      address: 'Mount Fuji, Shizuoka, Japan',
-      latitude: "35.3606",
-      longitude: "138.7274",
-      type: 'single' as const,
-      creatorId: 'streamer-japan',
-      providerId: 'provider-japan',
-      viewerCount: 132,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    },
-    {
-      id: 'live-pyramids',
-      title: 'Pyramids Sunset Exploration',
-      description: 'Exploring the Great Pyramids of Giza during sunset, discovering ancient Egyptian history',
-      price: '50.00',
-      status: 'live' as const,
-      category: 'history',
-      address: 'Giza Pyramids, Cairo, Egypt',
-      latitude: "29.9792",
-      longitude: "31.1342",
-      type: 'single' as const,
-      creatorId: 'streamer-egypt',
-      providerId: 'provider-egypt',
-      viewerCount: 660,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    }
-  ];
 
   // Deduplicate orders - filter by order ID, then add mock orders
   const allOrders = ordersResponse?.data || [];
@@ -306,12 +254,13 @@ export default function Home() {
     return matchesSearch && matchesCategory && matchesPrice;
   });
 
-  // Active streams (live orders + mock live streams)
-  const activeStreams = [...orders.filter((order: Order) => order.status === 'live'), ...mockLiveStreams] as Order[];
+  // Active streams (live orders from API)
+  const activeStreams = orders.filter((order: Order) => order.status === 'live') as Order[];
   
   // Debug logging
+  console.log('All orders from API:', orders);
   console.log('Active streams:', activeStreams);
-  console.log('Mock live streams:', mockLiveStreams);
+  console.log('Number of active streams:', activeStreams.length);
 
   const handleAcceptOrder = async (orderId: string) => {
     try {
@@ -644,7 +593,7 @@ export default function Home() {
             </div>
 
             {/* Demo Controls */}
-            <DemoControls />
+            {/* <DemoControls /> */}
 
             {/* Quick Filters */}
             <div className="space-y-4">

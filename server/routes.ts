@@ -1,6 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { WebSocketServer, WebSocket } from "ws";
+import { storage } from "./simple-storage";
 
 export function registerRoutes(app: Express): Server {
   
@@ -12,12 +13,51 @@ export function registerRoutes(app: Express): Server {
     });
   });
 
-  app.get("/api/orders", (req, res) => {
-    res.json({
-      success: true,
-      data: [],
-      message: "Orders endpoint ready"
-    });
+  app.get("/api/orders", async (req, res) => {
+    try {
+      const orders = await storage.getAllOrders();
+      
+      res.json({
+        success: true,
+        data: orders,
+        message: "Orders retrieved successfully"
+      });
+    } catch (error) {
+      console.error("Error fetching orders:", error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to fetch orders",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  app.get("/api/orders/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const order = await storage.getOrderById(id);
+      
+      if (!order) {
+        return res.status(404).json({
+          success: false,
+          message: "Order Not Found",
+          error: "The requested live stream could not be found."
+        });
+      }
+
+      res.json({
+        success: true,
+        data: order,
+        message: "Order retrieved successfully"
+      });
+    } catch (error) {
+      console.error("Error fetching order:", error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to fetch order",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
   });
 
   app.post("/api/orders", (req, res) => {
@@ -27,6 +67,63 @@ export function registerRoutes(app: Express): Server {
       message: "Order created",
       data: { id: Date.now(), ...req.body }
     });
+  });
+
+  app.patch("/api/orders/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updates = req.body;
+      
+      const updatedOrder = await storage.updateOrder(id, updates);
+      
+      if (!updatedOrder) {
+        return res.status(404).json({
+          success: false,
+          message: "Order not found"
+        });
+      }
+      
+      res.json({
+        success: true,
+        message: "Order updated successfully",
+        data: updatedOrder
+      });
+    } catch (error) {
+      console.error("Error updating order:", error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to update order",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  app.delete("/api/orders/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      const deleted = await storage.deleteOrder(id);
+      
+      if (!deleted) {
+        return res.status(404).json({
+          success: false,
+          message: "Order not found"
+        });
+      }
+      
+      res.json({
+        success: true,
+        message: "Order deleted successfully",
+        data: { id }
+      });
+    } catch (error) {
+      console.error("Error deleting order:", error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to delete order",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
   });
 
   // Web3 Payment Endpoints

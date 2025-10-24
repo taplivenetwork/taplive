@@ -31,7 +31,7 @@ export function LiveThumbnail({
       if (!enableWebSocket || lowPerformance) return;
       
       const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-      const wsUrl = `${protocol}//${window.location.host}/ws`;
+      const wsUrl = `${protocol}//localhost:5000/ws`;
       
       wsRef.current = new WebSocket(wsUrl);
       

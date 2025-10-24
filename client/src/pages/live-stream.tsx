@@ -30,14 +30,25 @@ export default function LiveStreamPage() {
   const orderId = params?.orderId || '';
 
   // Fetch order details
-  const { data: orderResponse, isLoading } = useQuery({
+  const { data: orderResponse, isLoading, error } = useQuery({
     queryKey: ['/api/orders', orderId],
+    queryFn: async () => {
+      const response = await apiRequest('GET', `/api/orders/${orderId}`);
+      return response.json();
+    },
     enabled: !!orderId,
   });
 
-  const order = Array.isArray(orderResponse?.data) 
-    ? orderResponse.data.find((o: Order) => o.id === orderId)
-    : orderResponse?.data as Order | undefined;
+  const order = orderResponse?.data as Order | undefined;
+
+  // Debug logging
+  console.log('Live Stream Debug:', {
+    orderId,
+    orderResponse,
+    order,
+    isLoading,
+    error
+  });
 
   // Update order status to live
   const updateOrderMutation = useMutation({
@@ -53,10 +64,10 @@ export default function LiveStreamPage() {
     // For demo, if order status is 'accepted' OR 'live', show broadcaster controls
     // Also allow broadcaster controls for 'pending' and 'open' status for testing
     if (order && ['pending', 'open', 'accepted', 'live'].includes(order.status)) {
-      console.log('🎬 Setting user role to broadcaster for status:', order.status);
+      console.log('Setting user role to broadcaster for status:', order.status);
       setUserRole('broadcaster');
     } else {
-      console.log('👥 Setting user role to viewer for status:', order?.status);
+      console.log('Setting user role to viewer for status:', order?.status);
       setUserRole('viewer');
     }
   }, [order]);
@@ -66,7 +77,7 @@ export default function LiveStreamPage() {
   };
 
   const handleStreamEnd = () => {
-    console.log('🔚 Manually ending stream - setting status to done');
+    console.log('Manually ending stream - setting status to done');
     updateOrderMutation.mutate('done');
   };
 
@@ -87,7 +98,7 @@ export default function LiveStreamPage() {
   };
 
   const handleGoBack = () => {
-    console.log('🔙 Navigating back...');
+    console.log('Navigating back...');
     // Try multiple navigation methods
     try {
       if (window.history.length > 1) {
@@ -161,7 +172,7 @@ export default function LiveStreamPage() {
                 </div>
                 <div className="flex items-center gap-2">
                   <Clock className="w-4 h-4" />
-                  <span>{new Date(order.createdAt).toLocaleDateString()}</span>
+                  <span>{order.createdAt ? new Date(order.createdAt).toLocaleDateString() : 'N/A'}</span>
                 </div>
               </div>
             </div>
@@ -199,7 +210,7 @@ export default function LiveStreamPage() {
             <div className="flex gap-2">
               <Button
                 onClick={() => {
-                  console.log('🔄 Switching to broadcaster mode');
+                  console.log('Switching to broadcaster mode');
                   setUserRole('broadcaster');
                 }}
                 variant={userRole === 'broadcaster' ? 'default' : 'outline'}
@@ -207,11 +218,11 @@ export default function LiveStreamPage() {
                 data-testid="switch-to-broadcaster"
                 className={userRole === 'broadcaster' ? 'bg-green-500 hover:bg-green-600' : ''}
               >
-                🎬 {userRole === 'broadcaster' ? '✅ Active Broadcaster' : 'Switch to Broadcaster'}
+                {userRole === 'broadcaster' ? 'Active Broadcaster' : 'Switch to Broadcaster'}
               </Button>
               <Button
                 onClick={() => {
-                  console.log('🔄 Switching to viewer mode');
+                  console.log('Switching to viewer mode');
                   setUserRole('viewer');
                 }}
                 variant={userRole === 'viewer' ? 'default' : 'outline'}
@@ -219,7 +230,7 @@ export default function LiveStreamPage() {
                 data-testid="switch-to-viewer"
                 className={userRole === 'viewer' ? 'bg-purple-500 hover:bg-purple-600' : ''}
               >
-                👥 {userRole === 'viewer' ? '✅ Active Viewer' : 'Switch to Viewer'}
+                {userRole === 'viewer' ? 'Active Viewer' : 'Switch to Viewer'}
               </Button>
             </div>
           </div>

@@ -7,7 +7,7 @@
     "doc": "docs"
   },
   "scripts": {
-    "dev": "tsx server/index.ts",
+    "dev": "tsx server/simple-server.ts",
     "dev:client": "cd client && npm run dev",
     "dev:all": "concurrently \"npm run dev\" \"npm run dev:client\"",
     "db:generate": "drizzle-kit generate",
