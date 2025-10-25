@@ -12,9 +12,70 @@ TapLive is a location-based livestream collaboration platform that allows users 
 - 🤝 Open, modular developer ecosystem  
 - ⚖️ Compliant: no token, no assetization
 
-## 📚 Documentation
+## 🚀 Tech Stack
 
-## 📂 Documentation
+- **Frontend:** Vite + React + TailwindCSS
+- **Backend:** Node.js + Express.js
+- **Database:** PostgreSQL (Neon DB)
+- **Web3**
+  - PYUSD (Sepolia Testnet)
+  - Yellow Network API
+  - Lighthouse decentralized storage
+
+---
+
+## 📦 Project Structure
+
+/client → React Frontend
+/server → Node.js Backend + Web3 APIs
+
+
+## 🔧 Setup Instructions
+
+### ✅ Clone the repository
+
+```bash
+git clone <your-repo-url>
+cd <repo-folder>
+```
+
+### Backend Setup
+```bash
+
+cd server
+npm install
+```
+
+### Configure Environment Variables
+Create .env in root (see .env.example for reference)
+
+Run migrations (if using Prisma)
+```bash
+npx prisma migrate deploy
+```
+Start server
+```bash
+npm run dev
+```
+Backend runs on:
+➡ http://localhost:5000
+
+### Frontend Setup
+```bash
+cd client
+npm install
+```
+Create .env.local inside /client folder (see .env.example below)
+
+Start frontend:
+
+```bash
+npm run dev
+```
+Frontend runs on:
+➡ http://localhost:5173
+
+## 📚 Documentation
 
 - [00 Project Overview](./docs/00_project-overview.md)
 - [01 Pitch Summary](./docs/01_pitch-summary.md)
