@@ -1,17 +1,18 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Plus, Search, Filter, Play, Users, MapPin, Clock, X } from "lucide-react";
+import { Plus, Search, Filter, Play, Users, MapPin, Clock, X, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
-import { OrderCard } from "@/components/order-card";
 import { LiveStreamCard } from "@/components/live-stream-card";
 import { MultiStreamGrid } from "@/components/multi-stream-grid";
 import { CreateOrderModal } from "@/components/create-order-modal";
-import { DemoControls } from "@/components/demo-controls";
+import WalletConnection from "@/components/wallet-connection";
+import Web3Payment from "@/components/web3-payment";
+import ProviderDashboard from "@/components/provider-dashboard";
 import { api } from "@/lib/api";
 import { apiRequest, queryClient } from "@/lib/queryclient";
 import { useToast } from "@/hooks/use-toast";
@@ -27,13 +28,16 @@ export default function Home() {
   const { toast } = useToast();
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | undefined>();
-  const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number } | undefined>();
   const [searchFilter, setSearchFilter] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
   const [priceFilter, setPriceFilter] = useState("");
   const [healthStatus, setHealthStatus] = useState<"connected" | "disconnected">("disconnected");
   const [viewMode, setViewMode] = useState<'cards' | 'grid'>('cards');
   const [dismissedOrders, setDismissedOrders] = useState<Set<string>>(new Set());
+  const [walletConnected, setWalletConnected] = useState(false);
+  const [showPayment, setShowPayment] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [currentView, setCurrentView] = useState<'home' | 'provider' | 'orders'>('home');
 
   // Health check
   const { data: healthData } = useQuery({
@@ -46,7 +50,7 @@ export default function Home() {
   // Set up global map update function for geocoding
   useEffect(() => {
     window.mapUpdateLocation = (lat: number, lng: number) => {
-      setMapCenter({ lat, lng });
+      // setMapCenter({ lat, lng });
       setSelectedLocation({ lat, lng });
     };
     
@@ -61,10 +65,8 @@ export default function Home() {
 
   // Fetch orders
   const { data: ordersResponse, isLoading, error } = useQuery({
-    queryKey: ['/api/orders', Date.now()], // Add timestamp to force refresh
+    queryKey: ['/api/orders'],
     queryFn: () => api.orders.getAll(),
-    staleTime: 0, // Always fetch fresh data
-    cacheTime: 0, // Don't cache
   });
 
   // Mock tourist orders for MVP demo
@@ -227,6 +229,43 @@ export default function Home() {
     });
   };
 
+  const handleWalletConnected = (_address: string) => {
+    setWalletConnected(true);
+    // setWalletAddress(address);
+  };
+
+  const handleWalletDisconnected = () => {
+    setWalletConnected(false);
+    // setWalletAddress('');
+  };
+
+  const handleJoinStream = (orderId: string) => {
+    if (!walletConnected) {
+      toast({
+        title: "Wallet Required",
+        description: "Please connect your wallet to join streams",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    const order = orders.find(o => o.id === orderId);
+    if (order) {
+      setSelectedOrder(order);
+      setShowPayment(true);
+    }
+  };
+
+  const handlePaymentComplete = (txHash: string) => {
+    setShowPayment(false);
+    toast({
+      title: "Payment Successful",
+      description: `Payment secured in escrow. Transaction: ${txHash.slice(0, 10)}...`,
+    });
+    // Navigate to stream page
+    window.location.href = `/stream/${selectedOrder?.id}?mode=viewer`;
+  };
+
   // Filter orders (exclude dismissed orders)
   const filteredOrders = orders.filter((order: Order) => {
     // First exclude dismissed orders
@@ -258,9 +297,7 @@ export default function Home() {
   const activeStreams = orders.filter((order: Order) => order.status === 'live') as Order[];
   
   // Debug logging
-  console.log('All orders from API:', orders);
   console.log('Active streams:', activeStreams);
-  console.log('Number of active streams:', activeStreams.length);
 
   const handleAcceptOrder = async (orderId: string) => {
     try {
@@ -282,13 +319,21 @@ export default function Home() {
     }
   };
 
-  const handleJoinStream = (orderId: string) => {
-    toast({
-      title: "正在进入直播",
-      description: "正在打开直播间...",
-    });
-    // 直接跳转到观看模式
-    window.location.href = `/stream/${orderId}?mode=viewer`;
+  const handleJoinStreamNew = (orderId: string) => {
+    if (!walletConnected) {
+      toast({
+        title: "Wallet Required",
+        description: "Please connect your wallet to join streams",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    const order = orders.find(o => o.id === orderId);
+    if (order) {
+      setSelectedOrder(order);
+      setShowPayment(true);
+    }
   };
 
   const handleCancelOrder = async (orderId: string) => {
@@ -479,7 +524,7 @@ export default function Home() {
               ) : viewMode === 'grid' ? (
                 <MultiStreamGrid 
                   streams={orders} 
-                  onStreamClick={handleJoinStream} 
+                  onStreamClick={handleJoinStreamNew} 
                 />
               ) : activeStreams.length > 0 ? (
                 <div className="grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
@@ -487,7 +532,7 @@ export default function Home() {
                     <LiveStreamCard
                       key={stream.id}
                       stream={stream}
-                      onJoin={handleJoinStream}
+                      onJoin={handleJoinStreamNew}
                       onCancel={handleCancelOrder}
                       onDelete={handleDeleteStream}
                       isMyOrder={false}
@@ -572,6 +617,19 @@ export default function Home() {
         {/* Sidebar - Create Stream & Quick Actions */}
         <aside className="w-full lg:w-80 xl:w-96 border-l border-border bg-card/50 backdrop-blur holographic">
           <div className="p-4 lg:p-6 space-y-6">
+            {/* Web3 Wallet Connection */}
+            <div className="space-y-4">
+              <h3 className="font-semibold text-foreground flex items-center gap-2">
+                <Wallet className="w-5 h-5" />
+                Web3 Wallet
+              </h3>
+              <WalletConnection 
+                onWalletConnected={handleWalletConnected}
+                onWalletDisconnected={handleWalletDisconnected}
+              />
+            </div>
+
+
             {/* Quick Create */}
             <div className="space-y-4">
               <h3 className="font-semibold text-foreground flex items-center gap-2">
@@ -734,6 +792,34 @@ export default function Home() {
           </div>
         </aside>
       </div>
+
+      {/* Payment Modal */}
+      {showPayment && selectedOrder && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-background p-6 rounded-lg max-w-md w-full mx-4">
+            <Web3Payment
+              amount={selectedOrder.price}
+              orderId={selectedOrder.id}
+              onPaymentComplete={handlePaymentComplete}
+              onPaymentFailed={(error) => {
+                setShowPayment(false);
+                toast({
+                  title: "Payment Failed",
+                  description: error,
+                  variant: "destructive",
+                });
+              }}
+            />
+            <Button 
+              variant="outline" 
+              onClick={() => setShowPayment(false)}
+              className="w-full mt-4"
+            >
+              Cancel
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Create Order Modal */}
       <CreateOrderModal
