@@ -80,7 +80,7 @@ Frontend runs on:
 - [00 Project Overview](./docs/00_project-overview.md)
 - [01 Pitch Summary](./docs/01_pitch-summary.md)
 - [02 Pitch](./docs/02_pitch.md)
-- [03 Roadmap Phase 1–2](./docs/03_roadmap-phase-1-2.md)
+- [03 mvp-architecture.md](./docs/03_mvp-architecture.md)
 - [04 MVP Architecture](./docs/04_mvp-architecture.md)
 - [05 Contribution Guide](./docs/05_contribution-guide.md)
 - [06 Legal Notice](./docs/06_legal-notice.md)
