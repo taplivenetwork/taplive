@@ -14,7 +14,7 @@ TapLive aims to connect people to real-world actions through on-demand, real-tim
 
 ## Phase 1 — MVP
 
-**Goal:
+  Goal:Build a basically runnable and verifiable prototype program
 
 **Key features**
 - On-demand live order system
@@ -27,7 +27,7 @@ TapLive aims to connect people to real-world actions through on-demand, real-tim
 ---
 
 ## Phase 2 — Trust Layer & Geo Verification
-**Goal:** Credibility, safety, reliable replay records.
+  Goal: Credibility, safety, reliable replay records.
 
 **Key features**
 - GIS enhancement & risk labeling
