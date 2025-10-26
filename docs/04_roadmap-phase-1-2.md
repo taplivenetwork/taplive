@@ -10,16 +10,17 @@ TapLive aims to connect people to real-world actions through on-demand, real-tim
 
 # 🛣 TapLive Roadmap — Phase 1–2 (Public)
 
-**Last updated:** 2025-10-11
+**Last updated:** 2025-10-26
 
-## Phase 1 — MVP & Cold Start
-**Goal:** Usable from Day 1, even with few users.
+## Phase 1 — MVP
+
+**Goal:
 
 **Key features**
 - On-demand live order system
 - AA group order mechanism
 - Basic LBS matching
-- Replay Viewer (with access control)
+- Replay Viewer (with access control)   （Optional）
 - Fiat payment (D+0 settlement)
 - Non-financial Tap Credits
 
