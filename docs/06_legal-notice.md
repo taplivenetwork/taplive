@@ -1,7 +1,12 @@
 # Legal Notice
 
 ## Compliance
-TapLive is committed to full legal compliance. The platform currently **does not issue or trade any financial assets, tokens, or cryptocurrencies**. All activities are limited to **internal TapLive Credits**, which are purely for tracking user engagement, contributions, and reputation within the platform.
+
+TapLive is committed to full legal compliance, and we do not issue or trade any financial assets or tokens.  
+The platform uses TapLive Credits as a non-financial system to track user engagement,contributions and reputation.
+
+This commitment does not prohibit TapLive from supporting lawful payment methods in the future.  
+Subject to compliance and licensing requirements, the platform may enable payments using fiat currencies, stablecoins, or widely recognized cryptocurrencies (such as BTC, ETH, USDT and so on) purely as payment tools—not as investment products or platform-issued tokens.
 
 ## Non-Financial System
 TapLive Credits cannot be converted into cash, exchanged for goods or services outside the platform, or considered investment instruments. Participation in TapLive does **not** require any financial investment or imply any expectation of profit.
