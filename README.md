@@ -130,11 +130,6 @@ Platform credits are **non-financial activity markers** only.
 
 ---
 
-## ⏳ Project Timeline Notice
-
-This project officially started development during the [ETHOnline 2025](https://ethglobal.com/events/ethonline2025) hackathon.  
-🗓️ Started on October 10, 2025
-
 Development Plan:
 ##Development plan
  -Phase 1: File structure and project overview
