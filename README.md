@@ -17,10 +17,6 @@ TapLive is a location-based livestream collaboration platform that allows users 
 - **Frontend:** Vite + React + TailwindCSS
 - **Backend:** Node.js + Express.js
 - **Database:** PostgreSQL (Neon DB)
-- **Web3**
-  - PYUSD (Sepolia Testnet)
-  - Yellow Network API
-  - Lighthouse decentralized storage
 
 ---
 
