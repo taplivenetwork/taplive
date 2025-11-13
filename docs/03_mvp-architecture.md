@@ -1,0 +1,33 @@
+# What are we building?
+
+For this hackathon, we aim to focus on one or more of the following modules:
+
+- ✅ Real-time order acceptance/grabbing system prototype
+- ✅ Video on demand & payment interface process
+- ✅ Geolocation verification & anti-counterfeiting live streaming SDK
+- ✅ Video acceleration technology, CDN acceleration optimization technology (optional)
+- ✅ Content access control and playback record scoring mechanism (optional)
+- ✅ Group order model (AA ordering) (optional)
+- ✅ Decentralized cache node access (PCDN) (optional)
+
+## 🔄 Workflow Diagram
+The diagram below illustrates the MVP system flow from **order placement**, **WebRTC connection**, **real-time livestreaming**, to **optional replay hook**.
+
+_This diagram shows the MVP flow: from order placement → WebRTC connection → live streaming → replay hook._
+![WebRTC Order Flow](../assets/architecture/webrtc-order-flow.png)
+
+_This diagram illustrates the MVP architecture of TapLive during the hackathon.  
+The flow starts from **order placement**, followed by **real-time WebRTC connection**, **live streaming**, and **optional replay recording**.  
+This simple end-to-end flow highlights how a user request can quickly trigger a verified livestream session._
+
+# Roadmap: Phase 1 & Phase 2
+
+## Phase 1
+- MVP launch: Live Dispatch Orders & Real-Time Interaction
+- Geo-matching engine integration
+- Risk Control Mechanism setup
+
+Phase 2  
+- Trust Layer Development  
+- Feedback & Iteration Cycle  
+- Community and Developer Participation/Recruitment/Expansion

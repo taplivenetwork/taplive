@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useRoute } from 'wouter';
+<<<<<<< HEAD
 import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
 import { CheckoutForm } from '@/components/payment/checkout';
@@ -14,11 +15,23 @@ if (!import.meta.env.VITE_STRIPE_PUBLIC_KEY) {
   throw new Error('Missing required Stripe key: VITE_STRIPE_PUBLIC_KEY');
 }
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
+=======
+import { PaymentModal } from '@/components/payment-modal';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft, Loader2, Wallet } from "lucide-react";
+import { useQuery } from '@tanstack/react-query';
+import { apiRequest } from "@/lib/queryclient";
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
 
 export default function PaymentPage() {
   const [, setLocation] = useLocation();
   const [match, params] = useRoute("/payment/:orderId");
   const [paymentComplete, setPaymentComplete] = useState(false);
+<<<<<<< HEAD
+=======
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
   
   const orderId = params?.orderId;
 
@@ -108,12 +121,15 @@ export default function PaymentPage() {
     );
   }
 
+<<<<<<< HEAD
   const stripeOptions = {
     mode: 'payment' as const,
     currency: orderData.currency.toLowerCase(),
     amount: Math.round(parseFloat(orderData.price) * 100),
   };
 
+=======
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
   return (
     <div className="min-h-screen bg-background circuit-bg">
       <div className="container mx-auto px-4 py-8">
@@ -156,6 +172,7 @@ export default function PaymentPage() {
             </Card>
           </div>
 
+<<<<<<< HEAD
           <Elements stripe={stripePromise} options={stripeOptions}>
             <CheckoutForm
               orderId={orderId}
@@ -173,6 +190,41 @@ export default function PaymentPage() {
           </Elements>
         </div>
       </div>
+=======
+          <Card className="glass-card">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Wallet className="w-5 h-5" />
+                Web3 Payment
+              </CardTitle>
+              <CardDescription>
+                Pay with PYUSD or swap any token using Yellow Network
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button 
+                onClick={() => setShowPaymentModal(true)}
+                className="w-full"
+                size="lg"
+              >
+                <Wallet className="mr-2 h-4 w-4" />
+                Pay with Web3
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      <PaymentModal
+        order={orderData}
+        isOpen={showPaymentModal}
+        onClose={() => setShowPaymentModal(false)}
+        onSuccess={() => {
+          setPaymentComplete(true);
+          setLocation(`/payment/${orderId}/success`);
+        }}
+      />
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
     </div>
   );
 }

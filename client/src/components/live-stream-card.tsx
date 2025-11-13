@@ -58,8 +58,13 @@ export function LiveStreamCard({ stream, onJoin, onAccept, onCancel, onDelete, i
     window.location.href = `/stream/${stream.id}?mode=viewer`;
   };
 
+<<<<<<< HEAD
   // Simulate viewer count based on stream data
   const viewerCount = stream.status === 'live' ? Math.floor(Math.random() * 1000) + 50 : 0;
+=======
+  // Get viewer count from stream data or use random for demo
+  const viewerCount = stream.status === 'live' ? (stream as any).viewerCount || Math.floor(Math.random() * 1000) + 50 : 0;
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
   
   return (
     <Card 
@@ -68,7 +73,11 @@ export function LiveStreamCard({ stream, onJoin, onAccept, onCancel, onDelete, i
       onClick={handleCardClick}
     >
       {/* Video Thumbnail/Preview */}
+<<<<<<< HEAD
       <div className="relative aspect-video bg-gradient-to-br from-primary/20 via-purple-500/20 to-pink-500/20 overflow-hidden">
+=======
+      <div className="relative aspect-video bg-gradient-to-br from-orange-400 via-red-500 to-green-400 overflow-hidden">
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
         {stream.status === 'live' ? (
           <LiveThumbnail 
             streamId={stream.id} 
@@ -76,7 +85,11 @@ export function LiveStreamCard({ stream, onJoin, onAccept, onCancel, onDelete, i
             showViewerCount={false} 
           />
         ) : (
+<<<<<<< HEAD
           <div className="w-full h-full bg-gradient-to-br from-primary/20 via-purple-500/20 to-pink-500/20" />
+=======
+          <div className="w-full h-full bg-gradient-to-br from-orange-400 via-red-500 to-green-400" />
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
         )}
         {/* Live indicator for active streams */}
         {stream.status === 'live' && (
@@ -161,11 +174,19 @@ export function LiveStreamCard({ stream, onJoin, onAccept, onCancel, onDelete, i
               {stream.title}
             </h3>
             <div className="text-right flex-shrink-0">
+<<<<<<< HEAD
               <div className="text-lg font-bold text-primary">
                 ${stream.price}
               </div>
               {stream.status === 'live' && (
                 <div className="text-xs text-green-600">
+=======
+              <div className="text-xl font-bold text-primary">
+                ${stream.price}
+              </div>
+              {stream.status === 'live' && (
+                <div className="text-base text-green-600">
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
                   Live Now
                 </div>
               )}
@@ -173,12 +194,20 @@ export function LiveStreamCard({ stream, onJoin, onAccept, onCancel, onDelete, i
           </div>
 
           {/* Description */}
+<<<<<<< HEAD
           <p className="text-sm text-muted-foreground line-clamp-2">
+=======
+          <p className="text-base text-muted-foreground line-clamp-2">
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
             {stream.description}
           </p>
 
           {/* Location */}
+<<<<<<< HEAD
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
+=======
+          <div className="flex items-center gap-2 text-base text-muted-foreground">
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
             <MapPin className="w-4 h-4 flex-shrink-0" />
             <span className="line-clamp-1">{stream.address}</span>
           </div>

@@ -1,6 +1,29 @@
+<<<<<<< HEAD
 node_modules
 dist
 .DS_Store
 server/public
 vite.config.ts.*
 *.tar.gz
+=======
+# Node / TypeScript
+node_modules/
+dist/
+coverage/
+*.log
+.env
+.env.*
+
+# Editor
+.vscode/
+.idea/
+
+# Mac / Windows
+.DS_Store
+Thumbs.db
+
+# Python (if used)
+__pycache__/
+*.pyc
+.venv/
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417

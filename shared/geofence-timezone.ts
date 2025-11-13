@@ -1,4 +1,131 @@
+<<<<<<< HEAD
 d geofence configuration'
+=======
+// Geofencing and Timezone Utilities
+
+export interface GeofenceCoordinates {
+  polygon?: Array<{ lat: number; lng: number }>;
+  circle?: { center: { lat: number; lng: number }; radius: number };
+  rectangle?: { 
+    topLeft: { lat: number; lng: number };
+    bottomRight: { lat: number; lng: number };
+  };
+}
+
+export interface TimeRestriction {
+  allowedHours?: Array<{ start: number; end: number }>;
+  restrictedDays?: number[]; // 0=Sunday, 1=Monday, etc.
+  timezone?: string;
+}
+
+export interface GeofenceCheckResult {
+  isInside: boolean;
+  geofenceId?: string;
+  geofenceName?: string;
+  action: 'block' | 'warn' | 'allow' | 'restrict_time';
+  priority: number;
+  message?: string;
+  timeRestriction?: TimeRestriction;
+}
+
+export interface TimezoneInfo {
+  timezone: string;
+  utcOffset: number; // offset in minutes
+  isDst: boolean;
+  localTime: Date;
+  isAllowedTime: boolean;
+  restrictionReason?: string;
+}
+
+// Geofencing algorithms
+export function isPointInPolygon(point: { lat: number; lng: number }, polygon: Array<{ lat: number; lng: number }>): boolean {
+  const x = point.lng;
+  const y = point.lat;
+  let inside = false;
+
+  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+    const xi = polygon[i].lng;
+    const yi = polygon[i].lat;
+    const xj = polygon[j].lng;
+    const yj = polygon[j].lat;
+
+    if (((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) {
+      inside = !inside;
+    }
+  }
+
+  return inside;
+}
+
+export function isPointInCircle(
+  point: { lat: number; lng: number }, 
+  circle: { center: { lat: number; lng: number }; radius: number }
+): boolean {
+  const distance = getDistanceInMeters(point, circle.center);
+  return distance <= circle.radius;
+}
+
+export function isPointInRectangle(
+  point: { lat: number; lng: number },
+  rectangle: { topLeft: { lat: number; lng: number }; bottomRight: { lat: number; lng: number } }
+): boolean {
+  return (
+    point.lat <= rectangle.topLeft.lat &&
+    point.lat >= rectangle.bottomRight.lat &&
+    point.lng >= rectangle.topLeft.lng &&
+    point.lng <= rectangle.bottomRight.lng
+  );
+}
+
+// Calculate distance between two points using Haversine formula
+export function getDistanceInMeters(
+  point1: { lat: number; lng: number },
+  point2: { lat: number; lng: number }
+): number {
+  const R = 6371000; // Earth's radius in meters
+  const dLat = toRadians(point2.lat - point1.lat);
+  const dLng = toRadians(point2.lng - point1.lng);
+  
+  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRadians(point1.lat)) * Math.cos(toRadians(point2.lat)) *
+    Math.sin(dLng / 2) * Math.sin(dLng / 2);
+  
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+function toRadians(degrees: number): number {
+  return degrees * (Math.PI / 180);
+}
+
+// Geofence validation
+export function checkGeofence(
+  point: { lat: number; lng: number },
+  geofence: {
+    id: string;
+    name: string;
+    type: string;
+    coordinates: string;
+    action: string;
+    priority: number;
+    timeRestrictions?: string;
+  }
+): GeofenceCheckResult {
+  let coordinates: GeofenceCoordinates;
+  let timeRestriction: TimeRestriction | undefined;
+
+  try {
+    coordinates = JSON.parse(geofence.coordinates);
+    if (geofence.timeRestrictions) {
+      timeRestriction = JSON.parse(geofence.timeRestrictions);
+    }
+  } catch (error) {
+    return {
+      isInside: false,
+      action: 'allow',
+      priority: 0,
+      message: 'Invalid geofence configuration'
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
     };
   }
 

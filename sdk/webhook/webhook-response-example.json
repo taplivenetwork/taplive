@@ -1,0 +1,16 @@
+{
+  "id": "evt_01JABCDEF",
+  "type": "replay.available",
+  "created_at": "2025-07-25T12:34:56Z",
+  "data": {
+    "replay_id": "rpl_91f2a",
+    "order_id": "ord_77k3m",
+    "duration_sec": 542,
+    "risk_label": "NOTICE",
+    "metadata": {
+      "geo_hint": "city-level",
+      "access": "signed-url"
+    }
+  },
+  "signature": "sha256=example"
+}

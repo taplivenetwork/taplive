@@ -41,7 +41,11 @@ export default function Earnings() {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-6">
+<<<<<<< HEAD
           <h1 className="text-3xl font-bold mb-2">
+=======
+          <h1 className="text-4xl font-bold mb-2">
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
             Earnings
           </h1>
           <p className="text-muted-foreground">
@@ -53,14 +57,23 @@ export default function Earnings() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <Card className="glass-card">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+<<<<<<< HEAD
               <CardTitle className="text-sm font-medium">
+=======
+              <CardTitle className="text-base font-medium">
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
                 Total Earnings
               </CardTitle>
               <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
+<<<<<<< HEAD
               <div className="text-2xl font-bold">${totalEarnings}</div>
               <p className="text-xs text-muted-foreground">
+=======
+              <div className="text-4xl font-bold">${totalEarnings}</div>
+              <p className="text-base text-muted-foreground">
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
                 All time
               </p>
             </CardContent>
@@ -68,14 +81,23 @@ export default function Earnings() {
 
           <Card className="glass-card">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+<<<<<<< HEAD
               <CardTitle className="text-sm font-medium">
+=======
+              <CardTitle className="text-base font-medium">
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
                 This Month
               </CardTitle>
               <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
+<<<<<<< HEAD
               <div className="text-2xl font-bold">${monthlyEarnings}</div>
               <p className="text-xs text-muted-foreground">
+=======
+              <div className="text-4xl font-bold">${monthlyEarnings}</div>
+              <p className="text-base text-muted-foreground">
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
                 +12% from last month
               </p>
             </CardContent>
@@ -83,14 +105,23 @@ export default function Earnings() {
 
           <Card className="glass-card">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+<<<<<<< HEAD
               <CardTitle className="text-sm font-medium">
+=======
+              <CardTitle className="text-base font-medium">
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
                 Completed Streams
               </CardTitle>
               <Calendar className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
+<<<<<<< HEAD
               <div className="text-2xl font-bold">{completedStreams}</div>
               <p className="text-xs text-muted-foreground">
+=======
+              <div className="text-4xl font-bold">{completedStreams}</div>
+              <p className="text-base text-muted-foreground">
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
                 This month
               </p>
             </CardContent>
@@ -98,14 +129,23 @@ export default function Earnings() {
 
           <Card className="glass-card">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+<<<<<<< HEAD
               <CardTitle className="text-sm font-medium">
+=======
+              <CardTitle className="text-base font-medium">
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
                 Average Rating
               </CardTitle>
               <span className="text-yellow-500">⭐</span>
             </CardHeader>
             <CardContent>
+<<<<<<< HEAD
               <div className="text-2xl font-bold">{avgRating}</div>
               <p className="text-xs text-muted-foreground">
+=======
+              <div className="text-4xl font-bold">{avgRating}</div>
+              <p className="text-base text-muted-foreground">
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
                 From customer reviews
               </p>
             </CardContent>
@@ -130,7 +170,11 @@ export default function Earnings() {
                     <h4 className="font-medium mb-1">
                       {earning.title}
                     </h4>
+<<<<<<< HEAD
                     <div className="flex items-center gap-4 text-sm text-muted-foreground">
+=======
+                    <div className="flex items-center gap-4 text-base text-muted-foreground">
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
                       <div className="flex items-center gap-1">
                         <Calendar className="w-4 h-4" />
                         {earning.date}
@@ -146,10 +190,17 @@ export default function Earnings() {
                     </div>
                   </div>
                   <div className="text-right">
+<<<<<<< HEAD
                     <div className="text-lg font-bold text-primary">
                       ${earning.amount}
                     </div>
                     <Badge variant="secondary" className="text-xs">
+=======
+                    <div className="text-xl font-bold text-primary">
+                      ${earning.amount}
+                    </div>
+                    <Badge variant="secondary" className="text-base">
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
                       Completed
                     </Badge>
                   </div>

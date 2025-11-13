@@ -1,18 +1,33 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
+<<<<<<< HEAD
 import { Plus, Search, Filter, Play, Users, MapPin, Clock, X } from "lucide-react";
+=======
+import { Plus, Search, Filter, Play, Users, MapPin, Clock, X, Wallet } from "lucide-react";
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
+<<<<<<< HEAD
 import { OrderCard } from "@/components/order-card";
 import { LiveStreamCard } from "@/components/live-stream-card";
 import { MultiStreamGrid } from "@/components/multi-stream-grid";
 import { CreateOrderModal } from "@/components/create-order-modal";
 import { api } from "@/lib/api";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+=======
+import { LiveStreamCard } from "@/components/live-stream-card";
+import { MultiStreamGrid } from "@/components/multi-stream-grid";
+import { CreateOrderModal } from "@/components/create-order-modal";
+import WalletConnection from "@/components/wallet-connection";
+import Web3Payment from "@/components/web3-payment";
+import ProviderDashboard from "@/components/provider-dashboard";
+import { api } from "@/lib/api";
+import { apiRequest, queryClient } from "@/lib/queryclient";
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
 import { useToast } from "@/hooks/use-toast";
 import type { Order } from "@shared/schema";
 
@@ -26,13 +41,23 @@ export default function Home() {
   const { toast } = useToast();
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | undefined>();
+<<<<<<< HEAD
   const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number } | undefined>();
+=======
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
   const [searchFilter, setSearchFilter] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
   const [priceFilter, setPriceFilter] = useState("");
   const [healthStatus, setHealthStatus] = useState<"connected" | "disconnected">("disconnected");
   const [viewMode, setViewMode] = useState<'cards' | 'grid'>('cards');
   const [dismissedOrders, setDismissedOrders] = useState<Set<string>>(new Set());
+<<<<<<< HEAD
+=======
+  const [walletConnected, setWalletConnected] = useState(false);
+  const [showPayment, setShowPayment] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [currentView, setCurrentView] = useState<'home' | 'provider' | 'orders'>('home');
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
 
   // Health check
   const { data: healthData } = useQuery({
@@ -45,7 +70,11 @@ export default function Home() {
   // Set up global map update function for geocoding
   useEffect(() => {
     window.mapUpdateLocation = (lat: number, lng: number) => {
+<<<<<<< HEAD
       setMapCenter({ lat, lng });
+=======
+      // setMapCenter({ lat, lng });
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
       setSelectedLocation({ lat, lng });
     };
     
@@ -164,6 +193,10 @@ export default function Home() {
     }
   ];
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
   // Deduplicate orders - filter by order ID, then add mock orders
   const allOrders = ordersResponse?.data || [];
   const realOrders = allOrders.filter((order: Order, index: number, arr: Order[]) => 
@@ -223,6 +256,46 @@ export default function Home() {
     });
   };
 
+<<<<<<< HEAD
+=======
+  const handleWalletConnected = (_address: string) => {
+    setWalletConnected(true);
+    // setWalletAddress(address);
+  };
+
+  const handleWalletDisconnected = () => {
+    setWalletConnected(false);
+    // setWalletAddress('');
+  };
+
+  const handleJoinStream = (orderId: string) => {
+    if (!walletConnected) {
+      toast({
+        title: "Wallet Required",
+        description: "Please connect your wallet to join streams",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    const order = orders.find(o => o.id === orderId);
+    if (order) {
+      setSelectedOrder(order);
+      setShowPayment(true);
+    }
+  };
+
+  const handlePaymentComplete = (txHash: string) => {
+    setShowPayment(false);
+    toast({
+      title: "Payment Successful",
+      description: `Payment secured in escrow. Transaction: ${txHash.slice(0, 10)}...`,
+    });
+    // Navigate to stream page
+    window.location.href = `/stream/${selectedOrder?.id}?mode=viewer`;
+  };
+
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
   // Filter orders (exclude dismissed orders)
   const filteredOrders = orders.filter((order: Order) => {
     // First exclude dismissed orders
@@ -250,8 +323,16 @@ export default function Home() {
     return matchesSearch && matchesCategory && matchesPrice;
   });
 
+<<<<<<< HEAD
   // Active streams (live orders)
   const activeStreams = orders.filter((order: Order) => order.status === 'live');
+=======
+  // Active streams (live orders from API)
+  const activeStreams = orders.filter((order: Order) => order.status === 'live') as Order[];
+  
+  // Debug logging
+  console.log('Active streams:', activeStreams);
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
 
   const handleAcceptOrder = async (orderId: string) => {
     try {
@@ -273,6 +354,7 @@ export default function Home() {
     }
   };
 
+<<<<<<< HEAD
   const handleJoinStream = (orderId: string) => {
     toast({
       title: "正在进入直播",
@@ -280,6 +362,23 @@ export default function Home() {
     });
     // 直接跳转到观看模式
     window.location.href = `/stream/${orderId}?mode=viewer`;
+=======
+  const handleJoinStreamNew = (orderId: string) => {
+    if (!walletConnected) {
+      toast({
+        title: "Wallet Required",
+        description: "Please connect your wallet to join streams",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    const order = orders.find(o => o.id === orderId);
+    if (order) {
+      setSelectedOrder(order);
+      setShowPayment(true);
+    }
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
   };
 
   const handleCancelOrder = async (orderId: string) => {
@@ -332,7 +431,11 @@ export default function Home() {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
+<<<<<<< HEAD
           <h2 className="text-2xl font-bold text-foreground mb-2">Connection Error</h2>
+=======
+          <h2 className="text-4xl font-bold text-foreground mb-2">Connection Error</h2>
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
           <p className="text-muted-foreground">Failed to connect to the server</p>
         </div>
       </div>
@@ -345,7 +448,11 @@ export default function Home() {
       <header className="p-4 lg:p-6 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 circuit-bg relative">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex-1">
+<<<<<<< HEAD
             <h1 className="text-2xl lg:text-3xl font-bold text-foreground mb-2 neon-text">
+=======
+            <h1 className="text-4xl lg:text-4xl font-bold text-foreground mb-2 neon-text">
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
               Live Streaming Hub
             </h1>
             <p className="text-muted-foreground">
@@ -470,7 +577,11 @@ export default function Home() {
               ) : viewMode === 'grid' ? (
                 <MultiStreamGrid 
                   streams={orders} 
+<<<<<<< HEAD
                   onStreamClick={handleJoinStream} 
+=======
+                  onStreamClick={handleJoinStreamNew} 
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
                 />
               ) : activeStreams.length > 0 ? (
                 <div className="grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
@@ -478,7 +589,11 @@ export default function Home() {
                     <LiveStreamCard
                       key={stream.id}
                       stream={stream}
+<<<<<<< HEAD
                       onJoin={handleJoinStream}
+=======
+                      onJoin={handleJoinStreamNew}
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
                       onCancel={handleCancelOrder}
                       onDelete={handleDeleteStream}
                       isMyOrder={false}
@@ -490,7 +605,11 @@ export default function Home() {
                   <div className="w-16 h-16 mx-auto mb-4 bg-muted rounded-full flex items-center justify-center">
                     <Play className="w-8 h-8 text-muted-foreground" />
                   </div>
+<<<<<<< HEAD
                   <h3 className="text-lg font-medium text-foreground mb-2">
+=======
+                  <h3 className="text-xl font-medium text-foreground mb-2">
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
                     No Live Streams
                   </h3>
                   <p className="text-muted-foreground mb-4">
@@ -543,7 +662,11 @@ export default function Home() {
                     <div className="w-16 h-16 mx-auto mb-4 bg-muted rounded-full flex items-center justify-center">
                       <MapPin className="w-8 h-8 text-muted-foreground" />
                     </div>
+<<<<<<< HEAD
                     <h3 className="text-lg font-medium text-foreground mb-2">
+=======
+                    <h3 className="text-xl font-medium text-foreground mb-2">
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
                       No Available Orders
                     </h3>
                     <p className="text-muted-foreground mb-4">
@@ -563,6 +686,22 @@ export default function Home() {
         {/* Sidebar - Create Stream & Quick Actions */}
         <aside className="w-full lg:w-80 xl:w-96 border-l border-border bg-card/50 backdrop-blur holographic">
           <div className="p-4 lg:p-6 space-y-6">
+<<<<<<< HEAD
+=======
+            {/* Web3 Wallet Connection */}
+            <div className="space-y-4">
+              <h3 className="font-semibold text-foreground flex items-center gap-2">
+                <Wallet className="w-5 h-5" />
+                Web3 Wallet
+              </h3>
+              <WalletConnection 
+                onWalletConnected={handleWalletConnected}
+                onWalletDisconnected={handleWalletDisconnected}
+              />
+            </div>
+
+
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
             {/* Quick Create */}
             <div className="space-y-4">
               <h3 className="font-semibold text-foreground flex items-center gap-2">
@@ -578,11 +717,21 @@ export default function Home() {
                 <Plus className="w-5 h-5 mr-2" />
                 Create Live Stream
               </Button>
+<<<<<<< HEAD
               <p className="text-xs text-muted-foreground text-center">
+=======
+              <p className="text-base text-muted-foreground text-center">
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
                 Request live content from anywhere
               </p>
             </div>
 
+<<<<<<< HEAD
+=======
+            {/* Demo Controls */}
+            {/* <DemoControls /> */}
+
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
             {/* Quick Filters */}
             <div className="space-y-4">
               <h3 className="font-semibold text-foreground flex items-center gap-2">
@@ -632,7 +781,11 @@ export default function Home() {
                     size="sm"
                     variant="outline"
                     onClick={handleResetDismissedOrders}
+<<<<<<< HEAD
                     className="h-6 px-2 text-xs"
+=======
+                    className="h-6 px-2 text-base"
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
                   >
                     Restore All ({dismissedOrders.size})
                   </Button>
@@ -668,6 +821,7 @@ export default function Home() {
 
                       <div className="space-y-2">
                         <div className="flex items-center justify-between">
+<<<<<<< HEAD
                           <Badge variant="secondary" className="text-xs">
                             {order.category || 'General'}
                           </Badge>
@@ -679,12 +833,29 @@ export default function Home() {
                           {order.title}
                         </h4>
                         <p className="text-xs text-muted-foreground line-clamp-2">
+=======
+                          <Badge variant="secondary" className="text-base">
+                            {order.category || 'General'}
+                          </Badge>
+                          <span className="text-base font-medium text-primary">
+                            ${order.price}
+                          </span>
+                        </div>
+                        <h4 className="font-medium text-base line-clamp-1 pr-6">
+                          {order.title}
+                        </h4>
+                        <p className="text-base text-muted-foreground line-clamp-2">
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
                           {order.address}
                         </p>
                         
                         {/* Mock order identifier */}
                         {order.id.startsWith('mock-') && (
+<<<<<<< HEAD
                           <Badge className="text-xs bg-blue-500 text-white">
+=======
+                          <Badge className="text-base bg-blue-500 text-white">
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
                             🌍 International Attraction
                           </Badge>
                         )}
@@ -698,10 +869,17 @@ export default function Home() {
                 </div>
               ) : dismissedOrders.size > 0 ? (
                 <div className="text-center py-6">
+<<<<<<< HEAD
                   <p className="text-sm text-muted-foreground mb-3">
                     All orders closed
                   </p>
                   <p className="text-xs text-muted-foreground mb-3">
+=======
+                  <p className="text-base text-muted-foreground mb-3">
+                    All orders closed
+                  </p>
+                  <p className="text-base text-muted-foreground mb-3">
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
                     📺 Limited orders in MVP phase, unlimited order sources in future
                   </p>
                   <Button size="sm" variant="outline" onClick={handleResetDismissedOrders}>
@@ -710,7 +888,11 @@ export default function Home() {
                 </div>
               ) : (
                 <div className="text-center py-6">
+<<<<<<< HEAD
                   <p className="text-sm text-muted-foreground mb-3">
+=======
+                  <p className="text-base text-muted-foreground mb-3">
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
                     No Active Requests
                   </p>
                   <Button size="sm" variant="outline" onClick={() => setCreateModalOpen(true)}>
@@ -723,6 +905,37 @@ export default function Home() {
         </aside>
       </div>
 
+<<<<<<< HEAD
+=======
+      {/* Payment Modal */}
+      {showPayment && selectedOrder && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-background p-6 rounded-lg max-w-md w-full mx-4">
+            <Web3Payment
+              amount={selectedOrder.price}
+              orderId={selectedOrder.id}
+              onPaymentComplete={handlePaymentComplete}
+              onPaymentFailed={(error) => {
+                setShowPayment(false);
+                toast({
+                  title: "Payment Failed",
+                  description: error,
+                  variant: "destructive",
+                });
+              }}
+            />
+            <Button 
+              variant="outline" 
+              onClick={() => setShowPayment(false)}
+              className="w-full mt-4"
+            >
+              Cancel
+            </Button>
+          </div>
+        </div>
+      )}
+
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
       {/* Create Order Modal */}
       <CreateOrderModal
         open={createModalOpen}

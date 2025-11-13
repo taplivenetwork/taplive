@@ -24,13 +24,22 @@ export function Sidebar() {
           <Video className="w-6 h-6 text-primary-foreground" />
         </div>
         <div>
+<<<<<<< HEAD
           <h1 className="text-xl font-bold text-foreground">TapLive</h1>
           <p className="text-xs text-muted-foreground">MVP Platform</p>
+=======
+          <h1 className="text-2xl font-bold text-foreground">TapLive</h1>
+          <p className="text-sm text-muted-foreground">MVP Platform</p>
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
         </div>
       </div>
 
       {/* Navigation */}
+<<<<<<< HEAD
       <nav className="space-y-2">
+=======
+      <nav className="space-y-4">
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
         {navigation.map((item) => {
           const Icon = item.icon;
           return (
@@ -60,7 +69,11 @@ export function Sidebar() {
           </div>
           <div className="flex-1">
             <p className="text-sm font-medium" data-testid="user-name">Sarah Chen</p>
+<<<<<<< HEAD
             <p className="text-xs text-muted-foreground" data-testid="user-role">
+=======
+            <p className="text-sm text-muted-foreground" data-testid="user-role">
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
               Content Creator
             </p>
           </div>

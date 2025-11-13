@@ -6,9 +6,15 @@ import { z } from "zod";
 export const orderStatusEnum = pgEnum('order_status', ['pending', 'open', 'accepted', 'live', 'completed', 'awaiting_approval', 'disputed', 'under_review', 'done', 'cancelled']);
 export const orderTypeEnum = pgEnum('order_type', ['single', 'group']);
 export const paymentStatusEnum = pgEnum('payment_status', ['pending', 'processing', 'completed', 'failed', 'refunded']);
+<<<<<<< HEAD
 export const paymentMethodEnum = pgEnum('payment_method', ['stripe', 'paypal', 'usdt_trc20', 'usdt_erc20', 'bitcoin', 'ethereum']);
 export const transactionTypeEnum = pgEnum('transaction_type', ['payment', 'payout', 'refund', 'commission']);
 export const currencyEnum = pgEnum('currency', ['USD', 'USDT', 'BTC', 'ETH']);
+=======
+export const paymentMethodEnum = pgEnum('payment_method', ['pyusd', 'usdt_trc20', 'usdt_erc20', 'bitcoin', 'ethereum', 'yellow_swap']);
+export const transactionTypeEnum = pgEnum('transaction_type', ['payment', 'payout', 'refund', 'commission', 'swap']);
+export const currencyEnum = pgEnum('currency', ['PYUSD', 'USDT', 'BTC', 'ETH', 'USD']);
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
 export const disputeStatusEnum = pgEnum('dispute_status', ['submitted', 'ai_review', 'human_review', 'resolved_approved', 'resolved_rejected']);
 export const disputeTypeEnum = pgEnum('dispute_type', ['quality_issue', 'content_mismatch', 'technical_issue', 'service_incomplete', 'other']);
 export const riskLevelEnum = pgEnum('risk_level', ['safe', 'low', 'medium', 'high', 'extreme', 'forbidden']);
@@ -44,6 +50,14 @@ export const users = pgTable("users", {
   walletAddress: text("wallet_address"), // Crypto wallet address for payouts
   preferredPaymentMethod: paymentMethodEnum("preferred_payment_method"), // Preferred payout method
   
+<<<<<<< HEAD
+=======
+  // Web3 fields
+  isWeb3Enabled: boolean("is_web3_enabled").default(false), // Provider has Web3 wallet connected
+  walletProvider: text("wallet_provider"), // MetaMask, WalletConnect, etc.
+  lastWalletActivity: timestamp("last_wallet_activity"), // Last Web3 transaction
+  
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -125,10 +139,26 @@ export const payments = pgTable("payments", {
   status: paymentStatusEnum("status").notNull().default('pending'),
   
   // External payment provider data
+<<<<<<< HEAD
   externalPaymentId: text("external_payment_id"), // Stripe/PayPal payment ID
   externalTransactionHash: text("external_transaction_hash"), // Crypto transaction hash
   paymentGatewayResponse: text("payment_gateway_response"), // JSON response from gateway
   
+=======
+  externalPaymentId: text("external_payment_id"), // External payment ID
+  externalTransactionHash: text("external_transaction_hash"), // Crypto transaction hash
+  paymentGatewayResponse: text("payment_gateway_response"), // JSON response from gateway
+  
+  // Web3 specific fields
+  web3TransactionHash: text("web3_transaction_hash"), // PYUSD transaction hash
+  pyusdAmount: decimal("pyusd_amount", { precision: 18, scale: 0 }), // PYUSD amount (18 decimals)
+  yellowSwapHash: text("yellow_swap_hash"), // Yellow Network swap transaction
+  originalToken: text("original_token"), // Original token received
+  originalAmount: decimal("original_amount", { precision: 18, scale: 0 }), // Original token amount
+  gasUsed: decimal("gas_used", { precision: 10, scale: 0 }), // Gas used for transaction
+  gasPrice: decimal("gas_price", { precision: 18, scale: 0 }), // Gas price in wei
+  
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
   // Metadata
   paymentMetadata: text("payment_metadata"), // JSON metadata
   failureReason: text("failure_reason"), // Reason for failed payments
@@ -153,7 +183,11 @@ export const payouts = pgTable("payouts", {
   recipientWallet: text("recipient_wallet"), // Crypto wallet or payment account
   
   // External payout data
+<<<<<<< HEAD
   externalPayoutId: text("external_payout_id"), // Stripe/PayPal payout ID
+=======
+  externalPayoutId: text("external_payout_id"), // External payout ID
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
   externalTransactionHash: text("external_transaction_hash"), // Crypto transaction hash
   payoutGatewayResponse: text("payout_gateway_response"), // JSON response from gateway
   
@@ -250,7 +284,11 @@ export const paymentValidationSchema = z.object({
   orderId: z.string(),
   amount: z.number().positive(),
   currency: z.enum(['USD', 'USDT', 'BTC', 'ETH']),
+<<<<<<< HEAD
   paymentMethod: z.enum(['stripe', 'paypal', 'usdt_trc20', 'usdt_erc20', 'bitcoin', 'ethereum']),
+=======
+  paymentMethod: z.enum(['pyusd', 'usdt_trc20', 'usdt_erc20', 'bitcoin', 'ethereum', 'yellow_swap']),
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
   paymentMetadata: z.object({}).optional(),
 });
 
