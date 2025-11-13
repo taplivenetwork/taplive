@@ -843,7 +843,11 @@ export class MemStorage implements IStorage {
       amount: commission.providerEarnings.toString(),
       platformFee: commission.platformFee.toString(),
       currency: payment.currency,
+<<<<<<< HEAD
+      payoutMethod: 'stripe', // Default, would be based on user preference
+=======
       payoutMethod: 'pyusd', // Default, would be based on user preference
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
       recipientWallet: null,
       payoutMetadata: JSON.stringify({ commission }),
     });
@@ -1604,7 +1608,11 @@ export class DatabaseStorage implements IStorage {
       amount: commission.providerEarnings.toString(),
       platformFee: commission.platformFee.toString(),
       currency: payment.currency,
+<<<<<<< HEAD
+      payoutMethod: 'stripe', // Default for demo
+=======
       payoutMethod: 'pyusd', // Default for demo
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
     });
     
     return payout;

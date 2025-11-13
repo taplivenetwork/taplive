@@ -25,7 +25,11 @@ export function NativeWebRTCBroadcaster({ orderId, onStreamStart, onStreamEnd }:
   // WebSocket connection
   useEffect(() => {
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+<<<<<<< HEAD
+    const wsUrl = `${protocol}//${window.location.host}/ws`;
+=======
     const wsUrl = `${protocol}//localhost:5000/ws`;
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
     const socket = new WebSocket(wsUrl);
 
     socket.onopen = () => {
@@ -43,12 +47,20 @@ export function NativeWebRTCBroadcaster({ orderId, onStreamStart, onStreamEnd }:
           handleViewerJoined();
         }
       } catch (error) {
+<<<<<<< HEAD
+        console.error('❌ Message parsing error:', error);
+=======
         console.error('Message parsing error:', error);
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
       }
     };
 
     socket.onclose = () => {
+<<<<<<< HEAD
+      console.log('❌ WebSocket disconnected');
+=======
       console.log('WebSocket disconnected');
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
       setIsConnected(false);
       setWs(null);
     };
@@ -144,7 +156,11 @@ export function NativeWebRTCBroadcaster({ orderId, onStreamStart, onStreamEnd }:
       };
 
       const mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
+<<<<<<< HEAD
+      console.log('✅ MediaStream obtained:', {
+=======
       console.log('MediaStream obtained:', {
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
         id: mediaStream.id,
         videoTracks: mediaStream.getVideoTracks().length,
         audioTracks: mediaStream.getAudioTracks().length
@@ -160,6 +176,17 @@ export function NativeWebRTCBroadcaster({ orderId, onStreamStart, onStreamEnd }:
         
         // Handle video events
         video.onloadedmetadata = () => {
+<<<<<<< HEAD
+          console.log('📊 Video metadata loaded');
+        };
+
+        video.onplay = () => {
+          console.log('▶️ Video started playing');
+        };
+
+        video.onpause = () => {
+          console.log('⏸️ Video paused - requiring user click');
+=======
           console.log('Video metadata loaded');
         };
 
@@ -169,24 +196,37 @@ export function NativeWebRTCBroadcaster({ orderId, onStreamStart, onStreamEnd }:
 
         video.onpause = () => {
           console.log('Video paused - requiring user click');
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
           setNeedsUserClick(true);
         };
 
         // Try to play
         try {
           await video.play();
+<<<<<<< HEAD
+          console.log('✅ Video playing successfully');
+=======
           console.log('Video playing successfully');
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
           
           // Check if it got paused immediately
           setTimeout(() => {
             if (video.paused) {
+<<<<<<< HEAD
+              console.log('⚠️ Video auto-paused - setting needsUserClick');
+=======
               console.log('Video auto-paused - setting needsUserClick');
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
               setNeedsUserClick(true);
             }
           }, 1000);
           
         } catch (playError: any) {
+<<<<<<< HEAD
+          console.log('🔒 Autoplay blocked, requiring user interaction');
+=======
           console.log('Autoplay blocked, requiring user interaction');
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
           setNeedsUserClick(true);
         }
         
@@ -217,6 +257,16 @@ export function NativeWebRTCBroadcaster({ orderId, onStreamStart, onStreamEnd }:
 
       setIsStreaming(true);
       onStreamStart();
+<<<<<<< HEAD
+      console.log('🎉 Native WebRTC broadcast started!');
+
+    } catch (err: any) {
+      console.error('❌ Broadcast start failed:', err);
+      if (err.name === 'NotAllowedError') {
+        setError('需要摄像头权限。请允许访问并重试。');
+      } else {
+        setError(`启动失败: ${err.message}`);
+=======
       console.log('Native WebRTC broadcast started!');
 
     } catch (err: any) {
@@ -225,12 +275,17 @@ export function NativeWebRTCBroadcaster({ orderId, onStreamStart, onStreamEnd }:
         setError('Camera permission required. Please allow access and try again.');
       } else {
         setError(`Start failed: ${err.message}`);
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
       }
     }
   };
 
   const stopBroadcast = () => {
+<<<<<<< HEAD
+    console.log('⏹️ Stopping native WebRTC broadcast');
+=======
     console.log('Stopping native WebRTC broadcast');
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
     
     if (stream) {
       stream.getTracks().forEach(track => track.stop());
@@ -250,17 +305,37 @@ export function NativeWebRTCBroadcaster({ orderId, onStreamStart, onStreamEnd }:
     setNeedsUserClick(false);
     // ONLY call onStreamEnd if user manually stopped
     // Don't auto-end when video has issues
+<<<<<<< HEAD
+    console.log('⚠️ Broadcast stopped but NOT calling onStreamEnd to prevent status change');
+    console.log('✅ Native WebRTC broadcast stopped');
+  };
+
+  const manualStopBroadcast = () => {
+    console.log('👤 User manually stopping broadcast');
+=======
     console.log('Broadcast stopped but NOT calling onStreamEnd to prevent status change');
     console.log('Native WebRTC broadcast stopped');
   };
 
   const manualStopBroadcast = () => {
     console.log('User manually stopping broadcast');
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
     stopBroadcast();
     onStreamEnd(); // Only call when user manually ends
   };
 
   const handleUserClick = async () => {
+<<<<<<< HEAD
+    console.log('👆 User clicked to start video');
+    if (videoRef.current) {
+      try {
+        await videoRef.current.play();
+        console.log('✅ Video started after user click');
+        setNeedsUserClick(false);
+      } catch (error) {
+        console.error('❌ Failed to play after user click:', error);
+        setError('播放失败，请重试');
+=======
     console.log('User clicked to start video');
     if (videoRef.current) {
       try {
@@ -270,6 +345,7 @@ export function NativeWebRTCBroadcaster({ orderId, onStreamStart, onStreamEnd }:
       } catch (error) {
         console.error('Failed to play after user click:', error);
         setError('Playback failed, please try again');
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
       }
     }
   };
@@ -287,16 +363,28 @@ export function NativeWebRTCBroadcaster({ orderId, onStreamStart, onStreamEnd }:
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
+<<<<<<< HEAD
+          原生WebRTC直播
+          <div className="flex items-center gap-2">
+            <Badge variant={isConnected ? "default" : "secondary"}>
+              {isConnected ? <Wifi className="w-3 h-3 mr-1" /> : <WifiOff className="w-3 h-3 mr-1" />}
+              {isConnected ? '已连接' : '连接中'}
+=======
           Live Stream Broadcaster
           <div className="flex items-center gap-2">
             <Badge variant={isConnected ? "default" : "secondary"}>
               {isConnected ? <Wifi className="w-3 h-3 mr-1" /> : <WifiOff className="w-3 h-3 mr-1" />}
               {isConnected ? 'Connected' : 'Connecting'}
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
             </Badge>
             {isStreaming && (
               <Badge variant="destructive">
                 <div className="w-2 h-2 bg-white rounded-full animate-pulse mr-1" />
+<<<<<<< HEAD
+                直播中
+=======
                 Live
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
               </Badge>
             )}
           </div>
@@ -318,7 +406,11 @@ export function NativeWebRTCBroadcaster({ orderId, onStreamStart, onStreamEnd }:
               <div className="text-center text-white">
                 <Camera className="w-12 h-12 mx-auto mb-2 opacity-50" />
                 <p className="text-sm opacity-75">
+<<<<<<< HEAD
+                  原生WebRTC直播技术
+=======
                   Start Your Live Stream
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
                 </p>
               </div>
             </div>
@@ -328,12 +420,21 @@ export function NativeWebRTCBroadcaster({ orderId, onStreamStart, onStreamEnd }:
           {needsUserClick && (
             <div className="absolute inset-0 flex items-center justify-center bg-red-600/90 z-50">
               <div className="text-center text-white space-y-4 p-6 bg-black/80 rounded-lg border-2 border-white">
+<<<<<<< HEAD
+                <div className="text-5xl animate-bounce">🎬</div>
+                <h3 className="text-xl font-bold">
+                  点击开始播放
+                </h3>
+                <p className="text-sm opacity-90">
+                  浏览器需要用户交互才能播放视频
+=======
                 <div className="text-5xl animate-bounce">📹</div>
                 <h3 className="text-xl font-bold">
                   Click to Start Playback
                 </h3>
                 <p className="text-sm opacity-90">
                   Browser requires user interaction to play video
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
                 </p>
                 <Button 
                   onClick={handleUserClick}
@@ -341,7 +442,11 @@ export function NativeWebRTCBroadcaster({ orderId, onStreamStart, onStreamEnd }:
                   data-testid="native-user-click-button"
                 >
                   <Play className="w-4 h-4 mr-2" />
+<<<<<<< HEAD
+                  立即播放
+=======
                   Play Now
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
                 </Button>
               </div>
             </div>
@@ -365,7 +470,11 @@ export function NativeWebRTCBroadcaster({ orderId, onStreamStart, onStreamEnd }:
               data-testid="native-start-broadcast-button"
             >
               <Play className="w-4 h-4 mr-2" />
+<<<<<<< HEAD
+              开始原生直播
+=======
               Start Broadcasting
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
             </Button>
           ) : (
             <Button 
@@ -375,7 +484,11 @@ export function NativeWebRTCBroadcaster({ orderId, onStreamStart, onStreamEnd }:
               data-testid="native-stop-broadcast-button"
             >
               <Square className="w-4 h-4 mr-2" />
+<<<<<<< HEAD
+              结束直播
+=======
               Stop Broadcasting
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
             </Button>
           )}
           
@@ -392,11 +505,34 @@ export function NativeWebRTCBroadcaster({ orderId, onStreamStart, onStreamEnd }:
         {/* Status */}
         <div className="text-center space-y-1">
           <p className="text-xs text-muted-foreground">
+<<<<<<< HEAD
+            {`摄像头: ${facingMode === 'user' ? '前置' : '后置'}`}
+=======
             {`Camera: ${facingMode === 'user' ? 'Front' : 'Rear'}`}
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
           </p>
           
           {/* Debug Status */}
           <div className="text-xs space-y-1 mt-2 p-2 bg-blue-50 rounded border">
+<<<<<<< HEAD
+            <p className="font-semibold">原生WebRTC状态:</p>
+            <p className={needsUserClick ? 'text-red-600 font-bold' : ''}>
+              needsUserClick: {needsUserClick ? '🔴 TRUE' : '🟢 FALSE'}
+              {videoRef.current?.paused && !needsUserClick && ' ⚠️ 状态错误!'}
+            </p>
+            <p>isStreaming: {isStreaming ? '✅ TRUE' : '❌ FALSE'}</p>
+            <p>isConnected: {isConnected ? '✅ TRUE' : '❌ FALSE'}</p>
+            <p>videoPaused: {videoRef.current?.paused ? '⏸️ TRUE' : '▶️ FALSE'}</p>
+            <p>streamTracks: {stream?.getTracks().length || 0}</p>
+            <p>hasVideo: {videoRef.current ? '✅ YES' : '❌ NO'}</p>
+            <p>videoSrc: {videoRef.current?.srcObject ? '✅ YES' : '❌ NO'}</p>
+            
+            {/* 强制修复按钮 */}
+            {videoRef.current?.paused && !needsUserClick && (
+              <Button 
+                onClick={() => {
+                  console.log('🔧 Manual fix: Setting needsUserClick = TRUE');
+=======
             <p className="font-semibold">Stream Status:</p>
             <p className={needsUserClick ? 'text-red-600 font-bold' : ''}>
               needsUserClick: {needsUserClick ? 'TRUE' : 'FALSE'}
@@ -414,13 +550,18 @@ export function NativeWebRTCBroadcaster({ orderId, onStreamStart, onStreamEnd }:
               <Button 
                 onClick={() => {
                   console.log('Manual fix: Setting needsUserClick = TRUE');
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
                   setNeedsUserClick(true);
                 }}
                 size="sm"
                 variant="destructive"
                 className="mt-2"
               >
+<<<<<<< HEAD
+                🔧 强制修复状态
+=======
                 Force Fix Status
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
               </Button>
             )}
           </div>

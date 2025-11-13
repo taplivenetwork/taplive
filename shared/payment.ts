@@ -59,6 +59,23 @@ export function calculateCommission(totalAmount: number, platformFeePercentage: 
   };
 }
 
+<<<<<<< HEAD
+// Payment method configurations
+export const PAYMENT_METHODS = {
+  STRIPE: {
+    name: 'Stripe',
+    type: 'fiat',
+    currencies: ['USD'],
+    icon: '💳',
+    description: 'Credit/Debit Card'
+  },
+  PAYPAL: {
+    name: 'PayPal',
+    type: 'fiat',
+    currencies: ['USD'],
+    icon: '🏦',
+    description: 'PayPal Account'
+=======
 // Payment method configurations (Web3 only)
 export const PAYMENT_METHODS = {
   PYUSD: {
@@ -68,36 +85,52 @@ export const PAYMENT_METHODS = {
     icon: '₮',
     description: 'PayPal USD (Ethereum)',
     requiresWallet: true
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
   },
   USDT_TRC20: {
     name: 'USDT (TRC20)',
     type: 'crypto',
     currencies: ['USDT'],
     icon: '₮',
+<<<<<<< HEAD
+    description: 'Tether (TRON Network)'
+=======
     description: 'Tether (TRON Network)',
     requiresWallet: true
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
   },
   USDT_ERC20: {
     name: 'USDT (ERC20)',
     type: 'crypto',
     currencies: ['USDT'],
     icon: '₮',
+<<<<<<< HEAD
+    description: 'Tether (Ethereum Network)'
+=======
     description: 'Tether (Ethereum Network)',
     requiresWallet: true
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
   },
   BITCOIN: {
     name: 'Bitcoin',
     type: 'crypto',
     currencies: ['BTC'],
     icon: '₿',
+<<<<<<< HEAD
+    description: 'Bitcoin Network'
+=======
     description: 'Bitcoin Network',
     requiresWallet: true
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
   },
   ETHEREUM: {
     name: 'Ethereum',
     type: 'crypto',
     currencies: ['ETH'],
     icon: 'Ξ',
+<<<<<<< HEAD
+    description: 'Ethereum Network'
+=======
     description: 'Ethereum Network',
     requiresWallet: true
   },
@@ -108,6 +141,7 @@ export const PAYMENT_METHODS = {
     icon: '🔄',
     description: 'Swap any token to PYUSD via Yellow Network',
     requiresWallet: true
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
   }
 } as const;
 

@@ -1,4 +1,8 @@
+<<<<<<< HEAD
+import { queryClient } from "./queryClient";
+=======
 import { queryClient } from "./queryclient";
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
 import type { Order, InsertOrder } from "@shared/schema";
 
 export interface ApiResponse<T> {
@@ -94,7 +98,11 @@ export const api = {
 
   health: {
     check: async () => {
+<<<<<<< HEAD
+      const response = await fetch('/healthz');
+=======
       const response = await fetch('/api/health');
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
       if (!response.ok) {
         throw new Error('Health check failed');
       }

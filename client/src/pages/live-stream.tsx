@@ -8,7 +8,11 @@ import { StreamViewer } from '@/components/video/stream-viewer';
 import { StreamBroadcaster } from '@/components/video/stream-broadcaster';
 import { NativeWebRTCBroadcaster } from '@/components/video/native-webrtc-broadcaster';
 import { ArrowLeft, MapPin, Clock, DollarSign, XCircle } from 'lucide-react';
+<<<<<<< HEAD
+import { apiRequest } from '@/lib/queryClient';
+=======
 import { apiRequest } from '@/lib/queryclient';
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
 import type { Order } from '@shared/schema';
 
 interface LiveStreamPageProps {
@@ -30,6 +34,16 @@ export default function LiveStreamPage() {
   const orderId = params?.orderId || '';
 
   // Fetch order details
+<<<<<<< HEAD
+  const { data: orderResponse, isLoading } = useQuery({
+    queryKey: ['/api/orders', orderId],
+    enabled: !!orderId,
+  });
+
+  const order = Array.isArray(orderResponse?.data) 
+    ? orderResponse.data.find((o: Order) => o.id === orderId)
+    : orderResponse?.data as Order | undefined;
+=======
   const { data: orderResponse, isLoading, error } = useQuery({
     queryKey: ['/api/orders', orderId],
     queryFn: async () => {
@@ -49,6 +63,7 @@ export default function LiveStreamPage() {
     isLoading,
     error
   });
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
 
   // Update order status to live
   const updateOrderMutation = useMutation({
@@ -64,10 +79,17 @@ export default function LiveStreamPage() {
     // For demo, if order status is 'accepted' OR 'live', show broadcaster controls
     // Also allow broadcaster controls for 'pending' and 'open' status for testing
     if (order && ['pending', 'open', 'accepted', 'live'].includes(order.status)) {
+<<<<<<< HEAD
+      console.log('🎬 Setting user role to broadcaster for status:', order.status);
+      setUserRole('broadcaster');
+    } else {
+      console.log('👥 Setting user role to viewer for status:', order?.status);
+=======
       console.log('Setting user role to broadcaster for status:', order.status);
       setUserRole('broadcaster');
     } else {
       console.log('Setting user role to viewer for status:', order?.status);
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
       setUserRole('viewer');
     }
   }, [order]);
@@ -77,7 +99,11 @@ export default function LiveStreamPage() {
   };
 
   const handleStreamEnd = () => {
+<<<<<<< HEAD
+    console.log('🔚 Manually ending stream - setting status to done');
+=======
     console.log('Manually ending stream - setting status to done');
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
     updateOrderMutation.mutate('done');
   };
 
@@ -98,7 +124,11 @@ export default function LiveStreamPage() {
   };
 
   const handleGoBack = () => {
+<<<<<<< HEAD
+    console.log('🔙 Navigating back...');
+=======
     console.log('Navigating back...');
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
     // Try multiple navigation methods
     try {
       if (window.history.length > 1) {
@@ -126,7 +156,11 @@ export default function LiveStreamPage() {
       <div className="flex-1 p-6 flex items-center justify-center">
         <Card className="w-full max-w-md">
           <CardContent className="text-center py-8">
+<<<<<<< HEAD
+            <h3 className="text-lg font-medium mb-2">
+=======
             <h3 className="text-xl font-medium mb-2">
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
               Order Not Found
             </h3>
             <p className="text-muted-foreground mb-4">
@@ -160,7 +194,11 @@ export default function LiveStreamPage() {
           
           <div className="flex items-center justify-between">
             <div>
+<<<<<<< HEAD
+              <h1 className="text-3xl font-bold mb-2">{order.title}</h1>
+=======
               <h1 className="text-4xl font-bold mb-2">{order.title}</h1>
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
               <div className="flex items-center gap-4 text-muted-foreground">
                 <div className="flex items-center gap-2">
                   <MapPin className="w-4 h-4" />
@@ -172,7 +210,11 @@ export default function LiveStreamPage() {
                 </div>
                 <div className="flex items-center gap-2">
                   <Clock className="w-4 h-4" />
+<<<<<<< HEAD
+                  <span>{new Date(order.createdAt).toLocaleDateString()}</span>
+=======
                   <span>{order.createdAt ? new Date(order.createdAt).toLocaleDateString() : 'N/A'}</span>
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
                 </div>
               </div>
             </div>
@@ -196,9 +238,15 @@ export default function LiveStreamPage() {
         {/* Mode Switch Controls */}
         <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
           <div className="flex items-center justify-between">
+<<<<<<< HEAD
+            <div className="text-sm">
+              <strong>Current Mode:</strong>
+              <span className={`ml-2 px-2 py-1 rounded text-xs font-semibold ${
+=======
             <div className="text-base">
               <strong>Current Mode:</strong>
               <span className={`ml-2 px-2 py-1 rounded text-base font-semibold ${
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
                 userRole === 'broadcaster' ? 'bg-green-500 text-white' : 'bg-purple-500 text-white'
               }`}>
                 {userRole === 'broadcaster' ? '🎬 Broadcaster Mode' : '👥 Viewer Mode'}
@@ -210,7 +258,11 @@ export default function LiveStreamPage() {
             <div className="flex gap-2">
               <Button
                 onClick={() => {
+<<<<<<< HEAD
+                  console.log('🔄 Switching to broadcaster mode');
+=======
                   console.log('Switching to broadcaster mode');
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
                   setUserRole('broadcaster');
                 }}
                 variant={userRole === 'broadcaster' ? 'default' : 'outline'}
@@ -218,11 +270,19 @@ export default function LiveStreamPage() {
                 data-testid="switch-to-broadcaster"
                 className={userRole === 'broadcaster' ? 'bg-green-500 hover:bg-green-600' : ''}
               >
+<<<<<<< HEAD
+                🎬 {userRole === 'broadcaster' ? '✅ Active Broadcaster' : 'Switch to Broadcaster'}
+              </Button>
+              <Button
+                onClick={() => {
+                  console.log('🔄 Switching to viewer mode');
+=======
                 {userRole === 'broadcaster' ? 'Active Broadcaster' : 'Switch to Broadcaster'}
               </Button>
               <Button
                 onClick={() => {
                   console.log('Switching to viewer mode');
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
                   setUserRole('viewer');
                 }}
                 variant={userRole === 'viewer' ? 'default' : 'outline'}
@@ -230,7 +290,11 @@ export default function LiveStreamPage() {
                 data-testid="switch-to-viewer"
                 className={userRole === 'viewer' ? 'bg-purple-500 hover:bg-purple-600' : ''}
               >
+<<<<<<< HEAD
+                👥 {userRole === 'viewer' ? '✅ Active Viewer' : 'Switch to Viewer'}
+=======
                 {userRole === 'viewer' ? 'Active Viewer' : 'Switch to Viewer'}
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
               </Button>
             </div>
           </div>
@@ -242,7 +306,11 @@ export default function LiveStreamPage() {
             {userRole === 'broadcaster' ? (
               <div className="space-y-4">
                 {/* Broadcaster Interface - Native WebRTC Streaming */}
+<<<<<<< HEAD
+                <div className="text-sm text-green-600 bg-green-50 p-3 rounded border font-semibold">
+=======
                 <div className="text-base text-green-600 bg-green-50 p-3 rounded border font-semibold">
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
                   🎬 Broadcaster Mode: You are live streaming
                 </div>
                 <NativeWebRTCBroadcaster
@@ -254,7 +322,11 @@ export default function LiveStreamPage() {
                 {/* Provider cancel order button */}
                 {(order.status === 'accepted' || order.status === 'live') && (
                   <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+<<<<<<< HEAD
+                    <p className="text-sm text-yellow-800 mb-3">
+=======
                     <p className="text-base text-yellow-800 mb-3">
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
                       As a service provider, you can cancel this order, but it will reduce your credit score
                     </p>
                     <Button 
@@ -273,7 +345,11 @@ export default function LiveStreamPage() {
             ) : (
               <div className="space-y-4">
                 {/* Viewer Interface */}
+<<<<<<< HEAD
+                <div className="text-sm text-purple-600 bg-purple-50 p-3 rounded border font-semibold">
+=======
                 <div className="text-base text-purple-600 bg-purple-50 p-3 rounded border font-semibold">
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
                   👥 Viewer Mode: Watching live stream
                 </div>
                 <StreamViewer
@@ -299,7 +375,11 @@ export default function LiveStreamPage() {
                   <h4 className="font-medium mb-1">
                     Description
                   </h4>
+<<<<<<< HEAD
+                  <p className="text-sm text-muted-foreground">
+=======
                   <p className="text-base text-muted-foreground">
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
                     {order.description}
                   </p>
                 </div>
@@ -318,7 +398,11 @@ export default function LiveStreamPage() {
                     <h4 className="font-medium mb-1">
                       Current Viewers
                     </h4>
+<<<<<<< HEAD
+                    <div className="text-2xl font-bold text-primary">
+=======
                     <div className="text-4xl font-bold text-primary">
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
                       {viewerCount}
                     </div>
                   </div>
@@ -336,7 +420,11 @@ export default function LiveStreamPage() {
               <CardContent>
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
+<<<<<<< HEAD
+                    <span className="text-sm text-muted-foreground">
+=======
                     <span className="text-base text-muted-foreground">
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
                       Status
                     </span>
                     <Badge variant={isLive ? 'default' : 'secondary'}>
@@ -347,17 +435,28 @@ export default function LiveStreamPage() {
                   </div>
                   
                   <div className="flex items-center justify-between">
+<<<<<<< HEAD
+                    <span className="text-sm text-muted-foreground">
+                      Order ID
+                    </span>
+                    <span className="text-xs font-mono">
+=======
                     <span className="text-base text-muted-foreground">
                       Order ID
                     </span>
                     <span className="text-base font-mono">
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
                       {orderId.slice(0, 8)}...
                     </span>
                   </div>
 
                   {userRole === 'broadcaster' && (
                     <div className="pt-2 border-t">
+<<<<<<< HEAD
+                      <p className="text-sm text-muted-foreground">
+=======
                       <p className="text-base text-muted-foreground">
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
                         You are the streamer for this order. Use the controls to start your broadcast.
                       </p>
                     </div>

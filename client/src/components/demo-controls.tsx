@@ -73,7 +73,11 @@ export function DemoControls() {
           orderId: order.data.id,
           amount: 25.00,
           currency: 'USD',
+<<<<<<< HEAD
+          paymentMethod: 'stripe',
+=======
           paymentMethod: 'pyusd',
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
           payerId: 'demo-user-id',
         }),
       });
@@ -94,7 +98,11 @@ export function DemoControls() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           externalPaymentId: `demo_${Date.now()}`,
+<<<<<<< HEAD
+          gateway: 'stripe',
+=======
           gateway: 'web3',
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
         }),
       });
 

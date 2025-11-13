@@ -58,7 +58,11 @@ export default function Streams() {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-6">
+<<<<<<< HEAD
+          <h1 className="text-3xl font-bold mb-2">
+=======
           <h1 className="text-4xl font-bold mb-2">
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
             Live Streams
           </h1>
           <p className="text-muted-foreground">
@@ -68,7 +72,11 @@ export default function Streams() {
 
         {/* Live Now Section */}
         <div className="mb-8">
+<<<<<<< HEAD
+          <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+=======
           <h2 className="text-2xl font-semibold mb-4 flex items-center gap-2">
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
             <span className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></span>
             Live Now
           </h2>
@@ -85,14 +93,22 @@ export default function Streams() {
                       <span className="w-2 h-2 bg-white rounded-full animate-pulse mr-1"></span>
                       Live
                     </Badge>
+<<<<<<< HEAD
+                    <div className="absolute top-2 right-2 bg-black/70 text-white px-2 py-1 rounded text-xs flex items-center gap-1">
+=======
                     <div className="absolute top-2 right-2 bg-black/70 text-white px-2 py-1 rounded text-base flex items-center gap-1">
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
                       <Eye className="w-3 h-3" />
                       {stream.viewers}
                     </div>
                   </div>
                   
                   <CardHeader>
+<<<<<<< HEAD
+                    <CardTitle className="text-lg">
+=======
                     <CardTitle className="text-2xl">
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
                       {stream.title}
                     </CardTitle>
                     <CardDescription>
@@ -101,7 +117,11 @@ export default function Streams() {
                   </CardHeader>
                   
                   <CardContent>
+<<<<<<< HEAD
+                    <div className="space-y-2 text-sm text-muted-foreground mb-4">
+=======
                     <div className="space-y-2 text-base text-muted-foreground mb-4">
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
                       <div className="flex items-center gap-2">
                         <MapPin className="w-4 h-4" />
                         <span>{stream.location}</span>
@@ -132,7 +152,11 @@ export default function Streams() {
             <Card className="glass-card">
               <CardContent className="text-center py-8">
                 <Play className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+<<<<<<< HEAD
+                <h3 className="text-lg font-medium mb-2">
+=======
                 <h3 className="text-2xl font-medium mb-2">
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
                   No Live Streams
                 </h3>
                 <p className="text-muted-foreground">
@@ -145,7 +169,11 @@ export default function Streams() {
 
         {/* Upcoming Streams */}
         <div>
+<<<<<<< HEAD
+          <h2 className="text-xl font-semibold mb-4">
+=======
           <h2 className="text-2xl font-semibold mb-4">
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
             Upcoming Streams
           </h2>
           
@@ -156,13 +184,21 @@ export default function Streams() {
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
+<<<<<<< HEAD
+                        <h4 className="font-semibold text-lg mb-1">
+=======
                         <h4 className="font-semibold text-2xl mb-1">
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
                           {stream.title}
                         </h4>
                         <p className="text-muted-foreground mb-3">
                           {stream.description}
                         </p>
+<<<<<<< HEAD
+                        <div className="flex items-center gap-6 text-sm text-muted-foreground">
+=======
                         <div className="flex items-center gap-6 text-base text-muted-foreground">
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
                           <div className="flex items-center gap-2">
                             <MapPin className="w-4 h-4" />
                             <span>{stream.location}</span>
@@ -194,7 +230,11 @@ export default function Streams() {
             <Card className="glass-card">
               <CardContent className="text-center py-8">
                 <Clock className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+<<<<<<< HEAD
+                <h3 className="text-lg font-medium mb-2">
+=======
                 <h3 className="text-2xl font-medium mb-2">
+>>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
                   No Upcoming Streams
                 </h3>
                 <p className="text-muted-foreground">
