@@ -36,11 +36,8 @@ export function StreamViewer({ streamId, isLive, onViewerCountChange }: StreamVi
 
     // WebSocket connection with enhanced error handling
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-<<<<<<< HEAD
     const wsUrl = `${protocol}//${window.location.host}/ws`;
-=======
     const wsUrl = `${protocol}//localhost:5000/ws`;
->>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
     const websocket = new WebSocket(wsUrl);
 
     websocket.onopen = () => {
@@ -69,11 +66,8 @@ export function StreamViewer({ streamId, isLive, onViewerCountChange }: StreamVi
             }
             break;
           case 'stream-started':
-<<<<<<< HEAD
             console.log('✅ Stream started signal received');
-=======
             console.log('Stream started signal received');
->>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
             setIsConnected(true);
             break;
           case 'user-joined':
@@ -89,11 +83,8 @@ export function StreamViewer({ streamId, isLive, onViewerCountChange }: StreamVi
     };
 
     websocket.onclose = (event) => {
-<<<<<<< HEAD
       console.log('❌ WebSocket connection closed:', event.code, event.reason);
-=======
       console.log('WebSocket connection closed:', event.code, event.reason);
->>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
       setWs(null);
       setIsConnected(false);
       
@@ -105,22 +96,16 @@ export function StreamViewer({ streamId, isLive, onViewerCountChange }: StreamVi
           connectToStream();
         }, 3000);
       } else {
-<<<<<<< HEAD
         setConnectionError('连接已断开。请刷新页面重试。');
-=======
         setConnectionError('Connection lost. Please refresh the page and try again.');
->>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
       }
     };
 
     websocket.onerror = (error) => {
-<<<<<<< HEAD
       console.error('❌ WebSocket error:', error);
       setConnectionError('连接失败，正在重试...');
-=======
       console.error('WebSocket error:', error);
       setConnectionError('Connection failed, retrying...');
->>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
     };
 
     return websocket;
@@ -179,31 +164,22 @@ export function StreamViewer({ streamId, isLive, onViewerCountChange }: StreamVi
     });
 
     newPeer.on('connect', () => {
-<<<<<<< HEAD
       console.log('✅ Peer connected');
-=======
       console.log('Peer connected');
->>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
       setIsConnected(true);
     });
 
     newPeer.on('error', (err) => {
-<<<<<<< HEAD
       console.error('❌ Peer error:', err);
       setConnectionError(`连接错误: ${err.message}`);
-=======
       console.error('Peer error:', err);
       setConnectionError(`Connection error: ${err.message}`);
->>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
       setIsConnected(false);
     });
 
     newPeer.on('close', () => {
-<<<<<<< HEAD
       console.log('❌ Peer connection closed');
-=======
       console.log('Peer connection closed');
->>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
       setIsConnected(false);
     });
 
@@ -211,13 +187,10 @@ export function StreamViewer({ streamId, isLive, onViewerCountChange }: StreamVi
       newPeer.signal(offer);
       setPeer(newPeer);
     } catch (error) {
-<<<<<<< HEAD
       console.error('❌ Failed to process offer:', error);
       setConnectionError('处理连接信号失败');
-=======
       console.error('Failed to process offer:', error);
       setConnectionError('Failed to process connection signal');
->>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
     }
   };
 
@@ -326,11 +299,8 @@ export function StreamViewer({ streamId, isLive, onViewerCountChange }: StreamVi
                     </div>
                     {retryCount > 0 && (
                       <div className="text-sm opacity-75">
-<<<<<<< HEAD
                         {`重试中... (${retryCount}/3)`}
-=======
                         {`Retrying... (${retryCount}/3)`}
->>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
                       </div>
                     )}
                   </>

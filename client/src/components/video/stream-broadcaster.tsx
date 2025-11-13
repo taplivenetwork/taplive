@@ -28,11 +28,8 @@ export function StreamBroadcaster({ orderId, onStreamStart, onStreamEnd }: Strea
     
     const connectWebSocket = () => {
       const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-<<<<<<< HEAD
       const wsUrl = `${protocol}//${window.location.host}/ws`;
-=======
       const wsUrl = `${protocol}//localhost:5000/ws`;
->>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
       const socket = new WebSocket(wsUrl);
 
       socket.onopen = () => {
@@ -43,11 +40,8 @@ export function StreamBroadcaster({ orderId, onStreamStart, onStreamEnd }: Strea
       };
 
       socket.onclose = () => {
-<<<<<<< HEAD
         console.log('❌ WebSocket disconnected');
-=======
         console.log('WebSocket disconnected');
->>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
         setIsConnected(false);
         setWs(null);
         
@@ -79,30 +73,24 @@ export function StreamBroadcaster({ orderId, onStreamStart, onStreamEnd }: Strea
   const startStream = async () => {
     try {
       setError(null);
-<<<<<<< HEAD
       console.log('🎬 Starting stream with camera:', facingMode);
       
       // Reset user interaction state at start
       console.log('🔄 Resetting needsUserInteraction to FALSE at start');
-=======
       console.log('Starting stream with camera:', facingMode);
       
       // Reset user interaction state at start
       console.log('Resetting needsUserInteraction to FALSE at start');
->>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
       setNeedsUserInteraction(false);
       
       // Clean up existing stream
       if (stream) {
-<<<<<<< HEAD
         console.log('🧹 Cleaning up existing stream...');
         stream.getTracks().forEach(track => {
           console.log(`⏹️ Stopping ${track.kind} track`);
-=======
         console.log('Cleaning up existing stream...');
         stream.getTracks().forEach(track => {
           console.log(`Stopping ${track.kind} track`);
->>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
           track.stop();
         });
         setStream(null);
@@ -124,11 +112,8 @@ export function StreamBroadcaster({ orderId, onStreamStart, onStreamEnd }: Strea
       };
 
       const mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
-<<<<<<< HEAD
       console.log('✅ MediaStream obtained:', {
-=======
       console.log('MediaStream obtained:', {
->>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
         id: mediaStream.id,
         videoTracks: mediaStream.getVideoTracks().length,
         audioTracks: mediaStream.getAudioTracks().length
@@ -163,20 +148,14 @@ export function StreamBroadcaster({ orderId, onStreamStart, onStreamEnd }: Strea
         video.playsInline = true; // Critical for mobile
         video.autoplay = true;
         
-<<<<<<< HEAD
         console.log('📹 Video element configured');
-=======
         console.log('Video element configured');
->>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
         
         // Enhanced video element monitoring
         const setupVideoEvents = () => {
           video.addEventListener('loadedmetadata', () => {
-<<<<<<< HEAD
             console.log('📊 Video metadata loaded:', {
-=======
             console.log('Video metadata loaded:', {
->>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
               duration: video.duration,
               videoWidth: video.videoWidth,
               videoHeight: video.videoHeight
@@ -184,7 +163,6 @@ export function StreamBroadcaster({ orderId, onStreamStart, onStreamEnd }: Strea
           });
 
           video.addEventListener('canplay', () => {
-<<<<<<< HEAD
             console.log('▶️ Video can play');
           });
 
@@ -195,7 +173,6 @@ export function StreamBroadcaster({ orderId, onStreamStart, onStreamEnd }: Strea
           video.addEventListener('pause', (e) => {
             console.warn('⏸️ Video paused');
             console.log('🚨 IMMEDIATE: Setting needsUserInteraction to TRUE on pause');
-=======
             console.log('Video can play');
           });
 
@@ -206,20 +183,16 @@ export function StreamBroadcaster({ orderId, onStreamStart, onStreamEnd }: Strea
           video.addEventListener('pause', (e) => {
             console.warn('Video paused');
             console.log('IMMEDIATE: Setting needsUserInteraction to TRUE on pause');
->>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
             setNeedsUserInteraction(true);
             setError(null);
             
             // Also check after delay for confirmation
             setTimeout(() => {
               if (video.paused && !video.ended && video.srcObject) {
-<<<<<<< HEAD
                 console.log('🔒 Confirmed: Video auto-paused by browser - requiring user interaction');
                 console.log('🚨 DOUBLE CONFIRM: Setting needsUserInteraction to TRUE');
-=======
                 console.log('Confirmed: Video auto-paused by browser - requiring user interaction');
                 console.log('DOUBLE CONFIRM: Setting needsUserInteraction to TRUE');
->>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
                 setNeedsUserInteraction(true);
                 setError(null);
               }
@@ -247,36 +220,29 @@ export function StreamBroadcaster({ orderId, onStreamStart, onStreamEnd }: Strea
             video.setAttribute('webkit-playsinline', 'true');
             
             await video.play();
-<<<<<<< HEAD
             console.log('✅ Video playing successfully');
-=======
             console.log('Video playing successfully');
->>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
             
             // Verify it's actually playing after a delay
             setTimeout(() => {
               if (video.paused && !video.ended) {
-<<<<<<< HEAD
                 console.warn('⚠️ Video auto-paused after start - browser autoplay restriction');
                 console.log('🚨 Setting needsUserInteraction to TRUE (from timeout)');
                 setNeedsUserInteraction(true);
                 setError(null);
               } else {
                 console.log('✅ Video confirmed playing');
-=======
                 console.warn('Video auto-paused after start - browser autoplay restriction');
                 console.log('Setting needsUserInteraction to TRUE (from timeout)');
                 setNeedsUserInteraction(true);
                 setError(null);
               } else {
                 console.log('Video confirmed playing');
->>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
                 setNeedsUserInteraction(false);
               }
             }, 2000);
             
           } catch (playError: any) {
-<<<<<<< HEAD
             console.error('❌ Play failed:', playError.name, '-', playError.message);
             
             if (playError.name === 'NotAllowedError') {
@@ -285,7 +251,6 @@ export function StreamBroadcaster({ orderId, onStreamStart, onStreamEnd }: Strea
               setError(null); // Clear error since this is expected behavior
             } else {
               setError('视频播放失败。请检查摄像头权限。');
-=======
             console.error('Play failed:', playError.name, '-', playError.message);
             
             if (playError.name === 'NotAllowedError') {
@@ -294,7 +259,6 @@ export function StreamBroadcaster({ orderId, onStreamStart, onStreamEnd }: Strea
               setError(null); // Clear error since this is expected behavior
             } else {
               setError('Video playback failed. Please check camera permissions.');
->>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
             }
           }
         };
@@ -320,15 +284,12 @@ export function StreamBroadcaster({ orderId, onStreamStart, onStreamEnd }: Strea
 
       setIsStreaming(true);
       onStreamStart();
-<<<<<<< HEAD
       console.log('🎉 Stream started successfully!');
     } catch (err: any) {
       console.error('❌ Stream start failed:', err);
-=======
       console.log('Stream started successfully!');
     } catch (err: any) {
       console.error('Stream start failed:', err);
->>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
       
       // Provide specific error messages
       if (err.name === 'NotAllowedError') {
@@ -344,21 +305,18 @@ export function StreamBroadcaster({ orderId, onStreamStart, onStreamEnd }: Strea
   };
 
   const stopStream = () => {
-<<<<<<< HEAD
     console.log('⏹️ Stopping stream...');
     
     if (stream) {
       console.log('🧹 Cleaning up MediaStream...');
       stream.getTracks().forEach(track => {
         console.log(`⏹️ Stopping ${track.kind} track`);
-=======
     console.log('Stopping stream...');
     
     if (stream) {
       console.log('Cleaning up MediaStream...');
       stream.getTracks().forEach(track => {
         console.log(`Stopping ${track.kind} track`);
->>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
         track.stop();
       });
       setStream(null);
@@ -380,20 +338,14 @@ export function StreamBroadcaster({ orderId, onStreamStart, onStreamEnd }: Strea
     onStreamEnd();
     setError(null);
     // DON'T reset needsUserInteraction here!
-<<<<<<< HEAD
     console.log('✅ Stream stopped');
-=======
     console.log('Stream stopped');
->>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
   };
 
   const switchCamera = async () => {
     const newFacingMode = facingMode === 'user' ? 'environment' : 'user';
-<<<<<<< HEAD
     console.log(`🔄 Switching camera: ${facingMode} → ${newFacingMode}`);
-=======
     console.log(`Switching camera: ${facingMode} → ${newFacingMode}`);
->>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
     setFacingMode(newFacingMode);
     
     if (isStreaming) {
@@ -413,11 +365,8 @@ export function StreamBroadcaster({ orderId, onStreamStart, onStreamEnd }: Strea
   };
 
   const handleUserInteraction = async () => {
-<<<<<<< HEAD
     console.log('👆 User interaction received');
-=======
     console.log('User interaction received');
->>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
     if (videoRef.current && stream) {
       try {
         // Force video properties again
@@ -425,33 +374,26 @@ export function StreamBroadcaster({ orderId, onStreamStart, onStreamEnd }: Strea
         videoRef.current.setAttribute('playsinline', 'true');
         
         await videoRef.current.play();
-<<<<<<< HEAD
         console.log('✅ Video started after user interaction');
-=======
                 console.log('Video started after user interaction');
->>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
         setNeedsUserInteraction(false);
         setError(null);
         
         // Double check after a delay
         setTimeout(() => {
           if (videoRef.current?.paused) {
-<<<<<<< HEAD
             console.warn('⚠️ Video paused again after user interaction');
             setError('视频仍然无法播放。请尝试刷新页面。');
           } else {
             console.log('✅ Video confirmed playing after user interaction');
-=======
             console.warn('Video paused again after user interaction');
             setError('Video still cannot play. Please try refreshing the page.');
           } else {
             console.log('Video confirmed playing after user interaction');
->>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
           }
         }, 1000);
         
       } catch (err: any) {
-<<<<<<< HEAD
         console.error('❌ User interaction play failed:', err);
         setError(`播放失败: ${err.message}. 请刷新页面重试。`);
         setNeedsUserInteraction(false);
@@ -459,7 +401,6 @@ export function StreamBroadcaster({ orderId, onStreamStart, onStreamEnd }: Strea
     } else {
       console.error('❌ No video element or stream available');
       setError('视频未准备好，请重新开始直播');
-=======
         console.error('User interaction play failed:', err);
         setError(`Playback failed: ${err.message}. Please refresh the page and try again.`);
         setNeedsUserInteraction(false);
@@ -467,7 +408,6 @@ export function StreamBroadcaster({ orderId, onStreamStart, onStreamEnd }: Strea
     } else {
       console.error('No video element or stream available');
       setError('Video not ready, please restart the stream');
->>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
       setNeedsUserInteraction(false);
     }
   };
@@ -516,11 +456,8 @@ export function StreamBroadcaster({ orderId, onStreamStart, onStreamEnd }: Strea
           <div className="flex items-center gap-2">
             <Badge variant={isConnected ? "default" : "secondary"}>
               {isConnected ? <Wifi className="w-3 h-3 mr-1" /> : <WifiOff className="w-3 h-3 mr-1" />}
-<<<<<<< HEAD
               {isConnected ? '已连接' : '连接中...'}
-=======
               {isConnected ? 'Connected' : 'Connecting...'}
->>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
             </Badge>
             {isStreaming && (
               <Badge variant="destructive">
@@ -609,11 +546,8 @@ export function StreamBroadcaster({ orderId, onStreamStart, onStreamEnd }: Strea
             </div>
             <div className="mt-3 text-xs text-muted-foreground">
               
-<<<<<<< HEAD
                 提示: 如果问题持续，请刷新页面或检查摄像头权限
-=======
                 Tip: If the problem persists, please refresh the page or check camera permissions
->>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
               
             </div>
           </div>
@@ -656,26 +590,19 @@ export function StreamBroadcaster({ orderId, onStreamStart, onStreamEnd }: Strea
         <div className="text-center space-y-1">
           <p className="text-xs text-muted-foreground">
             
-<<<<<<< HEAD
               {`摄像头: ${facingMode === 'user' ? '前置' : '后置'}`}
-=======
               {`Camera: ${facingMode === 'user' ? 'Front' : 'Rear'}`}
->>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
             
           </p>
           {retryCount > 0 && (
             <p className="text-xs text-yellow-600">
-<<<<<<< HEAD
               {`正在重连... (${retryCount}/5)`}
-=======
               {`Reconnecting... (${retryCount}/5)`}
->>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
             </p>
           )}
           
           {/* Debug Status Display */}
           <div className="text-xs space-y-1 mt-2 p-2 bg-gray-100 rounded">
-<<<<<<< HEAD
             <p>调试状态:</p>
             <p>needsUserInteraction: {needsUserInteraction ? '🔴 TRUE' : '🟢 FALSE'}</p>
             <p>isStreaming: {isStreaming ? '✅ TRUE' : '❌ FALSE'}</p>
@@ -683,7 +610,6 @@ export function StreamBroadcaster({ orderId, onStreamStart, onStreamEnd }: Strea
             <p>error: {error ? '❌ YES' : '✅ NO'}</p>
             <p>videoPaused: {videoRef.current?.paused ? '⏸️ TRUE' : '▶️ FALSE'}</p>
             <p>videoSrc: {videoRef.current?.srcObject ? '✅ YES' : '❌ NO'}</p>
-=======
             <p>Debug Status:</p>
             <p>needsUserInteraction: {needsUserInteraction ? 'TRUE' : 'FALSE'}</p>
             <p>isStreaming: {isStreaming ? 'TRUE' : 'FALSE'}</p>
@@ -691,7 +617,6 @@ export function StreamBroadcaster({ orderId, onStreamStart, onStreamEnd }: Strea
             <p>error: {error ? 'YES' : 'NO'}</p>
             <p>videoPaused: {videoRef.current?.paused ? 'TRUE' : 'FALSE'}</p>
             <p>videoSrc: {videoRef.current?.srcObject ? 'YES' : 'NO'}</p>
->>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
           </div>
         </div>
       </CardContent>

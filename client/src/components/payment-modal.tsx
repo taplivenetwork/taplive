@@ -10,13 +10,10 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
-<<<<<<< HEAD
 import { CreditCard, Smartphone, Bitcoin, DollarSign, Loader2, CheckCircle, AlertCircle } from "lucide-react";
-=======
 import { CreditCard, Smartphone, Bitcoin, DollarSign, Loader2, CheckCircle, AlertCircle, Wallet } from "lucide-react";
 import { Web3Service } from "@/lib/web3";
 import { YellowNetworkService } from "@/lib/yellow-network";
->>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
 import type { Order } from "@shared/schema";
 
 interface PaymentModalProps {
@@ -29,18 +26,15 @@ interface PaymentModalProps {
 interface PaymentMethod {
   id: string;
   name: string;
-<<<<<<< HEAD
   type: 'fiat' | 'crypto';
   icon: string;
   description: string;
   currencies: string[];
-=======
   type: 'fiat' | 'crypto' | 'web3' | 'swap';
   icon: string;
   description: string;
   currencies: string[];
   requiresWallet?: boolean;
->>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
 }
 
 export function PaymentModal({ order, isOpen, onClose, onSuccess }: PaymentModalProps) {
@@ -48,12 +42,9 @@ export function PaymentModal({ order, isOpen, onClose, onSuccess }: PaymentModal
   const [paymentStep, setPaymentStep] = useState<'select' | 'details' | 'processing' | 'success'>('select');
   const [cryptoHash, setCryptoHash] = useState('');
   const [senderWallet, setSenderWallet] = useState('');
-<<<<<<< HEAD
-=======
   const [isWalletConnected, setIsWalletConnected] = useState(false);
   const [walletAddress, setWalletAddress] = useState('');
   const [pyusdBalance, setPyusdBalance] = useState('0');
->>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -162,8 +153,6 @@ export function PaymentModal({ order, isOpen, onClose, onSuccess }: PaymentModal
     onSuccess?.();
   };
 
-<<<<<<< HEAD
-=======
   // Web3 payment methods
   const web3Methods: PaymentMethod[] = [
     {
@@ -186,7 +175,6 @@ export function PaymentModal({ order, isOpen, onClose, onSuccess }: PaymentModal
     }
   ];
 
->>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
   const methods: PaymentMethod[] = paymentMethods?.data ? Object.entries(paymentMethods.data).map(([key, value]: [string, any]) => ({
     id: key.toLowerCase(),
     name: value.name,
@@ -194,17 +182,13 @@ export function PaymentModal({ order, isOpen, onClose, onSuccess }: PaymentModal
     icon: value.icon,
     description: value.description,
     currencies: value.currencies,
-<<<<<<< HEAD
   })) : [];
-=======
     requiresWallet: value.requiresWallet || false,
   })) : web3Methods;
->>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
 
   const commission = commissionData?.data;
   const selectedMethodData = methods.find(m => m.id === selectedMethod);
 
-<<<<<<< HEAD
   const handleCreatePayment = () => {
     if (!selectedMethod) return;
 
@@ -217,7 +201,6 @@ export function PaymentModal({ order, isOpen, onClose, onSuccess }: PaymentModal
     };
 
     createPaymentMutation.mutate(paymentData);
-=======
   // Web3 payment handlers
   const handleWeb3Payment = async () => {
     if (!selectedMethod) return;
@@ -339,7 +322,6 @@ export function PaymentModal({ order, isOpen, onClose, onSuccess }: PaymentModal
 
       createPaymentMutation.mutate(paymentData);
     }
->>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
   };
 
   const handleCryptoPayment = () => {
@@ -385,13 +367,10 @@ export function PaymentModal({ order, isOpen, onClose, onSuccess }: PaymentModal
         return <CreditCard className="w-5 h-5" />;
       case 'crypto':
         return <Bitcoin className="w-5 h-5" />;
-<<<<<<< HEAD
-=======
       case 'web3':
         return <Wallet className="w-5 h-5" />;
       case 'swap':
         return <DollarSign className="w-5 h-5" />;
->>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
       default:
         return <DollarSign className="w-5 h-5" />;
     }

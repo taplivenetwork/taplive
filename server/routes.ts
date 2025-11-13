@@ -1,7 +1,6 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { WebSocketServer, WebSocket } from "ws";
-<<<<<<< HEAD
 import Stripe from "stripe";
 import { storage } from "./storage";
 import { insertOrderSchema, ratingValidationSchema, paymentValidationSchema, cryptoPaymentSchema, disputeSubmissionSchema, geoLocationSchema, aaGroupCreationSchema, type Order } from "@shared/schema";
@@ -61,7 +60,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({
         success: false,
         message: "Failed to fetch orders"
-=======
 import { storage } from "./simple-storage";
 
 export function registerRoutes(app: Express): Server {
@@ -89,15 +87,11 @@ export function registerRoutes(app: Express): Server {
         success: false,
         message: "Failed to fetch orders",
         error: error instanceof Error ? error.message : "Unknown error"
->>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
       });
     }
   });
 
-<<<<<<< HEAD
   // Get order by ID
-=======
->>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
   app.get("/api/orders/:id", async (req, res) => {
     try {
       const { id } = req.params;
@@ -106,18 +100,14 @@ export function registerRoutes(app: Express): Server {
       if (!order) {
         return res.status(404).json({
           success: false,
-<<<<<<< HEAD
           message: "Order not found"
-=======
           message: "Order Not Found",
           error: "The requested live stream could not be found."
->>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
         });
       }
 
       res.json({
         success: true,
-<<<<<<< HEAD
         data: order
       });
     } catch (error) {
@@ -176,7 +166,6 @@ export function registerRoutes(app: Express): Server {
       res.status(500).json({
         success: false,
         message: "Failed to create order"
-=======
         data: order,
         message: "Order retrieved successfully"
       });
@@ -186,14 +175,11 @@ export function registerRoutes(app: Express): Server {
         success: false,
         message: "Failed to fetch order",
         error: error instanceof Error ? error.message : "Unknown error"
->>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
       });
     }
   });
 
-<<<<<<< HEAD
   // Update order
-=======
   app.post("/api/orders", (req, res) => {
     console.log("Received order:", req.body);
     res.json({
@@ -203,16 +189,12 @@ export function registerRoutes(app: Express): Server {
     });
   });
 
->>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
   app.patch("/api/orders/:id", async (req, res) => {
     try {
       const { id } = req.params;
       const updates = req.body;
-<<<<<<< HEAD
 
-=======
       
->>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
       const updatedOrder = await storage.updateOrder(id, updates);
       
       if (!updatedOrder) {
@@ -221,7 +203,6 @@ export function registerRoutes(app: Express): Server {
           message: "Order not found"
         });
       }
-<<<<<<< HEAD
 
       res.json({
         success: true,
@@ -233,7 +214,6 @@ export function registerRoutes(app: Express): Server {
       res.status(500).json({
         success: false,
         message: "Failed to update order"
-=======
       
       res.json({
         success: true,
@@ -246,12 +226,10 @@ export function registerRoutes(app: Express): Server {
         success: false,
         message: "Failed to update order",
         error: error instanceof Error ? error.message : "Unknown error"
->>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
       });
     }
   });
 
-<<<<<<< HEAD
   // Provider cancel order (with rating penalty)
   app.post("/api/orders/:id/cancel-by-provider", async (req, res) => {
     try {
@@ -546,12 +524,10 @@ export function registerRoutes(app: Express): Server {
   app.delete("/api/orders/:id", async (req, res) => {
     try {
       const { id } = req.params;
-=======
   app.delete("/api/orders/:id", async (req, res) => {
     try {
       const { id } = req.params;
       
->>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
       const deleted = await storage.deleteOrder(id);
       
       if (!deleted) {
@@ -560,7 +536,6 @@ export function registerRoutes(app: Express): Server {
           message: "Order not found"
         });
       }
-<<<<<<< HEAD
 
       res.json({
         success: true,
@@ -571,7 +546,6 @@ export function registerRoutes(app: Express): Server {
       res.status(500).json({
         success: false,
         message: "Failed to delete order"
-=======
       
       res.json({
         success: true,
@@ -584,12 +558,10 @@ export function registerRoutes(app: Express): Server {
         success: false,
         message: "Failed to delete order",
         error: error instanceof Error ? error.message : "Unknown error"
->>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
       });
     }
   });
 
-<<<<<<< HEAD
   // Get user by ID (for displaying user profiles with ratings)
   app.get("/api/users/:id", async (req, res) => {
     try {
@@ -1951,7 +1923,6 @@ export function registerRoutes(app: Express): Server {
 
   return httpServer;
 }
-=======
   // Web3 Payment Endpoints
   app.post("/api/payments/pyusd", (req, res) => {
     const { orderId, amount, payerId, web3TransactionHash, pyusdAmount } = req.body;
@@ -2083,4 +2054,3 @@ export function registerRoutes(app: Express): Server {
 
   return server;
 }
->>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417

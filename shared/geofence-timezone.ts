@@ -1,6 +1,4 @@
-<<<<<<< HEAD
 d geofence configuration'
-=======
 // Geofencing and Timezone Utilities
 
 export interface GeofenceCoordinates {
@@ -125,7 +123,6 @@ export function checkGeofence(
       action: 'allow',
       priority: 0,
       message: 'Invalid geofence configuration'
->>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
     };
   }
 

@@ -28,11 +28,8 @@ export default function Settings() {
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="mb-6">
-<<<<<<< HEAD
           <h1 className="text-3xl font-bold mb-2">
-=======
           <h1 className="text-4xl font-bold mb-2">
->>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
             Settings
           </h1>
           <p className="text-muted-foreground">
@@ -42,11 +39,8 @@ export default function Settings() {
 
         <div className="space-y-6">
           {/* Profile Settings */}
-<<<<<<< HEAD
           <Card className="glass-card">
-=======
           <Card className="solid-card">
->>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <User className="w-5 h-5" />
@@ -99,11 +93,8 @@ export default function Settings() {
           </Card>
 
           {/* Streaming Settings */}
-<<<<<<< HEAD
           <Card className="glass-card">
-=======
           <Card className="solid-card">
->>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Camera className="w-5 h-5" />
@@ -157,11 +148,8 @@ export default function Settings() {
                   <Label>
                     Auto-start recording
                   </Label>
-<<<<<<< HEAD
                   <p className="text-sm text-muted-foreground">
-=======
                   <p className="text-base text-muted-foreground">
->>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
                     Automatically record all your streams
                   </p>
                 </div>
@@ -173,11 +161,8 @@ export default function Settings() {
                   <Label>
                     HD Quality
                   </Label>
-<<<<<<< HEAD
                   <p className="text-sm text-muted-foreground">
-=======
                   <p className="text-base text-muted-foreground">
->>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
                     Stream in high definition (uses more data)
                   </p>
                 </div>
@@ -187,11 +172,8 @@ export default function Settings() {
           </Card>
 
           {/* Notification Settings */}
-<<<<<<< HEAD
           <Card className="glass-card">
-=======
           <Card className="solid-card">
->>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Bell className="w-5 h-5" />
@@ -207,11 +189,8 @@ export default function Settings() {
                   <Label>
                     New Order Alerts
                   </Label>
-<<<<<<< HEAD
                   <p className="text-sm text-muted-foreground">
-=======
                   <p className="text-base text-muted-foreground">
->>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
                     Get notified when someone places a new order
                   </p>
                 </div>
@@ -223,11 +202,8 @@ export default function Settings() {
                   <Label>
                     Stream Reminders
                   </Label>
-<<<<<<< HEAD
                   <p className="text-sm text-muted-foreground">
-=======
                   <p className="text-base text-muted-foreground">
->>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
                     Remind you before scheduled streams
                   </p>
                 </div>
@@ -239,11 +215,8 @@ export default function Settings() {
                   <Label>
                     Payment Notifications
                   </Label>
-<<<<<<< HEAD
                   <p className="text-sm text-muted-foreground">
-=======
                   <p className="text-base text-muted-foreground">
->>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
                     Get notified when you receive payments
                   </p>
                 </div>
@@ -255,11 +228,8 @@ export default function Settings() {
                   <Label>
                     Marketing Emails
                   </Label>
-<<<<<<< HEAD
                   <p className="text-sm text-muted-foreground">
-=======
                   <p className="text-base text-muted-foreground">
->>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
                     Receive tips and updates about the platform
                   </p>
                 </div>
@@ -269,11 +239,8 @@ export default function Settings() {
           </Card>
 
           {/* Privacy & Security */}
-<<<<<<< HEAD
           <Card className="glass-card">
-=======
           <Card className="solid-card">
->>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Shield className="w-5 h-5" />
@@ -289,11 +256,8 @@ export default function Settings() {
                   <Label>
                     Profile Visibility
                   </Label>
-<<<<<<< HEAD
                   <p className="text-sm text-muted-foreground">
-=======
                   <p className="text-base text-muted-foreground">
->>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
                     Make your profile visible to other users
                   </p>
                 </div>
@@ -305,11 +269,8 @@ export default function Settings() {
                   <Label>
                     Location Sharing
                   </Label>
-<<<<<<< HEAD
                   <p className="text-sm text-muted-foreground">
-=======
                   <p className="text-base text-muted-foreground">
->>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
                     Allow sharing your location during streams
                   </p>
                 </div>

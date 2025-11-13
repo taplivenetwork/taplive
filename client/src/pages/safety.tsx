@@ -12,11 +12,8 @@ export function SafetyPage() {
       <div className="space-y-2">
         <div className="flex items-center gap-2">
           <Shield className="w-6 h-6 text-blue-600" />
-<<<<<<< HEAD
           <h1 className="text-3xl font-bold">
-=======
           <h1 className="text-4xl font-bold">
->>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
             Geographic Safety & Risk Control System
           </h1>
         </div>
@@ -35,11 +32,8 @@ export function SafetyPage() {
                 <div className="font-medium text-green-700 dark:text-green-400">
                   Geographic Risk Control
                 </div>
-<<<<<<< HEAD
                 <div className="text-sm text-green-600 dark:text-green-300">
-=======
                 <div className="text-base text-green-600 dark:text-green-300">
->>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
                   Military Base Detection
                 </div>
               </div>
@@ -55,11 +49,8 @@ export function SafetyPage() {
                 <div className="font-medium text-blue-700 dark:text-blue-400">
                   Weather Warnings
                 </div>
-<<<<<<< HEAD
                 <div className="text-sm text-blue-600 dark:text-blue-300">
-=======
                 <div className="text-base text-blue-600 dark:text-blue-300">
->>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
                   Natural Disaster Prevention
                 </div>
               </div>
@@ -75,11 +66,8 @@ export function SafetyPage() {
                 <div className="font-medium text-orange-700 dark:text-orange-400">
                   Content Moderation
                 </div>
-<<<<<<< HEAD
                 <div className="text-sm text-orange-600 dark:text-orange-300">
-=======
                 <div className="text-base text-orange-600 dark:text-orange-300">
->>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
                   Keyword Detection
                 </div>
               </div>
@@ -95,11 +83,8 @@ export function SafetyPage() {
                 <div className="font-medium text-purple-700 dark:text-purple-400">
                   Real-time Voice Detection
                 </div>
-<<<<<<< HEAD
                 <div className="text-sm text-purple-600 dark:text-purple-300">
-=======
                 <div className="text-base text-purple-600 dark:text-purple-300">
->>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
                   Real-time Voice Detection
                 </div>
               </div>
@@ -132,11 +117,8 @@ export function SafetyPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-<<<<<<< HEAD
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-=======
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-base">
->>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
                   <div className="space-y-2">
                     <div className="font-medium">
                       Geographic Risk Control
@@ -179,7 +161,6 @@ export function SafetyPage() {
                   <Card className="bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-700">
                     <CardContent className="p-4">
                       <div className="flex items-center gap-2 mb-2">
-<<<<<<< HEAD
                         <Badge variant="destructive" className="text-xs">
                           High Risk
                         </Badge>
@@ -188,7 +169,6 @@ export function SafetyPage() {
                         Illegal Activity Detection
                       </div>
                       <div className="text-xs text-muted-foreground">
-=======
                         <Badge variant="destructive" className="text-base">
                           High Risk
                         </Badge>
@@ -197,7 +177,6 @@ export function SafetyPage() {
                         Illegal Activity Detection
                       </div>
                       <div className="text-base text-muted-foreground">
->>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
                         Drug/Weapon Trafficking
                       </div>
                     </CardContent>
@@ -206,7 +185,6 @@ export function SafetyPage() {
                   <Card className="bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-700">
                     <CardContent className="p-4">
                       <div className="flex items-center gap-2 mb-2">
-<<<<<<< HEAD
                         <Badge variant="outline" className="text-xs border-orange-300">
                           Medium Risk
                         </Badge>
@@ -215,7 +193,6 @@ export function SafetyPage() {
                         Privacy Violation
                       </div>
                       <div className="text-xs text-muted-foreground">
-=======
                         <Badge variant="outline" className="text-base border-orange-300">
                           Medium Risk
                         </Badge>
@@ -224,7 +201,6 @@ export function SafetyPage() {
                         Privacy Violation
                       </div>
                       <div className="text-base text-muted-foreground">
->>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
                         Unauthorized Recording
                       </div>
                     </CardContent>
@@ -233,7 +209,6 @@ export function SafetyPage() {
                   <Card className="bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-700">
                     <CardContent className="p-4">
                       <div className="flex items-center gap-2 mb-2">
-<<<<<<< HEAD
                         <Badge variant="secondary" className="text-xs">
                           Real-time Monitoring
                         </Badge>
@@ -242,7 +217,6 @@ export function SafetyPage() {
                         Real-time Voice Detection
                       </div>
                       <div className="text-xs text-muted-foreground">
-=======
                         <Badge variant="secondary" className="text-base">
                           Real-time Monitoring
                         </Badge>
@@ -251,7 +225,6 @@ export function SafetyPage() {
                         Real-time Voice Detection
                       </div>
                       <div className="text-base text-muted-foreground">
->>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
                         Emergency Threat Detection
                       </div>
                     </CardContent>
@@ -259,17 +232,14 @@ export function SafetyPage() {
                 </div>
 
                 <div className="mt-4 p-4 bg-muted/50 rounded-lg">
-<<<<<<< HEAD
                   <div className="text-sm font-medium mb-2">
                     AI Detection Process
                   </div>
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
-=======
                   <div className="text-base font-medium mb-2">
                     AI Detection Process
                   </div>
                   <div className="flex items-center gap-2 text-base text-muted-foreground">
->>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
                     <span>1. Real-time Keyword Detection</span>
                     <span>→</span>
                     <span>2. AI Confidence Assessment</span>
@@ -295,11 +265,8 @@ export function SafetyPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-<<<<<<< HEAD
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-=======
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-base">
->>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
                   <div className="space-y-2">
                     <div className="font-medium">
                       Intelligent Split Payment
@@ -344,17 +311,14 @@ export function SafetyPage() {
                       <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mx-auto mb-2">
                         <span className="text-blue-600 font-bold">1</span>
                       </div>
-<<<<<<< HEAD
                       <div className="text-sm font-medium">
                         Create Group
                       </div>
                       <div className="text-xs text-muted-foreground">
-=======
                       <div className="text-base font-medium">
                         Create Group
                       </div>
                       <div className="text-base text-muted-foreground">
->>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
                         Set Participants
                       </div>
                     </div>
@@ -363,17 +327,14 @@ export function SafetyPage() {
                       <div className="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-2">
                         <span className="text-green-600 font-bold">2</span>
                       </div>
-<<<<<<< HEAD
                       <div className="text-sm font-medium">
                         Join Group
                       </div>
                       <div className="text-xs text-muted-foreground">
-=======
                       <div className="text-base font-medium">
                         Join Group
                       </div>
                       <div className="text-base text-muted-foreground">
->>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
                         Share Link
                       </div>
                     </div>
@@ -382,17 +343,14 @@ export function SafetyPage() {
                       <div className="w-10 h-10 bg-orange-100 dark:bg-orange-900/30 rounded-full flex items-center justify-center mx-auto mb-2">
                         <span className="text-orange-600 font-bold">3</span>
                       </div>
-<<<<<<< HEAD
                       <div className="text-sm font-medium">
                         Confirm Payment
                       </div>
                       <div className="text-xs text-muted-foreground">
-=======
                       <div className="text-base font-medium">
                         Confirm Payment
                       </div>
                       <div className="text-base text-muted-foreground">
->>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
                         Unified Payment (Full)
                       </div>
                     </div>
@@ -401,17 +359,14 @@ export function SafetyPage() {
                       <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center mx-auto mb-2">
                         <span className="text-purple-600 font-bold">4</span>
                       </div>
-<<<<<<< HEAD
                       <div className="text-sm font-medium">
                         Service Complete
                       </div>
                       <div className="text-xs text-muted-foreground">
-=======
                       <div className="text-base font-medium">
                         Service Complete
                       </div>
                       <div className="text-base text-muted-foreground">
->>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
                         Auto Payout
                       </div>
                     </div>
@@ -424,11 +379,8 @@ export function SafetyPage() {
                         <div className="font-medium text-yellow-800 dark:text-yellow-400">
                           Risk Protection
                         </div>
-<<<<<<< HEAD
                         <div className="text-sm text-yellow-700 dark:text-yellow-300 mt-1">
-=======
                         <div className="text-base text-yellow-700 dark:text-yellow-300 mt-1">
->>>>>>> 5a80c919e762d1f1ca97ba29eb4d9e63ec9af417
                           Group Fail = Auto Refund
                         </div>
                       </div>
