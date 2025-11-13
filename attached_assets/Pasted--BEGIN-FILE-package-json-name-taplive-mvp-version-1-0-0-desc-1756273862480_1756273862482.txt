@@ -1,0 +1,843 @@
+## 根目录文件
+
+>>>BEGIN FILE: package.json
+{
+  "name": "taplive-mvp",
+  "version": "1.0.0",
+  "description": "TapLive MVP - 基于 LBS 的全球视频直播点播调度平台",
+  "scripts": {
+    "dev": "concurrently \"npm run backend:dev\" \"npm run frontend:dev\"",
+    "backend:dev": "cd backend && npm run dev",
+    "frontend:dev": "cd frontend && npm run dev",
+    "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install",
+    "build": "cd frontend && npm run build",
+    "lint": "eslint . --ext .ts,.tsx",
+    "lint:fix": "eslint . --ext .ts,.tsx --fix",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\""
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "concurrently": "^8.2.0",
+    "eslint": "^8.45.0",
+    "eslint-config-prettier": "^8.8.0",
+    "eslint-plugin-prettier": "^5.0.0",
+    "eslint-plugin-react": "^7.32.2",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "prettier": "^3.0.0",
+    "typescript": "^5.0.2"
+  },
+  "keywords": ["live-streaming", "lbs", "mvp"],
+  "author": "TapLive Team",
+  "license": "MIT"
+}
+>>>END FILE
+
+>>>BEGIN FILE: .gitignore
+# Dependencies
+node_modules/
+*/node_modules/
+
+# Production builds
+dist/
+build/
+*/dist/
+*/build/
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*/.env
+*/.env.local
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+*.lcov
+
+# nyc test coverage
+.nyc_output
+
+# ESLint cache
+.eslintcache
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Microbundle cache
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# parcel-bundler cache (https://parceljs.org/)
+.cache
+.parcel-cache
+
+# Next.js build output
+.next
+
+# Nuxt.js build / generate output
+.nuxt
+dist
+
+# Storybook build outputs
+.out
+.storybook-out
+
+# Temporary folders
+tmp/
+temp/
+
+# Editor directories and files
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+>>>END FILE
+
+>>>BEGIN FILE: .eslintrc.js
+module.exports = {
+  root: true,
+  env: {
+    browser: true,
+    es2020: true,
+    node: true,
+  },
+  extends: [
+    'eslint:recommended',
+    '@typescript-eslint/recommended',
+    'plugin:react/recommended',
+    'plugin:react-hooks/recommended',
+    'prettier',
+  ],
+  ignorePatterns: ['dist', '.eslintrc.js'],
+  parser: '@typescript-eslint/parser',
+  plugins: ['react-refresh', '@typescript-eslint'],
+  rules: {
+    'react-refresh/only-export-components': [
+      'warn',
+      { allowConstantExport: true },
+    ],
+    '@typescript-eslint/no-unused-vars': 'error',
+    '@typescript-eslint/no-explicit-any': 'warn',
+    'react/react-in-jsx-scope': 'off',
+  },
+  settings: {
+    react: {
+      version: 'detect',
+    },
+  },
+}
+>>>END FILE
+
+>>>BEGIN FILE: .prettierrc
+{
+  "semi": false,
+  "trailingComma": "es5",
+  "singleQuote": true,
+  "printWidth": 80,
+  "tabWidth": 2,
+  "useTabs": false
+}
+>>>END FILE
+
+>>>BEGIN FILE: README.md
+# TapLive MVP
+
+基于 LBS 的全球视频直播点播调度平台最小可行产品
+
+## 项目概述
+
+TapLive 是一个创新的直播平台，允许用户发起位置相关的直播订单，服务者可以接单并提供直播服务。
+
+### 核心功能
+
+- **订单系统**: 支持单人付费和拼团模式
+- **接单系统**: 服务者浏览和接单功能
+- **直播回放**: 基础直播和回放功能
+- **地图选点**: LBS 位置选择
+- **用户认证**: Supabase Auth 集成
+
+## 技术栈
+
+- **后端**: Node.js + Express + TypeScript
+- **前端**: Vite + React + TypeScript + Tailwind CSS
+- **数据库**: PostgreSQL / Supabase
+- **地图**: Leaflet + OpenStreetMap
+
+## 快速开始
+
+### 本地开发
+
+```bash
+# 1. 安装所有依赖
+npm run install:all
+
+# 2. 配置环境变量
+cp backend/.env.example backend/.env
+cp frontend/.env.example frontend/.env
+
+# 3. 启动开发服务器（同时启动前后端）
+npm run dev
+
+# 或分别启动
+npm run backend:dev   # 后端: http://localhost:5174
+npm run frontend:dev  # 前端: http://localhost:5173
+```
+
+### Replit 部署
+
+1. Fork 本项目到 Replit
+2. 在 Replit Shell 中运行：
+```bash
+npm run install:all
+```
+3. 在 Secrets 中配置环境变量
+4. 运行 `npm run dev`
+
+## 环境变量配置
+
+参考 `.env.example` 文件配置必要的环境变量。
+
+## 项目验证
+
+1. 访问 http://localhost:5173
+2. 点击"创建订单"
+3. 填写订单信息并提交
+4. 查看订单列表确认订单已创建
+5. 检查后端健康状态: http://localhost:5174/healthz
+
+## API 文档
+
+- `GET /healthz` - 健康检查
+- `GET /api/orders` - 获取订单列表
+- `POST /api/orders` - 创建新订单
+
+## 开发规范
+
+- 使用 TypeScript 严格模式
+- 遵循 ESLint + Prettier 代码规范
+- Commit 信息使用 Conventional Commits 格式
+
+## License
+
+MIT
+>>>END FILE
+
+## 后端文件
+
+>>>BEGIN FILE: backend/package.json
+{
+  "name": "taplive-backend",
+  "version": "1.0.0",
+  "description": "TapLive MVP Backend",
+  "main": "dist/server.js",
+  "scripts": {
+    "dev": "tsx watch server.ts",
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "lint": "eslint src/**/*.ts",
+    "lint:fix": "eslint src/**/*.ts --fix"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.38.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "helmet": "^7.0.0",
+    "joi": "^17.9.2",
+    "morgan": "^1.10.0",
+    "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.13",
+    "@types/express": "^4.17.17",
+    "@types/morgan": "^1.9.4",
+    "@types/node": "^20.4.5",
+    "@types/uuid": "^9.0.2",
+    "tsx": "^3.12.7",
+    "typescript": "^5.1.6"
+  }
+}
+>>>END FILE
+
+>>>BEGIN FILE: backend/tsconfig.json
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "lib": ["ES2020"],
+    "module": "CommonJS",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "declaration": true,
+    "outDir": "./dist",
+    "rootDir": "./",
+    "resolveJsonModule": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "noImplicitAny": true,
+    "noImplicitReturns": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true
+  },
+  "include": ["src/**/*", "server.ts"],
+  "exclude": ["node_modules", "dist"]
+}
+>>>END FILE
+
+>>>BEGIN FILE: backend/.env.example
+# 服务器配置
+PORT=5174
+NODE_ENV=development
+
+# 数据库配置（选择一种）
+# 本地 PostgreSQL
+DATABASE_URL=postgresql://username:password@localhost:5432/taplive
+
+# 或者使用 Supabase
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SERVICE_KEY=your-service-key
+
+# CORS 配置
+FRONTEND_URL=http://localhost:5173
+
+# 日志级别
+LOG_LEVEL=info
+>>>END FILE
+
+>>>BEGIN FILE: backend/server.ts
+import dotenv from 'dotenv'
+import app from './src/app'
+import { logger } from './src/utils/logger'
+
+dotenv.config()
+
+const PORT = process.env.PORT || 5174
+
+app.listen(PORT, () => {
+  logger.info(`🚀 TapLive Backend server running on port ${PORT}`)
+  logger.info(`📊 Health check: http://localhost:${PORT}/healthz`)
+  logger.info(`📡 API endpoint: http://localhost:${PORT}/api`)
+  logger.info(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`)
+})
+
+// 优雅关闭
+process.on('SIGTERM', () => {
+  logger.info('SIGTERM received, shutting down gracefully')
+  process.exit(0)
+})
+
+process.on('SIGINT', () => {
+  logger.info('SIGINT received, shutting down gracefully')
+  process.exit(0)
+})
+>>>END FILE
+
+>>>BEGIN FILE: backend/src/app.ts
+import express from 'express'
+import helmet from 'helmet'
+import morgan from 'morgan'
+import { corsMiddleware } from './middleware/cors'
+import { errorHandler } from './middleware/errorHandler'
+import orderRoutes from './routes/orders'
+import { logger } from './utils/logger'
+
+const app = express()
+
+// 基础中间件
+app.use(helmet())
+app.use(corsMiddleware)
+app.use(morgan('combined'))
+app.use(express.json({ limit: '10mb' }))
+app.use(express.urlencoded({ extended: true }))
+
+// 健康检查
+app.get('/healthz', (req, res) => {
+  res.status(200).json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    service: 'TapLive Backend',
+    version: '1.0.0',
+    environment: process.env.NODE_ENV || 'development'
+  })
+})
+
+// API 路由
+app.use('/api/orders', orderRoutes)
+
+// 404 处理
+app.use('*', (req, res) => {
+  logger.warn(`404 - Route not found: ${req.method} ${req.originalUrl}`)
+  res.status(404).json({
+    success: false,
+    code: 'NOT_FOUND',
+    message: `Route ${req.method} ${req.originalUrl} not found`
+  })
+})
+
+// 错误处理中间件（必须放在最后）
+app.use(errorHandler)
+
+export default app
+>>>END FILE
+
+>>>BEGIN FILE: backend/src/middleware/cors.ts
+import cors from 'cors'
+
+const corsOptions: cors.CorsOptions = {
+  origin: [
+    'http://localhost:5173',
+    'http://localhost:3000',
+    'https://replit.com',
+    'https://*.replit.dev',
+    process.env.FRONTEND_URL
+  ].filter(Boolean),
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: [
+    'Content-Type',
+    'Authorization',
+    'X-Requested-With',
+    'Accept',
+    'Origin'
+  ],
+  credentials: true,
+  maxAge: 86400 // 24 hours
+}
+
+export const corsMiddleware = cors(corsOptions)
+>>>END FILE
+
+>>>BEGIN FILE: backend/src/middleware/errorHandler.ts
+import { Request, Response, NextFunction } from 'express'
+import { logger } from '../utils/logger'
+
+export interface AppError extends Error {
+  statusCode?: number
+  code?: string
+  isOperational?: boolean
+}
+
+export const errorHandler = (
+  error: AppError,
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const statusCode = error.statusCode || 500
+  const code = error.code || 'INTERNAL_SERVER_ERROR'
+  const message = error.message || 'Internal server error'
+
+  // 记录错误
+  logger.error(`Error ${statusCode} - ${code}: ${message}`, {
+    url: req.originalUrl,
+    method: req.method,
+    stack: error.stack,
+    body: req.body
+  })
+
+  // 发送错误响应
+  res.status(statusCode).json({
+    success: false,
+    code,
+    message,
+    ...(process.env.NODE_ENV === 'development' && { stack: error.stack })
+  })
+}
+
+export const createError = (
+  message: string, 
+  statusCode: number = 500, 
+  code: string = 'INTERNAL_SERVER_ERROR'
+): AppError => {
+  const error = new Error(message) as AppError
+  error.statusCode = statusCode
+  error.code = code
+  error.isOperational = true
+  return error
+}
+>>>END FILE
+
+>>>BEGIN FILE: backend/src/models/Order.ts
+export type OrderStatus = 'pending' | 'open' | 'accepted' | 'live' | 'done' | 'cancelled'
+
+export type OrderType = 'single' | 'group'
+
+export interface Location {
+  latitude: number
+  longitude: number
+  address?: string
+}
+
+export interface Order {
+  id: string
+  title: string
+  description: string
+  type: OrderType
+  status: OrderStatus
+  location: Location
+  price: number
+  maxParticipants?: number // 拼团模式的最大参与人数
+  currentParticipants: number
+  scheduledAt: string // ISO 8601 日期时间
+  duration: number // 直播时长（分钟）
+  liveUrl?: string // 直播链接
+  replayUrl?: string // 回放链接
+  creatorId?: string // 创建者ID（登录用户）
+  providerId?: string // 服务提供者ID
+  tags?: string[]
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CreateOrderRequest {
+  title: string
+  description: string
+  type: OrderType
+  location: Location
+  price: number
+  maxParticipants?: number
+  scheduledAt: string
+  duration: number
+  tags?: string[]
+}
+
+export interface UpdateOrderRequest {
+  status?: OrderStatus
+  providerId?: string
+  liveUrl?: string
+  replayUrl?: string
+}
+>>>END FILE
+
+>>>BEGIN FILE: backend/src/services/orderService.ts
+import { Order, CreateOrderRequest, UpdateOrderRequest, OrderStatus } from '../models/Order'
+import { v4 as uuidv4 } from 'uuid'
+import { createError } from '../middleware/errorHandler'
+
+// 内存存储（生产环境应使用数据库）
+class OrderService {
+  private orders: Order[] = []
+
+  constructor() {
+    // 初始化一些测试数据
+    this.initTestData()
+  }
+
+  private initTestData(): void {
+    const testOrders: Order[] = [
+      {
+        id: uuidv4(),
+        title: '香港维多利亚港夜景直播',
+        description: '带您欣赏香港维多利亚港的美丽夜景，包括灯光秀表演',
+        type: 'single',
+        status: 'open',
+        location: {
+          latitude: 22.2944,
+          longitude: 114.1691,
+          address: '香港维多利亚港'
+        },
+        price: 299,
+        currentParticipants: 1,
+        scheduledAt: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(), // 2小时后
+        duration: 60,
+        tags: ['夜景', '香港', '维多利亚港'],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      },
+      {
+        id: uuidv4(),
+        title: '东京涩谷十字路口实况',
+        description: '实时展示东京最繁忙的涩谷十字路口人潮',
+        type: 'group',
+        status: 'pending',
+        location: {
+          latitude: 35.6598,
+          longitude: 139.7006,
+          address: '日本东京涩谷十字路口'
+        },
+        price: 99,
+        maxParticipants: 10,
+        currentParticipants: 3,
+        scheduledAt: new Date(Date.now() + 4 * 60 * 60 * 1000).toISOString(), // 4小时后
+        duration: 30,
+        tags: ['东京', '涩谷', '街景'],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      }
+    ]
+
+    this.orders = testOrders
+  }
+
+  async getAllOrders(): Promise<Order[]> {
+    // 按创建时间倒序排列
+    return this.orders.sort((a, b) => 
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    )
+  }
+
+  async getOrderById(id: string): Promise<Order | null> {
+    return this.orders.find(order => order.id === id) || null
+  }
+
+  async createOrder(orderData: CreateOrderRequest, creatorId?: string): Promise<Order> {
+    // 验证数据
+    if (!orderData.title || orderData.title.trim().length < 3) {
+      throw createError('订单标题至少需要3个字符', 400, 'INVALID_TITLE')
+    }
+
+    if (!orderData.location || !orderData.location.latitude || !orderData.location.longitude) {
+      throw createError('必须提供有效的位置信息', 400, 'INVALID_LOCATION')
+    }
+
+    if (orderData.price <= 0) {
+      throw createError('订单价格必须大于0', 400, 'INVALID_PRICE')
+    }
+
+    if (orderData.type === 'group' && (!orderData.maxParticipants || orderData.maxParticipants < 2)) {
+      throw createError('拼团订单最大参与人数至少为2人', 400, 'INVALID_MAX_PARTICIPANTS')
+    }
+
+    const scheduledTime = new Date(orderData.scheduledAt)
+    if (scheduledTime <= new Date()) {
+      throw createError('直播时间必须是未来时间', 400, 'INVALID_SCHEDULED_TIME')
+    }
+
+    const newOrder: Order = {
+      id: uuidv4(),
+      ...orderData,
+      status: orderData.type === 'single' ? 'open' : 'pending',
+      currentParticipants: 1,
+      creatorId,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    }
+
+    this.orders.push(newOrder)
+    return newOrder
+  }
+
+  async updateOrder(id: string, updateData: UpdateOrderRequest): Promise<Order> {
+    const orderIndex = this.orders.findIndex(order => order.id === id)
+    
+    if (orderIndex === -1) {
+      throw createError('订单不存在', 404, 'ORDER_NOT_FOUND')
+    }
+
+    const order = this.orders[orderIndex]
+
+    // 验证状态转换
+    if (updateData.status) {
+      this.validateStatusTransition(order.status, updateData.status)
+    }
+
+    const updatedOrder: Order = {
+      ...order,
+      ...updateData,
+      updatedAt: new Date().toISOString()
+    }
+
+    this.orders[orderIndex] = updatedOrder
+    return updatedOrder
+  }
+
+  async deleteOrder(id: string): Promise<void> {
+    const orderIndex = this.orders.findIndex(order => order.id === id)
+    
+    if (orderIndex === -1) {
+      throw createError('订单不存在', 404, 'ORDER_NOT_FOUND')
+    }
+
+    this.orders.splice(orderIndex, 1)
+  }
+
+  private validateStatusTransition(currentStatus: OrderStatus, newStatus: OrderStatus): void {
+    const validTransitions: Record<OrderStatus, OrderStatus[]> = {
+      'pending': ['open', 'cancelled'],
+      'open': ['accepted', 'cancelled'],
+      'accepted': ['live', 'cancelled'],
+      'live': ['done'],
+      'done': [],
+      'cancelled': []
+    }
+
+    if (!validTransitions[currentStatus].includes(newStatus)) {
+      throw createError(
+        `无法从状态 ${currentStatus} 转换到 ${newStatus}`,
+        400,
+        'INVALID_STATUS_TRANSITION'
+      )
+    }
+  }
+
+  async getOrdersByStatus(status: OrderStatus): Promise<Order[]> {
+    return this.orders.filter(order => order.status === status)
+  }
+
+  async getOrdersByLocation(latitude: number, longitude: number, radiusKm: number = 10): Promise<Order[]> {
+    // 简单的距离计算（生产环境应使用更精确的地理计算）
+    return this.orders.filter(order => {
+      const latDiff = Math.abs(order.location.latitude - latitude)
+      const lngDiff = Math.abs(order.location.longitude - longitude)
+      const roughDistance = Math.sqrt(latDiff * latDiff + lngDiff * lngDiff) * 111 // 粗略转换为公里
+      return roughDistance <= radiusKm
+    })
+  }
+}
+
+export const orderService = new OrderService()
+>>>END FILE
+
+>>>BEGIN FILE: backend/src/controllers/orderController.ts
+import { Request, Response, NextFunction } from 'express'
+import { orderService } from '../services/orderService'
+import { CreateOrderRequest, UpdateOrderRequest, OrderStatus } from '../models/Order'
+import Joi from 'joi'
+import { createError } from '../middleware/errorHandler'
+import { logger } from '../utils/logger'
+
+// 验证schemas
+const createOrderSchema = Joi.object({
+  title: Joi.string().min(3).max(100).required(),
+  description: Joi.string().min(10).max(500).required(),
+  type: Joi.string().valid('single', 'group').required(),
+  location: Joi.object({
+    latitude: Joi.number().min(-90).max(90).required(),
+    longitude: Joi.number().min(-180).max(180).required(),
+    address: Joi.string().max(200).optional()
+  }).required(),
+  price: Joi.number().min(1).max(10000).required(),
+  maxParticipants: Joi.number().min(2).max(100).when('type', {
+    is: 'group',
+    then: Joi.required(),
+    otherwise: Joi.optional()
+  }),
+  scheduledAt: Joi.string().isoDate().required(),
+  duration: Joi.number().min(10).max(480).required(), // 10分钟到8小时
+  tags: Joi.array().items(Joi.string().max(20)).max(10).optional()
+})
+
+const updateOrderSchema = Joi.object({
+  status: Joi.string().valid('pending', 'open', 'accepted', 'live', 'done', 'cancelled').optional(),
+  providerId: Joi.string().uuid().optional(),
+  liveUrl: Joi.string().uri().optional(),
+  replayUrl: Joi.string().uri().optional()
+})
+
+export class OrderController {
+  async getAllOrders(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { status, latitude, longitude, radius } = req.query
+
+      let orders
+      
+      if (status && typeof status === 'string') {
+        orders = await orderService.getOrdersByStatus(status as OrderStatus)
+      } else if (latitude && longitude && typeof latitude === 'string' && typeof longitude === 'string') {
+        const lat = parseFloat(latitude)
+        const lng = parseFloat(longitude)
+        const radiusKm = radius ? parseFloat(radius as string) : 10
+        orders = await orderService.getOrdersByLocation(lat, lng, radiusKm)
+      } else {
+        orders = await orderService.getAllOrders()
+      }
+
+      logger.info(`Retrieved ${orders.length} orders`)
+
+      res.status(200).json({
+        success: true,
+        data: orders,
+        meta: {
+          total: orders.length,
+          timestamp: new Date().toISOString()
+        }
+      })
+    } catch (error) {
+      next(error)
+    }
+  }
+
+  async getOrderById(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id } = req.params
+
+      if (!id) {
+        throw createError('订单ID是必需的', 400, 'MISSING_ORDER_ID')
+      }
+
+      const order = await orderService.getOrderById(id)
+
+      if (!order) {
+        throw createError('订单不存在', 404, 'ORDER_NOT_FOUND')
+      }
+
+      logger.info(`Retrieved order: ${id}`)
+
+      res.status(200).json({
+        success: true,
+        data: order
+      })
+    } catch (error) {
+      next(error)
+    }
+  }
+
+  async createOrder(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { error, value } = createOrderSchema.validate(req.body, { abortEarly: false })
+
+      if (error) {
+        const errorMessages = error.details.map(detail => detail.message).join(', ')
+        throw createError(`数据验证失败: ${errorMessages}`, 400, 'VALIDATION_ERROR')
+      }
+
+      const orderData: CreateOrderRequest = value
+      
+      // 这里可以从认证中间件获取用户ID，
