@@ -84,6 +84,7 @@ Frontend runs on:
 - [08 Tech Stack](./docs/08_tech-stack.md)
 - [09 API Draft](./docs/09_api-draft.md)
 - [10 Workflow Diagram](./docs/10_workflow-diagram.md)
+- [11 roadmap-phase-3-4.md](./docs/11_roadmap-phase-3-4.md)
 
 📘 [TapLive Project Pitch](https://www.notion.so/TapLive-Project-Pitch-289943c0201980249cafd292b7d904d8)  
 🧭 [TapLive Roadmap Phase 1–2](https://www.notion.so/TapLive-Roadmap-Phase-1-2-289943c0201980f4a78aeb7cc191c17a)  
