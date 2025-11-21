@@ -60,10 +60,10 @@ export default function Streams() {
         {/* Header */}
         <div className="mb-6">
           <h1 className="text-3xl font-bold mb-2">
-            <TranslatedText>Live Streams</TranslatedText>
+            <TranslatedText context="streams">Live Streams</TranslatedText>
           </h1>
           <p className="text-muted-foreground">
-            <TranslatedText>Watch and manage your live streaming sessions</TranslatedText>
+            <TranslatedText context="streams">Watch and manage your live streaming sessions</TranslatedText>
           </p>
         </div>
 
@@ -71,7 +71,7 @@ export default function Streams() {
         <div className="mb-8">
           <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
             <span className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></span>
-            <TranslatedText>Live Now</TranslatedText>
+            <TranslatedText context="streams">Live Now</TranslatedText>
           </h2>
           
           {liveStreams.length > 0 ? (
@@ -84,7 +84,7 @@ export default function Streams() {
                     </div>
                     <Badge className="absolute top-2 left-2 bg-red-500 text-white">
                       <span className="w-2 h-2 bg-white rounded-full animate-pulse mr-1"></span>
-                      <TranslatedText>Live</TranslatedText>
+                      <TranslatedText context="streams">Live</TranslatedText>
                     </Badge>
                     <div className="absolute top-2 right-2 bg-black/70 text-white px-2 py-1 rounded text-xs flex items-center gap-1">
                       <Eye className="w-3 h-3" />
@@ -123,7 +123,7 @@ export default function Streams() {
                       onClick={() => window.location.href = `/stream/${stream.id}`}
                     >
                       <Play className="w-4 h-4 mr-2" />
-                      <TranslatedText>Watch Stream</TranslatedText>
+                      <TranslatedText context="streams">Watch Stream</TranslatedText>
                     </Button>
                   </CardContent>
                 </Card>
@@ -134,10 +134,10 @@ export default function Streams() {
               <CardContent className="text-center py-8">
                 <Play className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                 <h3 className="text-lg font-medium mb-2">
-                  <TranslatedText>No Live Streams</TranslatedText>
+                  <TranslatedText context="streams">No Live Streams</TranslatedText>
                 </h3>
                 <p className="text-muted-foreground">
-                  <TranslatedText>No streams are currently live. Check back later!</TranslatedText>
+                  <TranslatedText context="streams">No streams are currently live. Check back later!</TranslatedText>
                 </p>
               </CardContent>
             </Card>

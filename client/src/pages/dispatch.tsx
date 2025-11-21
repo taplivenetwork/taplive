@@ -54,10 +54,10 @@ export function DispatchPage() {
       <div className="space-y-2">
         <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
           <TrendingUp className="w-6 h-6" />
-          <TranslatedText>Smart Dispatch System</TranslatedText>
+          <TranslatedText context="dispatch">Smart Dispatch System</TranslatedText>
         </h1>
         <p className="text-muted-foreground">
-          <TranslatedText>Intelligent provider ranking based on distance, reputation, network speed and device performance</TranslatedText>
+          <TranslatedText context="dispatch">Intelligent provider ranking based on distance, reputation, network speed and device performance</TranslatedText>
         </p>
       </div>
 
@@ -66,14 +66,14 @@ export function DispatchPage() {
         <Card className="p-4">
           <h3 className="font-semibold text-foreground mb-3 flex items-center gap-2">
             <Zap className="w-4 h-4" />
-            <TranslatedText>Algorithm Weights</TranslatedText>
+            <TranslatedText context="dispatch">Algorithm Weights</TranslatedText>
           </h3>
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
             {Object.entries(algorithm.weights).map(([factor, weight]) => (
               <div key={factor} className="text-center">
                 <div className="text-2xl font-bold text-primary">{weight as number}%</div>
                 <div className="text-xs text-muted-foreground capitalize">
-                  <TranslatedText>{factor}</TranslatedText>
+                  <TranslatedText context="dispatch">{factor}</TranslatedText>
                 </div>
               </div>
             ))}
@@ -89,7 +89,7 @@ export function DispatchPage() {
             <div>
               <div className="text-2xl font-bold text-foreground">{openOrders.length}</div>
               <div className="text-sm text-muted-foreground">
-                <TranslatedText>Active Orders</TranslatedText>
+                <TranslatedText context="dispatch">Active Orders</TranslatedText>
               </div>
             </div>
           </div>
@@ -101,7 +101,7 @@ export function DispatchPage() {
             <div>
               <div className="text-2xl font-bold text-foreground">{providers.length}</div>
               <div className="text-sm text-muted-foreground">
-                <TranslatedText>Available Providers</TranslatedText>
+                <TranslatedText context="dispatch">Available Providers</TranslatedText>
               </div>
             </div>
           </div>
@@ -118,7 +118,7 @@ export function DispatchPage() {
                 }
               </div>
               <div className="text-sm text-muted-foreground">
-                <TranslatedText>Avg Dispatch Score</TranslatedText>
+                <TranslatedText context="dispatch">Avg Dispatch Score</TranslatedText>
               </div>
             </div>
           </div>
@@ -130,7 +130,7 @@ export function DispatchPage() {
         <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
           <div className="space-y-2 flex-1">
             <label className="text-sm font-medium text-foreground">
-              <TranslatedText>Select Order for Provider Ranking</TranslatedText>
+              <TranslatedText context="dispatch">Select Order for Provider Ranking</TranslatedText>
             </label>
             <Select value={selectedOrderId} onValueChange={setSelectedOrderId}>
               <SelectTrigger className="w-full md:w-80" data-testid="select-order">
@@ -148,7 +148,7 @@ export function DispatchPage() {
 
           <div className="flex items-center gap-2">
             <label className="text-sm text-foreground">
-              <TranslatedText>Show Details</TranslatedText>
+              <TranslatedText context="dispatch">Show Details</TranslatedText>
             </label>
             <Switch 
               checked={showDetails} 
@@ -176,26 +176,26 @@ export function DispatchPage() {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold text-foreground">
-              <TranslatedText>Provider Rankings</TranslatedText>
+              <TranslatedText context="dispatch">Provider Rankings</TranslatedText>
             </h2>
             {rankings.length > 0 && (
               <Badge variant="outline" data-testid="provider-count">
-                {rankings.length} <TranslatedText>providers</TranslatedText>
+                {rankings.length} <TranslatedText context="dispatch">providers</TranslatedText>
               </Badge>
             )}
           </div>
 
           {rankingsLoading ? (
             <div className="text-center py-8 text-muted-foreground">
-              <TranslatedText>Calculating rankings...</TranslatedText>
+              <TranslatedText context="dispatch">Calculating rankings...</TranslatedText>
             </div>
           ) : rankings.length === 0 ? (
             <Card className="p-8 text-center">
               <div className="text-muted-foreground">
                 <Users className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                <p><TranslatedText>No available providers found for this order</TranslatedText></p>
+                <p><TranslatedText context="dispatch">No available providers found for this order</TranslatedText></p>
                 <p className="text-sm mt-1">
-                  <TranslatedText>Providers need to be online and have location data</TranslatedText>
+                  <TranslatedText context="dispatch">Providers need to be online and have location data</TranslatedText>
                 </p>
               </div>
             </Card>

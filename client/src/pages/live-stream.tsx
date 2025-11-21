@@ -117,14 +117,14 @@ export default function LiveStreamPage() {
         <Card className="w-full max-w-md">
           <CardContent className="text-center py-8">
             <h3 className="text-lg font-medium mb-2">
-              <TranslatedText>Order Not Found</TranslatedText>
+              <TranslatedText context="error">Order Not Found</TranslatedText>
             </h3>
             <p className="text-muted-foreground mb-4">
-              <TranslatedText>The requested live stream could not be found.</TranslatedText>
+              <TranslatedText context="error">The requested live stream could not be found.</TranslatedText>
             </p>
             <Button onClick={handleGoBack}>
               <ArrowLeft className="w-4 h-4 mr-2" />
-              <TranslatedText>Go Back</TranslatedText>
+              <TranslatedText context="error">Go Back</TranslatedText>
             </Button>
           </CardContent>
         </Card>
@@ -145,7 +145,7 @@ export default function LiveStreamPage() {
             className="mb-4"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
-            <TranslatedText>Back</TranslatedText>
+            <TranslatedText context="error">Back</TranslatedText>
           </Button>
           
           <div className="flex items-center justify-between">

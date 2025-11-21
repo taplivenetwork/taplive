@@ -35,10 +35,10 @@ export default function Settings() {
         {/* Header */}
         <div className="mb-6">
           <h1 className="text-3xl font-bold mb-2">
-            <TranslatedText>Settings</TranslatedText>
+            <TranslatedText context="settings">Settings</TranslatedText>
           </h1>
           <p className="text-muted-foreground">
-            <TranslatedText>Manage your account preferences and streaming settings</TranslatedText>
+            <TranslatedText context="settings">Manage your account preferences and streaming settings</TranslatedText>
           </p>
         </div>
 
@@ -48,23 +48,23 @@ export default function Settings() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <User className="w-5 h-5" />
-                <TranslatedText>Profile Settings</TranslatedText>
+                <TranslatedText context="settings">Profile Settings</TranslatedText>
               </CardTitle>
               <CardDescription>
-                <TranslatedText>Update your personal information and profile details</TranslatedText>
+                <TranslatedText context="settings">Update your personal information and profile details</TranslatedText>
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="firstName">
-                    <TranslatedText>First Name</TranslatedText>
+                    <TranslatedText context="settings">First Name</TranslatedText>
                   </Label>
                   <Input id="firstName" defaultValue="Sarah" />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="lastName">
-                    <TranslatedText>Last Name</TranslatedText>
+                    <TranslatedText context="settings">Last Name</TranslatedText>
                   </Label>
                   <Input id="lastName" defaultValue="Chen" />
                 </div>
@@ -72,14 +72,14 @@ export default function Settings() {
               
               <div className="space-y-2">
                 <Label htmlFor="email">
-                  <TranslatedText>Email</TranslatedText>
+                  <TranslatedText context="settings">Email</TranslatedText>
                 </Label>
                 <Input id="email" type="email" defaultValue="sarah.chen@example.com" />
               </div>
               
               <div className="space-y-2">
                 <Label htmlFor="bio">
-                  <TranslatedText>Bio</TranslatedText>
+                  <TranslatedText context="settings">Bio</TranslatedText>
                 </Label>
                 <Textarea 
                   id="bio" 
@@ -93,7 +93,7 @@ export default function Settings() {
               
               <Button className="w-full md:w-auto" onClick={handleSaveProfile}>
                 <Save className="w-4 h-4 mr-2" />
-                <TranslatedText>Save Profile</TranslatedText>
+                <TranslatedText context="settings">Save Profile</TranslatedText>
               </Button>
             </CardContent>
           </Card>
@@ -103,46 +103,46 @@ export default function Settings() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Camera className="w-5 h-5" />
-                <TranslatedText>Streaming Settings</TranslatedText>
+                <TranslatedText context="settings">Streaming Settings</TranslatedText>
               </CardTitle>
               <CardDescription>
-                <TranslatedText>Configure your default streaming preferences</TranslatedText>
+                <TranslatedText context="settings">Configure your default streaming preferences</TranslatedText>
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="defaultDuration">
-                    <TranslatedText>Default Stream Duration</TranslatedText>
+                    <TranslatedText context="settings">Default Stream Duration</TranslatedText>
                   </Label>
                   <Select defaultValue="30">
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="15">15 <TranslatedText>min</TranslatedText></SelectItem>
-                      <SelectItem value="30">30 <TranslatedText>min</TranslatedText></SelectItem>
-                      <SelectItem value="45">45 <TranslatedText>min</TranslatedText></SelectItem>
-                      <SelectItem value="60">60 <TranslatedText>min</TranslatedText></SelectItem>
+                      <SelectItem value="15">15 <TranslatedText context="settings">min</TranslatedText></SelectItem>
+                      <SelectItem value="30">30 <TranslatedText context="settings">min</TranslatedText></SelectItem>
+                      <SelectItem value="45">45 <TranslatedText context="settings">min</TranslatedText></SelectItem>
+                      <SelectItem value="60">60 <TranslatedText context="settings">min</TranslatedText></SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 
                 <div className="space-y-2">
                   <Label htmlFor="defaultCategory">
-                    <TranslatedText>Default Category</TranslatedText>
+                    <TranslatedText context="settings">Default Category</TranslatedText>
                   </Label>
                   <Select defaultValue="travel">
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="travel"><TranslatedText>Travel</TranslatedText></SelectItem>
-                      <SelectItem value="food"><TranslatedText>Food</TranslatedText></SelectItem>
-                      <SelectItem value="music"><TranslatedText>Music</TranslatedText></SelectItem>
-                      <SelectItem value="events"><TranslatedText>Events</TranslatedText></SelectItem>
-                      <SelectItem value="fitness"><TranslatedText>Fitness</TranslatedText></SelectItem>
-                      <SelectItem value="education"><TranslatedText>Education</TranslatedText></SelectItem>
+                      <SelectItem value="travel"><TranslatedText context="settings">Travel</TranslatedText></SelectItem>
+                      <SelectItem value="food"><TranslatedText context="settings">Food</TranslatedText></SelectItem>
+                      <SelectItem value="music"><TranslatedText context="settings">Music</TranslatedText></SelectItem>
+                      <SelectItem value="events"><TranslatedText context="settings">Events</TranslatedText></SelectItem>
+                      <SelectItem value="fitness"><TranslatedText context="settings">Fitness</TranslatedText></SelectItem>
+                      <SelectItem value="education"><TranslatedText context="settings">Education</TranslatedText></SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -151,10 +151,10 @@ export default function Settings() {
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
                   <Label>
-                    <TranslatedText>Auto-start recording</TranslatedText>
+                    <TranslatedText context="settings">Auto-start recording</TranslatedText>
                   </Label>
                   <p className="text-sm text-muted-foreground">
-                    <TranslatedText>Automatically record all your streams</TranslatedText>
+                    <TranslatedText context="settings">Automatically record all your streams</TranslatedText>
                   </p>
                 </div>
                 <Switch defaultChecked />
@@ -163,10 +163,10 @@ export default function Settings() {
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
                   <Label>
-                    <TranslatedText>HD Quality</TranslatedText>
+                    <TranslatedText context="settings">HD Quality</TranslatedText>
                   </Label>
                   <p className="text-sm text-muted-foreground">
-                    <TranslatedText>Stream in high definition (uses more data)</TranslatedText>
+                    <TranslatedText context="settings">Stream in high definition (uses more data)</TranslatedText>
                   </p>
                 </div>
                 <Switch defaultChecked />
@@ -179,20 +179,20 @@ export default function Settings() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Bell className="w-5 h-5" />
-                <TranslatedText>Notifications</TranslatedText>
+                <TranslatedText context="settings">Notifications</TranslatedText>
               </CardTitle>
               <CardDescription>
-                <TranslatedText>Choose what notifications you want to receive</TranslatedText>
+                <TranslatedText context="settings">Choose what notifications you want to receive</TranslatedText>
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
                   <Label>
-                    <TranslatedText>New Order Alerts</TranslatedText>
+                    <TranslatedText context="settings">New Order Alerts</TranslatedText>
                   </Label>
                   <p className="text-sm text-muted-foreground">
-                    <TranslatedText>Get notified when someone places a new order</TranslatedText>
+                    <TranslatedText context="settings">Get notified when someone places a new order</TranslatedText>
                   </p>
                 </div>
                 <Switch defaultChecked />
@@ -201,10 +201,10 @@ export default function Settings() {
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
                   <Label>
-                    <TranslatedText>Stream Reminders</TranslatedText>
+                    <TranslatedText context="settings">Stream Reminders</TranslatedText>
                   </Label>
                   <p className="text-sm text-muted-foreground">
-                    <TranslatedText>Remind you before scheduled streams</TranslatedText>
+                    <TranslatedText context="settings">Remind you before scheduled streams</TranslatedText>
                   </p>
                 </div>
                 <Switch defaultChecked />
@@ -213,10 +213,10 @@ export default function Settings() {
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
                   <Label>
-                    <TranslatedText>Payment Notifications</TranslatedText>
+                    <TranslatedText context="settings">Payment Notifications</TranslatedText>
                   </Label>
                   <p className="text-sm text-muted-foreground">
-                    <TranslatedText>Get notified when you receive payments</TranslatedText>
+                    <TranslatedText context="settings">Get notified when you receive payments</TranslatedText>
                   </p>
                 </div>
                 <Switch defaultChecked />
@@ -225,10 +225,10 @@ export default function Settings() {
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
                   <Label>
-                    <TranslatedText>Marketing Emails</TranslatedText>
+                    <TranslatedText context="settings">Marketing Emails</TranslatedText>
                   </Label>
                   <p className="text-sm text-muted-foreground">
-                    <TranslatedText>Receive tips and updates about the platform</TranslatedText>
+                    <TranslatedText context="settings">Receive tips and updates about the platform</TranslatedText>
                   </p>
                 </div>
                 <Switch />
@@ -241,16 +241,16 @@ export default function Settings() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Globe className="w-5 h-5" />
-                <TranslatedText>Language & Region</TranslatedText>
+                <TranslatedText context="settings">Language & Region</TranslatedText>
               </CardTitle>
               <CardDescription>
-                <TranslatedText>Set your language and regional preferences</TranslatedText>
+                <TranslatedText context="settings">Set your language and regional preferences</TranslatedText>
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label>
-                  <TranslatedText>Language / 语言</TranslatedText>
+                  <TranslatedText context="settings">Language / 语言</TranslatedText>
                 </Label>
                 <LanguageSelector 
                   currentLanguage={currentLanguage}
@@ -261,18 +261,18 @@ export default function Settings() {
               
               <div className="space-y-2">
                 <Label htmlFor="timezone">
-                  <TranslatedText>Timezone</TranslatedText>
+                  <TranslatedText context="settings">Timezone</TranslatedText>
                 </Label>
                 <Select defaultValue="pst">
                   <SelectTrigger className="w-full md:w-64">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="pst"><TranslatedText>Pacific Standard Time (PST)</TranslatedText></SelectItem>
-                    <SelectItem value="mst"><TranslatedText>Mountain Standard Time (MST)</TranslatedText></SelectItem>
-                    <SelectItem value="cst"><TranslatedText>Central Standard Time (CST)</TranslatedText></SelectItem>
-                    <SelectItem value="est"><TranslatedText>Eastern Standard Time (EST)</TranslatedText></SelectItem>
-                    <SelectItem value="utc"><TranslatedText>Coordinated Universal Time (UTC)</TranslatedText></SelectItem>
+                    <SelectItem value="pst"><TranslatedText context="settings">Pacific Standard Time (PST)</TranslatedText></SelectItem>
+                    <SelectItem value="mst"><TranslatedText context="settings">Mountain Standard Time (MST)</TranslatedText></SelectItem>
+                    <SelectItem value="cst"><TranslatedText context="settings">Central Standard Time (CST)</TranslatedText></SelectItem>
+                    <SelectItem value="est"><TranslatedText context="settings">Eastern Standard Time (EST)</TranslatedText></SelectItem>
+                    <SelectItem value="utc"><TranslatedText context="settings">Coordinated Universal Time (UTC)</TranslatedText></SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -284,20 +284,20 @@ export default function Settings() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Shield className="w-5 h-5" />
-                <TranslatedText>Privacy & Security</TranslatedText>
+                <TranslatedText context="settings">Privacy & Security</TranslatedText>
               </CardTitle>
               <CardDescription>
-                <TranslatedText>Manage your privacy settings and account security</TranslatedText>
+                <TranslatedText context="settings">Manage your privacy settings and account security</TranslatedText>
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
                   <Label>
-                    <TranslatedText>Profile Visibility</TranslatedText>
+                    <TranslatedText context="settings">Profile Visibility</TranslatedText>
                   </Label>
                   <p className="text-sm text-muted-foreground">
-                    <TranslatedText>Make your profile visible to other users</TranslatedText>
+                    <TranslatedText context="settings">Make your profile visible to other users</TranslatedText>
                   </p>
                 </div>
                 <Switch defaultChecked />
@@ -306,10 +306,10 @@ export default function Settings() {
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
                   <Label>
-                    <TranslatedText>Location Sharing</TranslatedText>
+                    <TranslatedText context="settings">Location Sharing</TranslatedText>
                   </Label>
                   <p className="text-sm text-muted-foreground">
-                    <TranslatedText>Allow sharing your location during streams</TranslatedText>
+                    <TranslatedText context="settings">Allow sharing your location during streams</TranslatedText>
                   </p>
                 </div>
                 <Switch defaultChecked />
@@ -317,13 +317,13 @@ export default function Settings() {
               
               <div className="space-y-2">
                 <Button variant="outline" className="w-full md:w-auto" onClick={handleChangePassword}>
-                  <TranslatedText>Change Password</TranslatedText>
+                  <TranslatedText context="settings">Change Password</TranslatedText>
                 </Button>
               </div>
               
               <div className="space-y-2">
                 <Button variant="outline" className="w-full md:w-auto text-red-600 hover:text-red-700" onClick={handleDeleteAccount}>
-                  <TranslatedText>Delete Account</TranslatedText>
+                  <TranslatedText context="settings">Delete Account</TranslatedText>
                 </Button>
               </div>
             </CardContent>

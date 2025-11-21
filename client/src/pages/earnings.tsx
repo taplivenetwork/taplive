@@ -43,10 +43,10 @@ export default function Earnings() {
         {/* Header */}
         <div className="mb-6">
           <h1 className="text-3xl font-bold mb-2">
-            <TranslatedText>Earnings</TranslatedText>
+            <TranslatedText context="earnings">Earnings</TranslatedText>
           </h1>
           <p className="text-muted-foreground">
-            <TranslatedText>Track your streaming revenue and performance</TranslatedText>
+            <TranslatedText context="earnings">Track your streaming revenue and performance</TranslatedText>
           </p>
         </div>
 
@@ -55,14 +55,14 @@ export default function Earnings() {
           <Card className="solid-card">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-                <TranslatedText>Total Earnings</TranslatedText>
+                <TranslatedText context="earnings">Total Earnings</TranslatedText>
               </CardTitle>
               <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">${totalEarnings}</div>
               <p className="text-xs text-muted-foreground">
-                <TranslatedText>All time</TranslatedText>
+                <TranslatedText context="earnings">All time</TranslatedText>
               </p>
             </CardContent>
           </Card>
@@ -70,14 +70,14 @@ export default function Earnings() {
           <Card className="solid-card">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-                <TranslatedText>This Month</TranslatedText>
+                <TranslatedText context="earnings">This Month</TranslatedText>
               </CardTitle>
               <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">${monthlyEarnings}</div>
               <p className="text-xs text-muted-foreground">
-                <TranslatedText>+12% from last month</TranslatedText>
+                <TranslatedText context="earnings">+12% from last month</TranslatedText>
               </p>
             </CardContent>
           </Card>
@@ -85,14 +85,14 @@ export default function Earnings() {
           <Card className="solid-card">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-                <TranslatedText>Completed Streams</TranslatedText>
+                <TranslatedText context="earnings">Completed Streams</TranslatedText>
               </CardTitle>
               <Calendar className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{completedStreams}</div>
               <p className="text-xs text-muted-foreground">
-                <TranslatedText>This month</TranslatedText>
+                <TranslatedText context="earnings">This month</TranslatedText>
               </p>
             </CardContent>
           </Card>
@@ -100,14 +100,14 @@ export default function Earnings() {
           <Card className="solid-card">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-                <TranslatedText>Average Rating</TranslatedText>
+                <TranslatedText context="earnings">Average Rating</TranslatedText>
               </CardTitle>
               <span className="text-yellow-500">⭐</span>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{avgRating}</div>
               <p className="text-xs text-muted-foreground">
-                <TranslatedText>From customer reviews</TranslatedText>
+                <TranslatedText context="earnings">From customer reviews</TranslatedText>
               </p>
             </CardContent>
           </Card>
@@ -117,10 +117,10 @@ export default function Earnings() {
         <Card className="solid-card">
           <CardHeader>
             <CardTitle>
-              <TranslatedText>Recent Earnings</TranslatedText>
+              <TranslatedText context="earnings">Recent Earnings</TranslatedText>
             </CardTitle>
             <CardDescription>
-              <TranslatedText>Your latest completed streaming sessions</TranslatedText>
+              <TranslatedText context="earnings">Your latest completed streaming sessions</TranslatedText>
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -129,7 +129,7 @@ export default function Earnings() {
                 <div key={earning.id} className="flex items-center justify-between p-4 rounded-lg border border-border bg-card/50">
                   <div className="flex-1">
                     <h4 className="font-medium mb-1">
-                      <TranslatedText>{earning.title}</TranslatedText>
+                      <TranslatedText context="earnings">{earning.title}</TranslatedText>
                     </h4>
                     <div className="flex items-center gap-4 text-sm text-muted-foreground">
                       <div className="flex items-center gap-1">
@@ -151,7 +151,7 @@ export default function Earnings() {
                       ${earning.amount}
                     </div>
                     <Badge variant="secondary" className="text-xs">
-                      <TranslatedText>Completed</TranslatedText>
+                      <TranslatedText context="earnings">Completed</TranslatedText>
                     </Badge>
                   </div>
                 </div>
