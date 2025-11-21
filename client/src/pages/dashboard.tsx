@@ -70,14 +70,14 @@ export function Dashboard() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">
-            <TranslatedText>Dashboard</TranslatedText>
+            <TranslatedText context="dashboard">Dashboard</TranslatedText>
           </h1>
           <p className="text-muted-foreground mt-1">
-            <TranslatedText>Welcome back</TranslatedText>, {user?.name || 'User'}
+            <TranslatedText context="dashboard">Welcome back</TranslatedText>, {user?.name || 'User'}
           </p>
         </div>
         <Badge variant="secondary" className="text-sm">
-          <TranslatedText>{user?.role || 'User'}</TranslatedText>
+          <TranslatedText context="dashboard">{user?.role || 'User'}</TranslatedText>
         </Badge>
       </div>
 
@@ -86,7 +86,7 @@ export function Dashboard() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              <TranslatedText>Total Earnings</TranslatedText>
+              <TranslatedText context="dashboard">Total Earnings</TranslatedText>
             </CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
@@ -95,7 +95,7 @@ export function Dashboard() {
               ${totalEarnings.toFixed(2)}
             </div>
             <p className="text-xs text-muted-foreground">
-              <TranslatedText>From completed orders</TranslatedText>
+              <TranslatedText context="dashboard">From completed orders</TranslatedText>
             </p>
           </CardContent>
         </Card>
@@ -103,7 +103,7 @@ export function Dashboard() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              <TranslatedText>Total Spent</TranslatedText>
+              <TranslatedText context="dashboard">Total Spent</TranslatedText>
             </CardTitle>
             <CreditCard className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
@@ -112,7 +112,7 @@ export function Dashboard() {
               ${totalSpent.toFixed(2)}
             </div>
             <p className="text-xs text-muted-foreground">
-              <TranslatedText>On streaming orders</TranslatedText>
+              <TranslatedText context="dashboard">On streaming orders</TranslatedText>
             </p>
           </CardContent>
         </Card>
@@ -120,7 +120,7 @@ export function Dashboard() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              <TranslatedText>Completed Orders</TranslatedText>
+              <TranslatedText context="dashboard">Completed Orders</TranslatedText>
             </CardTitle>
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
@@ -129,7 +129,7 @@ export function Dashboard() {
               {completedOrders.length}
             </div>
             <p className="text-xs text-muted-foreground">
-              <TranslatedText>Successfully completed</TranslatedText>
+              <TranslatedText context="dashboard">Successfully completed</TranslatedText>
             </p>
           </CardContent>
         </Card>
@@ -137,7 +137,7 @@ export function Dashboard() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              <TranslatedText>Rating</TranslatedText>
+              <TranslatedText context="dashboard">Rating</TranslatedText>
             </CardTitle>
             <Star className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
@@ -146,7 +146,7 @@ export function Dashboard() {
               {user?.rating || '0.0'}⭐
             </div>
             <p className="text-xs text-muted-foreground">
-              <TranslatedText>From</TranslatedText> {user?.totalRatings || 0} <TranslatedText>reviews</TranslatedText>
+              <TranslatedText context="dashboard">From</TranslatedText> {user?.totalRatings || 0} <TranslatedText context="dashboard">reviews</TranslatedText>
             </p>
           </CardContent>
         </Card>
@@ -159,19 +159,19 @@ export function Dashboard() {
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
               <DollarSign className="w-5 h-5" />
-              <TranslatedText>Payment Summary</TranslatedText>
+              <TranslatedText context="dashboard">Payment Summary</TranslatedText>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex justify-between items-center">
               <span className="text-sm text-muted-foreground">
-                <TranslatedText>Recent Transactions</TranslatedText>
+                <TranslatedText context="dashboard">Recent Transactions</TranslatedText>
               </span>
               <Badge variant="outline">{transactions.length}</Badge>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm text-muted-foreground">
-                <TranslatedText>Pending Payouts</TranslatedText>
+                <TranslatedText context="dashboard">Pending Payouts</TranslatedText>
               </span>
               <Badge variant={pendingPayouts > 0 ? 'default' : 'secondary'}>
                 {pendingPayouts}
@@ -179,7 +179,7 @@ export function Dashboard() {
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm text-muted-foreground">
-                <TranslatedText>Completed Payouts</TranslatedText>
+                <TranslatedText context="dashboard">Completed Payouts</TranslatedText>
               </span>
               <Badge variant="outline">
                 {payouts.filter((p: any) => p.status === 'completed').length}
@@ -193,21 +193,21 @@ export function Dashboard() {
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
               <ArrowUpRight className="w-5 h-5" />
-              <TranslatedText>Quick Actions</TranslatedText>
+              <TranslatedText context="dashboard">Quick Actions</TranslatedText>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="text-sm space-y-2">
               <div className="flex items-center justify-between py-2 px-3 bg-muted/50 rounded-lg">
-                <span><TranslatedText>Create New Order</TranslatedText></span>
+                <span><TranslatedText context="dashboard">Create New Order</TranslatedText></span>
                 <span className="text-xs text-muted-foreground">→</span>
               </div>
               <div className="flex items-center justify-between py-2 px-3 bg-muted/50 rounded-lg">
-                <span><TranslatedText>Browse Orders</TranslatedText></span>
+                <span><TranslatedText context="dashboard">Browse Orders</TranslatedText></span>
                 <span className="text-xs text-muted-foreground">→</span>
               </div>
               <div className="flex items-center justify-between py-2 px-3 bg-muted/50 rounded-lg">
-                <span><TranslatedText>Update Profile</TranslatedText></span>
+                <span><TranslatedText context="dashboard">Update Profile</TranslatedText></span>
                 <span className="text-xs text-muted-foreground">→</span>
               </div>
             </div>
@@ -219,26 +219,26 @@ export function Dashboard() {
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
               <TrendingUp className="w-5 h-5" />
-              <TranslatedText>Revenue Model</TranslatedText>
+              <TranslatedText context="dashboard">Revenue Model</TranslatedText>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="text-sm space-y-2">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">
-                  <TranslatedText>Platform Fee</TranslatedText>
+                  <TranslatedText context="dashboard">Platform Fee</TranslatedText>
                 </span>
                 <span className="font-medium">10%</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">
-                  <TranslatedText>Provider Share</TranslatedText>
+                  <TranslatedText context="dashboard">Provider Share</TranslatedText>
                 </span>
                 <span className="font-medium text-green-600">90%</span>
               </div>
               <Separator />
               <div className="text-xs text-muted-foreground">
-                <TranslatedText>Automatic payout after order completion</TranslatedText>
+                <TranslatedText context="dashboard">Automatic payout after order completion</TranslatedText>
               </div>
             </div>
           </CardContent>

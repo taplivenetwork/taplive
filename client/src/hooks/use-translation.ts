@@ -23,10 +23,12 @@ export function useTranslationState() {
   const [currentLanguage, setCurrentLanguage] = useState(getUserLanguage());
   const [isTranslating, setIsTranslating] = useState(false);
 
-  // Save language preference to localStorage
+  // Save language preference to localStorage and notify other components
   useEffect(() => {
     try {
       localStorage.setItem('user-language', currentLanguage);
+      // Trigger custom event for cross-component synchronization
+      window.dispatchEvent(new CustomEvent('languageChange', { detail: { language: currentLanguage } }));
     } catch (error) {
       console.warn('Failed to save language preference:', error);
     }

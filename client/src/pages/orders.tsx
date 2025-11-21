@@ -5,6 +5,8 @@ import { queryClient } from "@/lib/queryClient";
 import { OrderCard } from "@/components/order-card";
 import { LiveStreamCard } from "@/components/live-stream-card";
 import { TranslatedText } from "@/components/translated-text";
+import { useTranslation } from "@/hooks/use-translation";
+import translationsData from "@/lib/translations.json";
 import { api } from "@/lib/api";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
@@ -17,9 +19,20 @@ import type { Order } from "@shared/schema";
 
 export default function Orders() {
   const { toast } = useToast();
+  const { currentLanguage } = useTranslation();
   const [searchFilter, setSearchFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [sortBy, setSortBy] = useState("recent");
+  
+  // Helper function to get translated text for placeholders
+  const getTranslation = (key: string) => {
+    try {
+      const translations = (translationsData.translations as any)["orders"];
+      return translations?.[currentLanguage]?.[key] || key;
+    } catch {
+      return key;
+    }
+  };
   
   const { data: ordersResponse, isLoading } = useQuery({
     queryKey: ['/api/orders'],
@@ -126,14 +139,14 @@ export default function Orders() {
             <Calendar className="w-8 h-8 text-muted-foreground" />
           </div>
           <h3 className="text-lg font-medium text-foreground mb-2">
-            <TranslatedText>{emptyMessage}</TranslatedText>
+            <TranslatedText context="orders">{emptyMessage}</TranslatedText>
           </h3>
           <p className="text-muted-foreground mb-4">
-            <TranslatedText>Create your first streaming order to get started</TranslatedText>
+            <TranslatedText context="orders">Create your first streaming order to get started</TranslatedText>
           </p>
           <Button>
             <Plus className="w-4 h-4 mr-2" />
-            <TranslatedText>Create Order</TranslatedText>
+            <TranslatedText context="orders">Create Order</TranslatedText>
           </Button>
         </div>
       );
@@ -173,10 +186,10 @@ export default function Orders() {
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <h2 className="text-2xl lg:text-3xl font-bold text-foreground mb-2">
-              <TranslatedText>My Orders Dashboard</TranslatedText>
+              <TranslatedText context="orders">My Orders Dashboard</TranslatedText>
             </h2>
             <p className="text-muted-foreground">
-              <TranslatedText>Manage your streaming orders and track their progress</TranslatedText>
+              <TranslatedText context="orders">Manage your streaming orders and track their progress</TranslatedText>
             </p>
           </div>
           
@@ -185,19 +198,19 @@ export default function Orders() {
             <Card className="p-3">
               <div className="text-center">
                 <div className="text-2xl font-bold text-primary">{orders.length}</div>
-                <div className="text-xs text-muted-foreground"><TranslatedText>Total</TranslatedText></div>
+                <div className="text-xs text-muted-foreground"><TranslatedText context="orders">Total</TranslatedText></div>
               </div>
             </Card>
             <Card className="p-3">
               <div className="text-center">
                 <div className="text-2xl font-bold text-green-600">{liveOrders.length}</div>
-                <div className="text-xs text-muted-foreground"><TranslatedText>Live</TranslatedText></div>
+                <div className="text-xs text-muted-foreground"><TranslatedText context="orders">Live</TranslatedText></div>
               </div>
             </Card>
             <Card className="p-3">
               <div className="text-center">
                 <div className="text-2xl font-bold text-orange-600">{pendingOrders.length}</div>
-                <div className="text-xs text-muted-foreground"><TranslatedText>Pending</TranslatedText></div>
+                <div className="text-xs text-muted-foreground"><TranslatedText context="orders">Pending</TranslatedText></div>
               </div>
             </Card>
           </div>
@@ -211,7 +224,7 @@ export default function Orders() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
               <Input
-                placeholder="Search orders..."
+                placeholder={getTranslation("Search orders...")}
                 className="pl-10"
                 value={searchFilter}
                 onChange={(e) => setSearchFilter(e.target.value)}
@@ -224,10 +237,10 @@ export default function Orders() {
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all"><TranslatedText>All Status</TranslatedText></SelectItem>
-                <SelectItem value="pending"><TranslatedText>Pending</TranslatedText></SelectItem>
-                <SelectItem value="live"><TranslatedText>Live</TranslatedText></SelectItem>
-                <SelectItem value="completed"><TranslatedText>Completed</TranslatedText></SelectItem>
+                <SelectItem value="all"><TranslatedText context="orders">All Status</TranslatedText></SelectItem>
+                <SelectItem value="pending"><TranslatedText context="orders">Pending</TranslatedText></SelectItem>
+                <SelectItem value="live"><TranslatedText context="orders">Live</TranslatedText></SelectItem>
+                <SelectItem value="completed"><TranslatedText context="orders">Completed</TranslatedText></SelectItem>
               </SelectContent>
             </Select>
             <Select value={sortBy} onValueChange={setSortBy}>
@@ -236,9 +249,9 @@ export default function Orders() {
                 <SelectValue placeholder="Sort" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="recent"><TranslatedText>Most Recent</TranslatedText></SelectItem>
-                <SelectItem value="price-high"><TranslatedText>Price: High to Low</TranslatedText></SelectItem>
-                <SelectItem value="price-low"><TranslatedText>Price: Low to High</TranslatedText></SelectItem>
+                <SelectItem value="recent"><TranslatedText context="orders">Most Recent</TranslatedText></SelectItem>
+                <SelectItem value="price-high"><TranslatedText context="orders">Price: High to Low</TranslatedText></SelectItem>
+                <SelectItem value="price-low"><TranslatedText context="orders">Price: Low to High</TranslatedText></SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -250,27 +263,27 @@ export default function Orders() {
         <Tabs defaultValue="all" className="w-full">
           <TabsList className="grid w-full grid-cols-6 bg-secondary mb-6">
             <TabsTrigger value="all" data-testid="tab-all">
-              <TranslatedText>All</TranslatedText>
+              <TranslatedText context="orders">All</TranslatedText>
               <Badge variant="secondary" className="ml-2">{orders.length}</Badge>
             </TabsTrigger>
             <TabsTrigger value="pending" data-testid="tab-pending">
-              <TranslatedText>Pending</TranslatedText>
+              <TranslatedText context="orders">Pending</TranslatedText>
               <Badge variant="secondary" className="ml-2">{pendingOrders.length}</Badge>
             </TabsTrigger>
             <TabsTrigger value="open" data-testid="tab-open">
-              <TranslatedText>Open</TranslatedText>
+              <TranslatedText context="orders">Open</TranslatedText>
               <Badge variant="secondary" className="ml-2">{openOrders.length}</Badge>
             </TabsTrigger>
             <TabsTrigger value="accepted" data-testid="tab-accepted">
-              <TranslatedText>Accepted</TranslatedText>
+              <TranslatedText context="orders">Accepted</TranslatedText>
               <Badge variant="secondary" className="ml-2">{acceptedOrders.length}</Badge>
             </TabsTrigger>
             <TabsTrigger value="live" data-testid="tab-live">
-              <TranslatedText>Live</TranslatedText>
+              <TranslatedText context="orders">Live</TranslatedText>
               <Badge variant="secondary" className="ml-2">{liveOrders.length}</Badge>
             </TabsTrigger>
             <TabsTrigger value="completed" data-testid="tab-completed">
-              <TranslatedText>Completed</TranslatedText>
+              <TranslatedText context="orders">Completed</TranslatedText>
               <Badge variant="secondary" className="ml-2">{completedOrders.length}</Badge>
             </TabsTrigger>
           </TabsList>

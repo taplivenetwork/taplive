@@ -189,14 +189,15 @@ export default function LiveStreamPage() {
         <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
           <div className="flex items-center justify-between">
             <div className="text-sm">
-              <strong>当前模式：</strong>
+              <strong><TranslatedText context="home">Current Mode</TranslatedText>：</strong>
               <span className={`ml-2 px-2 py-1 rounded text-xs font-semibold ${
                 userRole === 'broadcaster' ? 'bg-green-500 text-white' : 'bg-purple-500 text-white'
               }`}>
-                {userRole === 'broadcaster' ? '🎬 主播模式' : '👥 观看模式'}
+                {userRole === 'broadcaster' ? '🎬 ' : '👥 '}
+                <TranslatedText context="home">{userRole === 'broadcaster' ? 'Broadcaster Mode' : 'Viewer Mode'}</TranslatedText>
               </span>
               <span className="ml-4 text-gray-600">
-                订单状态: <span className="font-mono">{order?.status}</span>
+                <TranslatedText context="home">Order Status</TranslatedText>: <span className="font-mono">{order?.status}</span>
               </span>
             </div>
             <div className="flex gap-2">
@@ -210,7 +211,8 @@ export default function LiveStreamPage() {
                 data-testid="switch-to-broadcaster"
                 className={userRole === 'broadcaster' ? 'bg-green-500 hover:bg-green-600' : ''}
               >
-                🎬 {userRole === 'broadcaster' ? '✅ 当前主播' : '切换主播'}
+                🎬 {userRole === 'broadcaster' ? '✅ ' : ''}
+                <TranslatedText context="home">{userRole === 'broadcaster' ? 'Current Broadcaster' : 'Switch to Broadcaster'}</TranslatedText>
               </Button>
               <Button
                 onClick={() => {
@@ -222,7 +224,8 @@ export default function LiveStreamPage() {
                 data-testid="switch-to-viewer"
                 className={userRole === 'viewer' ? 'bg-purple-500 hover:bg-purple-600' : ''}
               >
-                👥 {userRole === 'viewer' ? '✅ 当前观看' : '切换观看'}
+                👥 {userRole === 'viewer' ? '✅ ' : ''}
+                <TranslatedText context="home">{userRole === 'viewer' ? 'Current Viewer' : 'Switch to Viewer'}</TranslatedText>
               </Button>
             </div>
           </div>

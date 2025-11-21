@@ -1,20 +1,47 @@
 import { useState, useEffect } from 'react';
 import translationsData from '@/lib/translations.json';
 
-// 简单的翻译Hook
+// 简单的翻译Hook - 与主翻译系统同步
 export function useSimpleTranslation() {
   const [currentLanguage, setCurrentLanguage] = useState<string>('en');
   
-  // 从localStorage加载语言设置
+  // 从localStorage加载语言设置 - 使用与主系统相同的key
   useEffect(() => {
-    const savedLang = localStorage.getItem('app-language') || 'en';
+    const savedLang = localStorage.getItem('user-language') || 'en';
     setCurrentLanguage(savedLang);
   }, []);
   
-  // 保存语言设置到localStorage
+  // 监听其他组件的语言变化（跨组件同步）
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'user-language' && e.newValue) {
+        setCurrentLanguage(e.newValue);
+      }
+    };
+    
+    // 监听自定义事件（同一窗口内的语言变化）
+    const handleLanguageChange = (e: CustomEvent) => {
+      if (e.detail && e.detail.language) {
+        setCurrentLanguage(e.detail.language);
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('languageChange' as any, handleLanguageChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('languageChange' as any, handleLanguageChange);
+    };
+  }, []);
+  
+  // 保存语言设置到localStorage并触发事件
   const changeLanguage = (lang: string) => {
     setCurrentLanguage(lang);
-    localStorage.setItem('app-language', lang);
+    localStorage.setItem('user-language', lang);
+    
+    // 触发自定义事件通知其他组件
+    window.dispatchEvent(new CustomEvent('languageChange', { detail: { language: lang } }));
   };
   
   // 翻译函数 - 根据分类和key获取翻译

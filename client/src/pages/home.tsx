@@ -211,8 +211,8 @@ export default function Home() {
     
     // 显示提示
     toast({
-      title: "订单已关闭",
-      description: "该订单不再显示，系统会自动推荐新的订单",
+      title: <TranslatedText context="home">Order closed</TranslatedText>,
+      description: <TranslatedText context="home">This order will no longer be displayed, the system will automatically recommend new orders</TranslatedText>,
       variant: "default",
     });
   };
@@ -222,8 +222,8 @@ export default function Home() {
     console.log('重置所有关闭的订单');
     setDismissedOrders(new Set());
     toast({
-      title: "订单恢复",
-      description: "所有关闭的订单已重新显示",
+      title: <TranslatedText context="home">Orders restored</TranslatedText>,
+      description: <TranslatedText context="home">All closed orders have been redisplayed</TranslatedText>,
       variant: "default",
     });
   };
@@ -262,8 +262,8 @@ export default function Home() {
     try {
       await api.orders.update(orderId, { status: 'accepted' });
       toast({
-        title: "接单成功！",
-        description: "正在跳转到直播页面...",
+        title: <TranslatedText context="home">Order accepted successfully!</TranslatedText>,
+        description: <TranslatedText context="home">Redirecting to live page...</TranslatedText>,
       });
       // 接单成功后跳转到直播页面
       setTimeout(() => {
@@ -271,8 +271,8 @@ export default function Home() {
       }, 1000);
     } catch (error) {
       toast({
-        title: "接单失败",
-        description: "请重试",
+        title: <TranslatedText context="home">Order acceptance failed</TranslatedText>,
+        description: <TranslatedText context="home">Please try again</TranslatedText>,
         variant: "destructive",
       });
     }
@@ -280,8 +280,8 @@ export default function Home() {
 
   const handleJoinStream = (orderId: string) => {
     toast({
-      title: "正在进入直播",
-      description: "正在打开直播间...",
+      title: <TranslatedText context="home">Entering live stream</TranslatedText>,
+      description: <TranslatedText context="home">Opening live room...</TranslatedText>,
     });
     // 直接跳转到观看模式
     window.location.href = `/stream/${orderId}?mode=viewer`;
@@ -354,7 +354,7 @@ export default function Home() {
               <TranslatedText>Live Streaming Hub</TranslatedText>
             </h1>
             <p className="text-muted-foreground">
-              <TranslatedText>Discover amazing live content from around the world</TranslatedText>
+              <TranslatedText context="home">Discover amazing live content from around the world</TranslatedText>
             </p>
           </div>
           
@@ -379,8 +379,8 @@ export default function Home() {
                     window.location.href = `/stream/${liveOrder.id}?mode=viewer`;
                   } else {
                     toast({
-                      title: "暂无直播",
-                      description: "目前没有进行中的直播，请稍后再试",
+                      title: <TranslatedText context="home">No live streams available</TranslatedText>,
+                      description: <TranslatedText context="home">Currently no live streams, please try again later</TranslatedText>,
                     });
                   }
                 }}
@@ -388,7 +388,7 @@ export default function Home() {
                 className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold px-6 py-3 shadow-lg shadow-purple-500/25"
                 data-testid="button-watch-live"
               >
-                👥 立即观看直播
+                👥 <TranslatedText context="home">Watch Live Now</TranslatedText>
               </Button>
             </div>
             
@@ -457,7 +457,7 @@ export default function Home() {
                   className={viewMode === 'cards' ? 'bg-blue-600 text-white hover:bg-blue-700' : ''}
                   data-testid="button-card-view"
                 >
-                  🎬 单个直播 {viewMode === 'cards' && '✓'}
+                  🎬 <TranslatedText context="home">Single Stream</TranslatedText> {viewMode === 'cards' && '✓'}
                 </Button>
                 <Button
                   size="sm"
@@ -469,7 +469,7 @@ export default function Home() {
                   className={viewMode === 'grid' ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700' : ''}
                   data-testid="button-grid-view"
                 >
-                  📺 多屏网格 {viewMode === 'grid' && '✓'}
+                  📺 <TranslatedText context="home">Multi-Grid</TranslatedText> {viewMode === 'grid' && '✓'}
                 </Button>
               </div>
             </div>
@@ -660,7 +660,7 @@ export default function Home() {
                     onClick={handleResetDismissedOrders}
                     className="h-6 px-2 text-xs"
                   >
-                    恢复全部 ({dismissedOrders.size})
+                    <TranslatedText context="home">Restore All</TranslatedText> ({dismissedOrders.size})
                   </Button>
                 )}
               </div>
@@ -711,7 +711,7 @@ export default function Home() {
                         {/* 模拟订单标识 */}
                         {order.id.startsWith('mock-') && (
                           <Badge className="text-xs bg-blue-500 text-white">
-                            🌍 国际景点
+                            🌍 <TranslatedText context="home">International Attraction</TranslatedText>
                           </Badge>
                         )}
                         
@@ -725,13 +725,13 @@ export default function Home() {
               ) : dismissedOrders.size > 0 ? (
                 <div className="text-center py-6">
                   <p className="text-sm text-muted-foreground mb-3">
-                    所有订单已关闭
+                    <TranslatedText context="home">All orders closed</TranslatedText>
                   </p>
                   <p className="text-xs text-muted-foreground mb-3">
-                    📺 MVP阶段订单有限，未来将有无限订单源
+                    📺 <TranslatedText context="home">MVP phase has limited orders, future will have unlimited order sources</TranslatedText>
                   </p>
                   <Button size="sm" variant="outline" onClick={handleResetDismissedOrders}>
-                    恢复全部订单
+                    <TranslatedText context="home">Restore all orders</TranslatedText>
                   </Button>
                 </div>
               ) : (

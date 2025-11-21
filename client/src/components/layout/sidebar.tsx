@@ -71,9 +71,9 @@ export function Sidebar() {
             <User className="w-5 h-5 text-primary" />
           </div>
           <div className="flex-1">
-            <p className="text-sm font-medium" data-testid="user-name">Sarah Chen</p>
+            <p className="text-sm font-medium" data-testid="user-name"><T category="navigation" k="Sarah Chen" /></p>
             <p className="text-xs text-muted-foreground" data-testid="user-role">
-              Content Creator
+              <T category="navigation" k="Content Creator" />
             </p>
           </div>
           <Button

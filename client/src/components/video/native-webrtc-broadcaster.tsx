@@ -288,16 +288,16 @@ export function NativeWebRTCBroadcaster({ orderId, onStreamStart, onStreamEnd }:
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
-          <TranslatedText>原生WebRTC直播</TranslatedText>
+          <TranslatedText context="broadcaster">原生WebRTC直播</TranslatedText>
           <div className="flex items-center gap-2">
             <Badge variant={isConnected ? "default" : "secondary"}>
               {isConnected ? <Wifi className="w-3 h-3 mr-1" /> : <WifiOff className="w-3 h-3 mr-1" />}
-              <TranslatedText>{isConnected ? '已连接' : '连接中'}</TranslatedText>
+              <TranslatedText context="broadcaster">{isConnected ? '已连接' : '连接中'}</TranslatedText>
             </Badge>
             {isStreaming && (
               <Badge variant="destructive">
                 <div className="w-2 h-2 bg-white rounded-full animate-pulse mr-1" />
-                <TranslatedText>直播中</TranslatedText>
+                <TranslatedText context="broadcaster">直播中</TranslatedText>
               </Badge>
             )}
           </div>
@@ -319,7 +319,7 @@ export function NativeWebRTCBroadcaster({ orderId, onStreamStart, onStreamEnd }:
               <div className="text-center text-white">
                 <Camera className="w-12 h-12 mx-auto mb-2 opacity-50" />
                 <p className="text-sm opacity-75">
-                  <TranslatedText>原生WebRTC直播技术</TranslatedText>
+                  <TranslatedText context="broadcaster">原生WebRTC直播技术</TranslatedText>
                 </p>
               </div>
             </div>
@@ -331,10 +331,10 @@ export function NativeWebRTCBroadcaster({ orderId, onStreamStart, onStreamEnd }:
               <div className="text-center text-white space-y-4 p-6 bg-black/80 rounded-lg border-2 border-white">
                 <div className="text-5xl animate-bounce">🎬</div>
                 <h3 className="text-xl font-bold">
-                  <TranslatedText>点击开始播放</TranslatedText>
+                  <TranslatedText context="broadcaster">点击开始播放</TranslatedText>
                 </h3>
                 <p className="text-sm opacity-90">
-                  <TranslatedText>浏览器需要用户交互才能播放视频</TranslatedText>
+                  <TranslatedText context="broadcaster">浏览器需要用户交互才能播放视频</TranslatedText>
                 </p>
                 <Button 
                   onClick={handleUserClick}
@@ -342,7 +342,7 @@ export function NativeWebRTCBroadcaster({ orderId, onStreamStart, onStreamEnd }:
                   data-testid="native-user-click-button"
                 >
                   <Play className="w-4 h-4 mr-2" />
-                  <TranslatedText>立即播放</TranslatedText>
+                  <TranslatedText context="broadcaster">立即播放</TranslatedText>
                 </Button>
               </div>
             </div>
@@ -366,7 +366,7 @@ export function NativeWebRTCBroadcaster({ orderId, onStreamStart, onStreamEnd }:
               data-testid="native-start-broadcast-button"
             >
               <Play className="w-4 h-4 mr-2" />
-              <TranslatedText>开始原生直播</TranslatedText>
+              <TranslatedText context="broadcaster">开始原生直播</TranslatedText>
             </Button>
           ) : (
             <Button 
@@ -376,7 +376,7 @@ export function NativeWebRTCBroadcaster({ orderId, onStreamStart, onStreamEnd }:
               data-testid="native-stop-broadcast-button"
             >
               <Square className="w-4 h-4 mr-2" />
-              <TranslatedText>结束直播</TranslatedText>
+              <TranslatedText context="broadcaster">结束直播</TranslatedText>
             </Button>
           )}
           
@@ -393,7 +393,7 @@ export function NativeWebRTCBroadcaster({ orderId, onStreamStart, onStreamEnd }:
         {/* Status */}
         <div className="text-center space-y-1">
           <p className="text-xs text-muted-foreground">
-            <TranslatedText>{`摄像头: ${facingMode === 'user' ? '前置' : '后置'}`}</TranslatedText>
+            <TranslatedText context="broadcaster">{`摄像头: ${facingMode === 'user' ? '前置' : '后置'}`}</TranslatedText>
           </p>
           
           {/* Debug Status */}
