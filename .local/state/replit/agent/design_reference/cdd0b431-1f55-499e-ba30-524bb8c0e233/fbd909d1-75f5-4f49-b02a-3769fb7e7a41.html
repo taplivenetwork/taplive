@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TapLive MVP - Location-Based Live Streaming Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                borderRadius: {
+                    lg: "var(--radius)",
+                    md: "calc(var(--radius) - 2px)",
+                    sm: "calc(var(--radius) - 4px)",
+                },
+                colors: {
+                    background: "var(--background)",
+                    foreground: "var(--foreground)",
+                    card: {
+                        DEFAULT: "var(--card)",
+                        foreground: "var(--card-foreground)",
+                    },
+                    popover: {
+                        DEFAULT: "var(--popover)",
+                        foreground: "var(--popover-foreground)",
+                    },
+                    primary: {
+                        DEFAULT: "var(--primary)",
+                        foreground: "var(--primary-foreground)",
+                    },
+                    secondary: {
+                        DEFAULT: "var(--secondary)",
+                        foreground: "var(--secondary-foreground)",
+                    },
+                    muted: {
+                        DEFAULT: "var(--muted)",
+                        foreground: "var(--muted-foreground)",
+                    },
+                    accent: {
+                        DEFAULT: "var(--accent)",
+                        foreground: "var(--accent-foreground)",
+                    },
+                    destructive: {
+                        DEFAULT: "var(--destructive)",
+                        foreground: "var(--destructive-foreground)",
+                    },
+                    border: "var(--border)",
+                    input: "var(--input)",
+                    ring: "var(--ring)",
+                    chart: {
+                        "1": "var(--chart-1)",
+                        "2": "var(--chart-2)",
+                        "3": "var(--chart-3)",
+                        "4": "var(--chart-4)",
+                        "5": "var(--chart-5)",
+                    }
+                },
+                fontFamily: {
+                    sans: ["var(--font-sans)"],
+                },
+                animation: {
+                    'fade-in': 'fadeIn 0.5s ease-in-out',
+                    'slide-up': 'slideUp 0.3s ease-out',
+                    'pulse-glow': 'pulseGlow 2s ease-in-out infinite',
+                }
+            },
+        }
+    };
+    </script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --background: hsl(240 10% 3.9%);
+            --foreground: hsl(0 0% 98%);
+            --card: hsl(240 10% 3.9%);
+            --card-foreground: hsl(0 0% 98%);
+            --popover: hsl(240 10% 3.9%);
+            --popover-foreground: hsl(0 0% 98%);
+            --primary: hsl(263 70% 65%);
+            --primary-foreground: hsl(0 0% 98%);
+            --secondary: hsl(240 4.8% 15.9%);
+            --secondary-foreground: hsl(0 0% 98%);
+            --muted: hsl(240 3.7% 15.9%);
+            --muted-foreground: hsl(240 5% 64.9%);
+            --accent: hsl(12 76% 61%);
+            --accent-foreground: hsl(0 0% 98%);
+            --destructive: hsl(0 62.8% 30.6%);
+            --destructive-foreground: hsl(0 0% 98%);
+            --border: hsl(240 3.7% 15.9%);
+            --input: hsl(240 3.7% 15.9%);
+            --ring: hsl(263 70% 65%);
+            --radius: 0.75rem;
+            --font-sans: 'Inter', system-ui, sans-serif;
+        }
+
+        * {
+            border-color: var(--border);
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background-color: var(--background);
+            color: var(--foreground);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 0 5px var(--primary), 0 0 10px var(--primary), 0 0 15px var(--primary); }
+            50% { box-shadow: 0 0 10px var(--primary), 0 0 20px var(--primary), 0 0 30px var(--primary); }
+        }
+
+        .glassmorphism {
+            backdrop-filter: blur(16px) saturate(180%);
+            background-color: rgba(17, 25, 40, 0.75);
+            border: 1px solid rgba(255, 255, 255, 0.125);
+        }
+
+        .map-container {
+            height: 400px;
+            border-radius: var(--radius);
+            overflow: hidden;
+        }
+
+        .live-indicator {
+            animation: pulseGlow 2s ease-in-out infinite;
+        }
+
+        .order-card:hover {
+            transform: translateY(-2px);
+            transition: all 0.3s ease;
+        }
+
+        .streaming-overlay {
+            background: linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.8) 100%);
+        }
+    </style>
+</head>
+<body class="bg-background text-foreground min-h-screen">
+    <!-- @COMPONENT: AppLayout -->
+    <div class="flex min-h-screen">
+        <!-- @COMPONENT: Sidebar -->
+        <aside class="w-64 bg-card border-r border-border p-6 hidden lg:block">
+            <!-- @COMPONENT: Logo -->
+            <div class="flex items-center gap-3 mb-8">
+                <div class="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
+                    <i class="fas fa-video text-primary-foreground text-lg"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold text-foreground">TapLive</h1>
+                    <p class="text-xs text-muted-foreground">MVP Platform</p>
+                </div>
+            </div>
+
+            <!-- @COMPONENT: Navigation -->
+            <nav class="space-y-2">
+                <button class="w-full flex items-center gap-3 px-3 py-2 rounded-md bg-primary text-primary-foreground font-medium">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span>Discover</span>
+                </button>
+                <button class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors">
+                    <i class="fas fa-list"></i>
+                    <span>My Orders</span>
+                </button>
+                <button class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors">
+                    <i class="fas fa-video"></i>
+                    <span>Live Streams</span>
+                </button>
+                <button class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors">
+                    <i class="fas fa-wallet"></i>
+                    <span>Earnings</span>
+                </button>
+                <button class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </button>
+            </nav>
+
+            <!-- @COMPONENT: UserProfile -->
+            <div class="mt-auto pt-6 border-t border-border">
+                <div class="flex items-center gap-3">
+                    <!-- A professional headshot of a young content creator with modern lighting -->
+                    <img src="https://pixabay.com/get/g21614bd3823a762ba03923929667a272b114dcafc0552a50f5d76427db7aee6d3ea1b14f612df2bf94afc17baa7e901cc9feeb0e3a4826d0b0706dab24266a26_1280.jpg" alt="User profile" class="w-10 h-10 rounded-full" />
+                    <div class="flex-1">
+                        <p class="text-sm font-medium" data-bind="user.name">Sarah Chen</p>
+                        <p class="text-xs text-muted-foreground" data-bind="user.role">Content Creator</p>
+                    </div>
+                    <button class="text-muted-foreground hover:text-foreground">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </div>
+            </div>
+        </aside>
+        <!-- @END_COMPONENT: Sidebar -->
+
+        <!-- @COMPONENT: MainContent -->
+        <main class="flex-1 flex flex-col lg:flex-row">
+            <!-- @COMPONENT: MapSection -->
+            <div class="flex-1 p-6">
+                <!-- @COMPONENT: Header -->
+                <header class="flex flex-col sm:flex-row sm:items-center justify-between mb-6">
+                    <div>
+                        <h2 class="text-2xl font-bold text-foreground">Discover Live Streams</h2>
+                        <p class="text-muted-foreground">Find and create location-based streaming experiences</p>
+                    </div>
+                    <div class="flex items-center gap-3 mt-4 sm:mt-0">
+                        <!-- @COMPONENT: HealthStatus -->
+                        <div class="flex items-center gap-2 px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-sm">
+                            <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                            <span>API Connected</span>
+                        </div>
+                        <button class="px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors" data-event="click:openCreateOrder">
+                            <i class="fas fa-plus mr-2"></i>
+                            Create Order
+                        </button>
+                    </div>
+                </header>
+
+                <!-- @COMPONENT: MapContainer -->
+                <div class="glassmorphism rounded-xl p-1 mb-6">
+                    <div id="map" class="map-container" data-implementation="Leaflet map with OpenStreetMap tiles, location markers for active orders"></div>
+                </div>
+
+                <!-- @COMPONENT: ActiveStreams -->
+                <div class="space-y-4">
+                    <h3 class="text-lg font-semibold text-foreground">Active Streams Nearby</h3>
+                    
+                    <!-- @MAP: activeStreams.map(stream => ( -->
+                    <div class="glassmorphism rounded-xl p-4 order-card">
+                        <div class="flex flex-col sm:flex-row gap-4">
+                            <div class="relative">
+                                <!-- A vibrant street performance scene with musicians and audience -->
+                                <img src="https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=200&h=120" alt="Live street performance" class="w-full sm:w-48 h-28 object-cover rounded-lg" />
+                                <div class="absolute top-2 left-2 bg-red-500 text-white px-2 py-1 rounded text-xs font-medium live-indicator">
+                                    <i class="fas fa-circle mr-1"></i>LIVE
+                                </div>
+                                <div class="absolute bottom-2 right-2 bg-black/70 text-white px-2 py-1 rounded text-xs">
+                                    <span data-bind="stream.viewers">127</span> viewers
+                                </div>
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="font-semibold text-foreground mb-1" data-bind="stream.title">Downtown Street Performance</h4>
+                                <p class="text-sm text-muted-foreground mb-2" data-bind="stream.description">Live music performance at Pike Place Market featuring local artists</p>
+                                <div class="flex items-center gap-4 text-sm text-muted-foreground">
+                                    <span><i class="fas fa-map-marker-alt mr-1"></i><span data-bind="stream.location">Seattle, WA</span></span>
+                                    <span><i class="fas fa-clock mr-1"></i><span data-bind="stream.duration">1h 23m</span></span>
+                                    <span><i class="fas fa-dollar-sign mr-1"></i><span data-bind="stream.price">$15</span></span>
+                                </div>
+                                <div class="flex items-center justify-between mt-3">
+                                    <div class="flex items-center gap-2">
+                                        <!-- A portrait of a street musician with their guitar -->
+                                        <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=32&h=32" alt="Stream host" class="w-6 h-6 rounded-full" />
+                                        <span class="text-sm font-medium" data-bind="stream.host">Mike Rodriguez</span>
+                                    </div>
+                                    <button class="px-3 py-1 bg-accent text-accent-foreground rounded-lg text-sm font-medium hover:bg-accent/90 transition-colors" data-event="click:joinStream">
+                                        Join Stream
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- @END_MAP )) -->
+
+                    <!-- @MAP: activeStreams.map(stream => ( -->
+                    <div class="glassmorphism rounded-xl p-4 order-card">
+                        <div class="flex flex-col sm:flex-row gap-4">
+                            <div class="relative">
+                                <!-- A beautiful urban sunset view from a rooftop -->
+                                <img src="https://images.unsplash.com/photo-1519501025264-65ba15a82390?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=200&h=120" alt="Rooftop sunset view" class="w-full sm:w-48 h-28 object-cover rounded-lg" />
+                                <div class="absolute top-2 left-2 bg-red-500 text-white px-2 py-1 rounded text-xs font-medium live-indicator">
+                                    <i class="fas fa-circle mr-1"></i>LIVE
+                                </div>
+                                <div class="absolute bottom-2 right-2 bg-black/70 text-white px-2 py-1 rounded text-xs">
+                                    <span data-bind="stream.viewers">89</span> viewers
+                                </div>
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="font-semibold text-foreground mb-1" data-bind="stream.title">Rooftop Sunset Experience</h4>
+                                <p class="text-sm text-muted-foreground mb-2" data-bind="stream.description">Sharing the most beautiful sunset view in the city from this exclusive rooftop location</p>
+                                <div class="flex items-center gap-4 text-sm text-muted-foreground">
+                                    <span><i class="fas fa-map-marker-alt mr-1"></i><span data-bind="stream.location">New York, NY</span></span>
+                                    <span><i class="fas fa-clock mr-1"></i><span data-bind="stream.duration">45m</span></span>
+                                    <span><i class="fas fa-dollar-sign mr-1"></i><span data-bind="stream.price">$25</span></span>
+                                </div>
+                                <div class="flex items-center justify-between mt-3">
+                                    <div class="flex items-center gap-2">
+                                        <!-- A portrait of a young photographer with urban background -->
+                                        <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=32&h=32" alt="Stream host" class="w-6 h-6 rounded-full" />
+                                        <span class="text-sm font-medium" data-bind="stream.host">Alex Zhang</span>
+                                    </div>
+                                    <button class="px-3 py-1 bg-accent text-accent-foreground rounded-lg text-sm font-medium hover:bg-accent/90 transition-colors" data-event="click:joinStream">
+                                        Join Stream
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- @END_MAP )) -->
+                </div>
+            </div>
+            <!-- @END_COMPONENT: MapSection -->
+
+            <!-- @COMPONENT: OrderPanel -->
+            <aside class="w-full lg:w-96 border-l border-border p-6 bg-card/50">
+                <div class="space-y-6">
+                    <!-- @COMPONENT: OrderTabs -->
+                    <div class="flex bg-secondary rounded-lg p-1">
+                        <button class="flex-1 px-4 py-2 rounded-md bg-primary text-primary-foreground font-medium text-sm">
+                            Available Orders
+                        </button>
+                        <button class="flex-1 px-4 py-2 rounded-md text-muted-foreground hover:text-foreground font-medium text-sm transition-colors">
+                            My Orders
+                        </button>
+                    </div>
+
+                    <!-- @COMPONENT: OrderFilters -->
+                    <div class="space-y-3">
+                        <div class="flex items-center gap-2">
+                            <input type="text" placeholder="Search by location or description..." class="flex-1 px-3 py-2 bg-input border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring" />
+                            <button class="px-3 py-2 bg-secondary text-foreground rounded-lg hover:bg-secondary/80 transition-colors">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                        <div class="flex gap-2">
+                            <select class="px-3 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring">
+                                <option>All Categories</option>
+                                <option>Music</option>
+                                <option>Food</option>
+                                <option>Travel</option>
+                                <option>Events</option>
+                            </select>
+                            <select class="px-3 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring">
+                                <option>Any Price</option>
+                                <option>$10-25</option>
+                                <option>$25-50</option>
+                                <option>$50+</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- @COMPONENT: OrdersList -->
+                    <div class="space-y-4">
+                        <h3 class="font-semibold text-foreground">Streaming Requests</h3>
+                        
+                        <!-- @MAP: availableOrders.map(order => ( -->
+                        <div class="glassmorphism rounded-xl p-4 space-y-3 order-card">
+                            <div class="flex items-start justify-between">
+                                <div class="flex-1">
+                                    <h4 class="font-semibold text-foreground mb-1" data-bind="order.title">Central Park Concert Stream</h4>
+                                    <p class="text-sm text-muted-foreground" data-bind="order.description">Looking for someone to stream the outdoor concert happening at Central Park this evening</p>
+                                </div>
+                                <span class="bg-accent/20 text-accent px-2 py-1 rounded text-xs font-medium" data-bind="order.status">Open</span>
+                            </div>
+                            
+                            <div class="space-y-2 text-sm">
+                                <div class="flex items-center gap-2 text-muted-foreground">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                    <span data-bind="order.location">Central Park, NYC</span>
+                                </div>
+                                <div class="flex items-center gap-2 text-muted-foreground">
+                                    <i class="fas fa-clock"></i>
+                                    <span data-bind="order.scheduledTime">Today 7:00 PM</span>
+                                </div>
+                                <div class="flex items-center gap-2 text-muted-foreground">
+                                    <i class="fas fa-users"></i>
+                                    <span><span data-bind="order.currentParticipants">3</span>/<span data-bind="order.maxParticipants">5</span> participants</span>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center justify-between pt-3 border-t border-border">
+                                <div class="flex items-center gap-2">
+                                    <!-- A portrait of an event organizer in professional attire -->
+                                    <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=32&h=32" alt="Order creator" class="w-6 h-6 rounded-full" />
+                                    <span class="text-sm font-medium" data-bind="order.creator">Emma Wilson</span>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-lg font-bold text-primary" data-bind="order.totalPrice">$45</div>
+                                    <div class="text-xs text-muted-foreground">Total Pool</div>
+                                </div>
+                            </div>
+
+                            <button class="w-full px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors" data-event="click:acceptOrder">
+                                Accept Order
+                            </button>
+                        </div>
+                        <!-- @END_MAP )) -->
+
+                        <!-- @MAP: availableOrders.map(order => ( -->
+                        <div class="glassmorphism rounded-xl p-4 space-y-3 order-card">
+                            <div class="flex items-start justify-between">
+                                <div class="flex-1">
+                                    <h4 class="font-semibold text-foreground mb-1" data-bind="order.title">Food Market Tour</h4>
+                                    <p class="text-sm text-muted-foreground" data-bind="order.description">Want someone to stream a guided tour of Pike Place Market, showcasing local vendors and food</p>
+                                </div>
+                                <span class="bg-yellow-500/20 text-yellow-400 px-2 py-1 rounded text-xs font-medium" data-bind="order.status">Urgent</span>
+                            </div>
+                            
+                            <div class="space-y-2 text-sm">
+                                <div class="flex items-center gap-2 text-muted-foreground">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                    <span data-bind="order.location">Pike Place Market, Seattle</span>
+                                </div>
+                                <div class="flex items-center gap-2 text-muted-foreground">
+                                    <i class="fas fa-clock"></i>
+                                    <span data-bind="order.scheduledTime">Tomorrow 2:00 PM</span>
+                                </div>
+                                <div class="flex items-center gap-2 text-muted-foreground">
+                                    <i class="fas fa-users"></i>
+                                    <span><span data-bind="order.currentParticipants">1</span>/<span data-bind="order.maxParticipants">4</span> participants</span>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center justify-between pt-3 border-t border-border">
+                                <div class="flex items-center gap-2">
+                                    <!-- A portrait of a food enthusiast with kitchen background -->
+                                    <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=32&h=32" alt="Order creator" class="w-6 h-6 rounded-full" />
+                                    <span class="text-sm font-medium" data-bind="order.creator">David Kim</span>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-lg font-bold text-primary" data-bind="order.totalPrice">$30</div>
+                                    <div class="text-xs text-muted-foreground">Total Pool</div>
+                                </div>
+                            </div>
+
+                            <button class="w-full px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors" data-event="click:acceptOrder">
+                                Accept Order
+                            </button>
+                        </div>
+                        <!-- @END_MAP )) -->
+
+                        <!-- @MAP: availableOrders.map(order => ( -->
+                        <div class="glassmorphism rounded-xl p-4 space-y-3 order-card">
+                            <div class="flex items-start justify-between">
+                                <div class="flex-1">
+                                    <h4 class="font-semibold text-foreground mb-1" data-bind="order.title">Beach Sunset Yoga</h4>
+                                    <p class="text-sm text-muted-foreground" data-bind="order.description">Stream a peaceful sunset yoga session at Santa Monica Beach for wellness enthusiasts</p>
+                                </div>
+                                <span class="bg-accent/20 text-accent px-2 py-1 rounded text-xs font-medium" data-bind="order.status">Open</span>
+                            </div>
+                            
+                            <div class="space-y-2 text-sm">
+                                <div class="flex items-center gap-2 text-muted-foreground">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                    <span data-bind="order.location">Santa Monica Beach, CA</span>
+                                </div>
+                                <div class="flex items-center gap-2 text-muted-foreground">
+                                    <i class="fas fa-clock"></i>
+                                    <span data-bind="order.scheduledTime">Sunday 6:30 PM</span>
+                                </div>
+                                <div class="flex items-center gap-2 text-muted-foreground">
+                                    <i class="fas fa-users"></i>
+                                    <span><span data-bind="order.currentParticipants">2</span>/<span data-bind="order.maxParticipants">6</span> participants</span>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center justify-between pt-3 border-t border-border">
+                                <div class="flex items-center gap-2">
+                                    <!-- A portrait of a yoga instructor in athletic wear -->
+                                    <img src="https://pixabay.com/get/gdaf738c9fcd3d80092569a5cd4cc094c8911e2189a3969b1be85d9a6a85eb3754a22dcdd104b1199c659f4884f88796d46af09db81a6c6c6e7c2df0771935544_1280.jpg" alt="Order creator" class="w-6 h-6 rounded-full" />
+                                    <span class="text-sm font-medium" data-bind="order.creator">Maya Patel</span>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-lg font-bold text-primary" data-bind="order.totalPrice">$60</div>
+                                    <div class="text-xs text-muted-foreground">Total Pool</div>
+                                </div>
+                            </div>
+
+                            <button class="w-full px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors" data-event="click:acceptOrder">
+                                Accept Order
+                            </button>
+                        </div>
+                        <!-- @END_MAP )) -->
+                    </div>
+                </div>
+            </aside>
+            <!-- @END_COMPONENT: OrderPanel -->
+        </main>
+        <!-- @END_COMPONENT: MainContent -->
+    </div>
+    <!-- @END_COMPONENT: AppLayout -->
+
+    <!-- @COMPONENT: CreateOrderModal -->
+    <div id="createOrderModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center p-4 z-50" data-modal="createOrder">
+        <div class="glassmorphism rounded-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-xl font-bold text-foreground">Create Streaming Order</h3>
+                    <button class="text-muted-foreground hover:text-foreground" data-event="click:closeModal">
+                        <i class="fas fa-times text-lg"></i>
+                    </button>
+                </div>
+
+                <form class="space-y-4" data-event="submit:createOrder">
+                    <div>
+                        <label class="block text-sm font-medium text-foreground mb-2">Stream Title</label>
+                        <input type="text" name="title" placeholder="What would you like to stream?" class="w-full px-3 py-2 bg-input border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring" required />
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-foreground mb-2">Description</label>
+                        <textarea name="description" rows="3" placeholder="Describe the streaming experience you want..." class="w-full px-3 py-2 bg-input border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring resize-none" required></textarea>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-foreground mb-2">Location</label>
+                        <div class="relative">
+                            <input type="text" name="location" placeholder="Enter location or click on map" class="w-full pl-10 pr-3 py-2 bg-input border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring" required />
+                            <i class="fas fa-map-marker-alt absolute left-3 top-3 text-muted-foreground"></i>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-foreground mb-2">Date & Time</label>
+                            <input type="datetime-local" name="scheduledTime" class="w-full px-3 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring" required />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-foreground mb-2">Duration</label>
+                            <select name="duration" class="w-full px-3 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring" required>
+                                <option value="">Select duration</option>
+                                <option value="30">30 minutes</option>
+                                <option value="60">1 hour</option>
+                                <option value="120">2 hours</option>
+                                <option value="custom">Custom</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-foreground mb-2">Category</label>
+                        <select name="category" class="w-full px-3 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring" required>
+                            <option value="">Select category</option>
+                            <option value="music">Music & Entertainment</option>
+                            <option value="food">Food & Dining</option>
+                            <option value="travel">Travel & Tourism</option>
+                            <option value="events">Events & Gatherings</option>
+                            <option value="education">Educational</option>
+                            <option value="fitness">Fitness & Wellness</option>
+                        </select>
+                    </div>
+
+                    <div class="border border-border rounded-lg p-4 space-y-4">
+                        <h4 class="font-medium text-foreground">Payment Options</h4>
+                        
+                        <div class="space-y-3">
+                            <label class="flex items-center gap-3">
+                                <input type="radio" name="paymentType" value="solo" class="text-primary focus:ring-primary" checked />
+                                <div class="flex-1">
+                                    <div class="font-medium text-foreground">Solo Payment</div>
+                                    <div class="text-sm text-muted-foreground">Pay the full amount yourself</div>
+                                </div>
+                            </label>
+                            
+                            <label class="flex items-center gap-3">
+                                <input type="radio" name="paymentType" value="group" class="text-primary focus:ring-primary" />
+                                <div class="flex-1">
+                                    <div class="font-medium text-foreground">Group Payment</div>
+                                    <div class="text-sm text-muted-foreground">Split the cost with others</div>
+                                </div>
+                            </label>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-foreground mb-2">Total Budget</label>
+                                <div class="relative">
+                                    <span class="absolute left-3 top-3 text-muted-foreground">$</span>
+                                    <input type="number" name="budget" placeholder="0" min="10" class="w-full pl-8 pr-3 py-2 bg-input border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring" required />
+                                </div>
+                            </div>
+                            <div id="maxParticipantsField" class="hidden">
+                                <label class="block text-sm font-medium text-foreground mb-2">Max Participants</label>
+                                <input type="number" name="maxParticipants" placeholder="4" min="2" max="10" class="w-full px-3 py-2 bg-input border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-3 pt-4">
+                        <button type="button" class="flex-1 px-4 py-2 border border-border text-foreground rounded-lg font-medium hover:bg-secondary transition-colors" data-event="click:closeModal">
+                            Cancel
+                        </button>
+                        <button type="submit" class="flex-1 px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors">
+                            Create Order
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!-- @END_COMPONENT: CreateOrderModal -->
+
+    <!-- @COMPONENT: MobileNavigation -->
+    <nav class="lg:hidden fixed bottom-0 left-0 right-0 bg-card border-t border-border p-4 z-40">
+        <div class="flex items-center justify-around">
+            <button class="flex flex-col items-center gap-1 text-primary">
+                <i class="fas fa-map-marker-alt text-lg"></i>
+                <span class="text-xs">Discover</span>
+            </button>
+            <button class="flex flex-col items-center gap-1 text-muted-foreground">
+                <i class="fas fa-list text-lg"></i>
+                <span class="text-xs">Orders</span>
+            </button>
+            <button class="flex flex-col items-center gap-1 text-muted-foreground">
+                <i class="fas fa-video text-lg"></i>
+                <span class="text-xs">Streams</span>
+            </button>
+            <button class="flex flex-col items-center gap-1 text-muted-foreground">
+                <i class="fas fa-user text-lg"></i>
+                <span class="text-xs">Profile</span>
+            </button>
+        </div>
+    </nav>
+    <!-- @END_COMPONENT: MobileNavigation -->
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // TODO: Implement business logic, API calls, and state management
+        
+        (() => {
+            // Initialize Leaflet map
+            const map = L.map('map').setView([40.7128, -74.0060], 13);
+            
+            L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+
+            // Add sample markers for active orders
+            const sampleMarkers = [
+                { lat: 40.7589, lng: -73.9851, title: "Central Park Concert", type: "music" },
+                { lat: 40.7505, lng: -73.9934, title: "Food Market Tour", type: "food" },
+                { lat: 40.7282, lng: -74.0776, title: "Sunset Yoga", type: "fitness" }
+            ];
+
+            sampleMarkers.forEach(marker => {
+                const icon = L.divIcon({
+                    html: `<div class="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-white text-sm font-bold shadow-lg">${marker.type === 'music' ? '♪' : marker.type === 'food' ? '🍽' : '🧘'}</div>`,
+                    className: 'custom-marker',
+                    iconSize: [32, 32],
+                    iconAnchor: [16, 16]
+                });
+
+                L.marker([marker.lat, marker.lng], { icon })
+                    .addTo(map)
+                    .bindPopup(`<strong>${marker.title}</strong><br>Click to view details`);
+            });
+
+            // Modal functionality
+            const createOrderBtn = document.querySelector('[data-event="click:openCreateOrder"]');
+            const modal = document.getElementById('createOrderModal');
+            const closeModalBtns = document.querySelectorAll('[data-event="click:closeModal"]');
+            const paymentTypeRadios = document.querySelectorAll('input[name="paymentType"]');
+            const maxParticipantsField = document.getElementById('maxParticipantsField');
+
+            createOrderBtn?.addEventListener('click', () => {
+                modal?.classList.remove('hidden');
+                modal?.classList.add('flex');
+            });
+
+            closeModalBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    modal?.classList.add('hidden');
+                    modal?.classList.remove('flex');
+                });
+            });
+
+            // Handle payment type change
+            paymentTypeRadios.forEach(radio => {
+                radio.addEventListener('change', (e) => {
+                    if (e.target.value === 'group') {
+                        maxParticipantsField?.classList.remove('hidden');
+                    } else {
+                        maxParticipantsField?.classList.add('hidden');
+                    }
+                });
+            });
+
+            // Handle form submission
+            const createOrderForm = document.querySelector('form[data-event="submit:createOrder"]');
+            createOrderForm?.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                // TODO: Send API request to backend /api/orders endpoint
+                const formData = new FormData(e.target);
+                const orderData = Object.fromEntries(formData.entries());
+                
+                console.log('Creating order:', orderData);
+                
+                // Simulate API call
+                try {
+                    const response = await fetch('/api/orders', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(orderData)
+                    });
+                    
+                    if (response.ok) {
+                        // TODO: Update UI with new order
+                        modal?.classList.add('hidden');
+                        modal?.classList.remove('flex');
+                        e.target.reset();
+                        alert('Order created successfully!');
+                    }
+                } catch (error) {
+                    console.error('Error creating order:', error);
+                    alert('Failed to create order. Please try again.');
+                }
+            });
+
+            // Health check
+            const checkHealth = async () => {
+                try {
+                    const response = await fetch('/healthz');
+                    const data = await response.json();
+                    console.log('Health check:', data);
+                } catch (error) {
+                    console.error('Health check failed:', error);
+                }
+            };
+
+            // Check health on load
+            checkHealth();
+        })();
+    </script>
+</body>
+</html>

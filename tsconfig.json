@@ -1,5 +1,5 @@
 {
-  "include": ["client/src/**/*", "shared/**/*", "server/**/*"],
+  "include": ["client/src/**/*", "shared/**/*", "server/**/*", "docs/tsconfig.node.json", "client/tsconfig.json", "client/tsconfig.app.json", "client/tailwind.config.js", "client/postcss.config.cjs", "client/eslint.config.js", "client/vite.config.ts"],
   "exclude": ["node_modules", "build", "dist", "**/*.test.ts"],
   "compilerOptions": {
     "incremental": true,
