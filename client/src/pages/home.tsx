@@ -13,12 +13,13 @@ import { LiveStreamCard } from "@/components/live-stream-card";
 import { MultiStreamGrid } from "@/components/multi-stream-grid";
 import { CreateOrderModal } from "@/components/create-order-modal";
 import { DemoControls } from "@/components/demo-controls";
+import { NotificationCard } from "@/components/notification-card";
 import { TranslatedText } from "@/components/translated-text";
 import { api } from "@/lib/api";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "@/hooks/use-translation";
-import type { Order } from "@shared/schema";
+import type { Order, Notification } from "@shared/schema";
 
 declare global {
   interface Window {
@@ -38,6 +39,9 @@ export default function Home() {
   const [healthStatus, setHealthStatus] = useState<"connected" | "disconnected">("disconnected");
   const [viewMode, setViewMode] = useState<'cards' | 'grid'>('cards');
   const [dismissedOrders, setDismissedOrders] = useState<Set<string>>(new Set()); // 跟踪被关闭的订单
+  
+  // Mock current user ID - in production this would come from auth
+  const CURRENT_USER_ID = "demo-user-1";
 
   // Health check
   const { data: healthData } = useQuery({
@@ -68,6 +72,19 @@ export default function Home() {
     queryKey: ['/api/orders'],
     queryFn: () => api.orders.getAll(),
   });
+
+  // Fetch provider notifications (order dispatches)
+  const { data: notificationsResponse, isLoading: notificationsLoading } = useQuery({
+    queryKey: [`/api/users/${CURRENT_USER_ID}/notifications/orders`],
+    queryFn: async () => {
+      const response: any = await apiRequest('GET', `/api/users/${CURRENT_USER_ID}/notifications/orders`);
+      return response.data || [];
+    },
+    refetchInterval: 30000, // Refetch every 30 seconds for near-real-time updates
+    
+  });
+
+  const notifications: Notification[] = notificationsResponse || [];
 
   // 创建国外著名景点的模拟订单（MVP阶段补充内容）
   const mockTouristOrders = [
@@ -360,6 +377,16 @@ export default function Home() {
           
           {/* 桌面版语言选择器 - 右上角显眼位置 */}
           <div className="hidden lg:flex items-center gap-3 mb-4">
+            {/* User Mode Toggle */}
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-white/80 backdrop-blur-sm rounded-lg shadow-sm border border-slate-200">
+           
+              { notifications.length > 0 && (
+                <Badge variant="destructive" className="ml-1 animate-pulse">
+                  {notifications.length}
+                </Badge>
+              )}
+            </div>
+            
             <LanguageSelector 
               currentLanguage={currentLanguage}
               onLanguageChange={setCurrentLanguage}
@@ -427,6 +454,47 @@ export default function Home() {
       <div className="flex-1 flex flex-col lg:flex-row">
         {/* Live Streams Main Area */}
         <main className="flex-1 p-4 lg:p-6">
+          {/* Provider: Recent Requests Section */}
+          {notifications.length > 0 && (
+            <div className="mb-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-2xl font-bold text-slate-900">
+                  <TranslatedText context="home">Recent Requests</TranslatedText>
+                </h2>
+                <Badge variant="default" className="bg-blue-500">
+                  {notifications.length} <TranslatedText context="home">New</TranslatedText>
+                </Badge>
+              </div>
+              <div className="space-y-3">
+                {notifications.slice(0, 3).map((notification) => (
+                  <NotificationCard
+                    key={notification.id}
+                    notification={notification}
+                    onAccept={handleAcceptOrder}
+                    onDismiss={() => {
+                      queryClient.invalidateQueries({ queryKey: [`/api/users/${CURRENT_USER_ID}/notifications/orders`] });
+                    }}
+                  />
+                ))}
+              </div>
+              {notifications.length > 3 && (
+                <Button
+                  variant="outline"
+                  className="w-full mt-3"
+                  onClick={() => {
+                    // Navigate to notifications page
+                    toast({
+                      title: "View All Notifications",
+                      description: `You have ${notifications.length} order matches`,
+                    });
+                  }}
+                >
+                  <TranslatedText context="home">View All {notifications.length} Requests</TranslatedText>
+                </Button>
+              )}
+            </div>
+          )}
+
           {/* Filter Tabs */}
           <Tabs defaultValue="live" className="mb-6">
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-4">

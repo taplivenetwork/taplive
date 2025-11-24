@@ -15,6 +15,7 @@ export const riskLevelEnum = pgEnum('risk_level', ['safe', 'low', 'medium', 'hig
 export const weatherAlertEnum = pgEnum('weather_alert', ['clear', 'watch', 'warning', 'emergency']);
 export const orderGroupTypeEnum = pgEnum('order_group_type', ['single', 'aa_split', 'group_booking']);
 export const violationTypeEnum = pgEnum('violation_type', ['keyword_detected', 'illegal_content', 'prohibited_area', 'weather_risk', 'voice_violation']);
+export const notificationTypeEnum = pgEnum('notification_type', ['order_dispatch', 'order_accepted', 'order_completed', 'payment_received', 'rating_received', 'system_alert']);
 
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -460,6 +461,20 @@ export const locationTimezone = pgTable("location_timezone", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// Notifications table for dispatch and other real-time notifications
+export const notifications = pgTable("notifications", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }), // Recipient
+  type: notificationTypeEnum("type").notNull(),
+  title: text("title").notNull(),
+  message: text("message").notNull(),
+  orderId: varchar("order_id").references(() => orders.id, { onDelete: 'cascade' }), // Related order if applicable
+  metadata: text("metadata"), // JSON string for additional data (dispatch score, distance, etc.)
+  read: boolean("read").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+  expiresAt: timestamp("expires_at"), // For time-sensitive notifications (order dispatch)
+});
+
 // Insert schemas for new tables
 export const insertGeoRiskZoneSchema = createInsertSchema(geoRiskZones).omit({
   id: true,
@@ -500,6 +515,11 @@ export const insertTimezoneRuleSchema = createInsertSchema(timezoneRules).omit({
 });
 
 export const insertLocationTimezoneSchema = createInsertSchema(locationTimezone).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertNotificationSchema = createInsertSchema(notifications).omit({
   id: true,
   createdAt: true,
 });
@@ -560,3 +580,5 @@ export type TimezoneRule = typeof timezoneRules.$inferSelect;
 export type InsertTimezoneRule = z.infer<typeof insertTimezoneRuleSchema>;
 export type LocationTimezone = typeof locationTimezone.$inferSelect;
 export type InsertLocationTimezone = z.infer<typeof insertLocationTimezoneSchema>;
+export type Notification = typeof notifications.$inferSelect;
+export type InsertNotification = z.infer<typeof insertNotificationSchema>;

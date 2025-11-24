@@ -5,9 +5,10 @@ import { type User, type InsertUser, type Order, type InsertOrder, type Rating, 
          type ContentViolation, type InsertContentViolation, type OrderGroup, type InsertOrderGroup,
          type GroupParticipant, type InsertGroupParticipant, type Geofence, type InsertGeofence,
          type TimezoneRule, type InsertTimezoneRule, type LocationTimezone, type InsertLocationTimezone,
+         type Notification, type InsertNotification,
          users, orders, ratings, payments, payouts, transactions, disputes, orderApprovals,
          geoRiskZones, weatherAlerts, contentViolations, orderGroups, groupParticipants,
-         geofences, timezoneRules, locationTimezone } from "@shared/schema";
+         geofences, timezoneRules, locationTimezone, notifications } from "@shared/schema";
 import { type ProviderRanking, rankProvidersForOrder, updateUserDispatchScore } from "@shared/dispatch";
 import { calculateCommission } from "@shared/payment";
 import { randomUUID } from "crypto";
@@ -124,6 +125,14 @@ export interface IStorage {
   createLocationTimezone(locationTz: InsertLocationTimezone): Promise<LocationTimezone>;
   getLocationTimezoneByOrder(orderId: string): Promise<LocationTimezone | undefined>;
   updateLocationTimezone(id: string, updates: Partial<LocationTimezone>): Promise<LocationTimezone | undefined>;
+
+  // Notification operations
+  createNotification(notification: InsertNotification): Promise<Notification>;
+  getUserNotifications(userId: string, unreadOnly?: boolean): Promise<Notification[]>;
+  markNotificationAsRead(id: string): Promise<Notification | undefined>;
+  markAllNotificationsAsRead(userId: string): Promise<void>;
+  getActiveOrderNotifications(userId: string): Promise<Notification[]>;
+  deleteExpiredNotifications(): Promise<void>;
 }
 
 export class MemStorage implements IStorage {
@@ -143,6 +152,7 @@ export class MemStorage implements IStorage {
   private geofences: Map<string, Geofence>;
   private timezoneRules: Map<string, TimezoneRule>;
   private locationTimezones: Map<string, LocationTimezone>;
+  private notifications: Map<string, Notification>;
 
   constructor() {
     this.users = new Map();
@@ -161,6 +171,7 @@ export class MemStorage implements IStorage {
     this.geofences = new Map();
     this.timezoneRules = new Map();
     this.locationTimezones = new Map();
+    this.notifications = new Map();
     this.initializeTestData();
   }
 
@@ -1352,6 +1363,70 @@ export class MemStorage implements IStorage {
     const updatedLocationTz = { ...locationTz, ...updates };
     this.locationTimezones.set(id, updatedLocationTz);
     return updatedLocationTz;
+  }
+
+  // Notification operations
+  async createNotification(notification: InsertNotification): Promise<Notification> {
+    const id = randomUUID();
+    const newNotification: Notification = {
+      id,
+      userId: notification.userId,
+      type: notification.type,
+      title: notification.title,
+      message: notification.message,
+      orderId: notification.orderId || null,
+      metadata: notification.metadata || null,
+      read: notification.read ?? false,
+      createdAt: new Date(),
+      expiresAt: notification.expiresAt || null,
+    };
+    this.notifications.set(id, newNotification);
+    return newNotification;
+  }
+
+  async getUserNotifications(userId: string, unreadOnly: boolean = false): Promise<Notification[]> {
+    const userNotifications = Array.from(this.notifications.values())
+      .filter(n => n.userId === userId && (!unreadOnly || !n.read))
+      .sort((a, b) => (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0));
+    return userNotifications;
+  }
+
+  async markNotificationAsRead(id: string): Promise<Notification | undefined> {
+    const notification = this.notifications.get(id);
+    if (!notification) return undefined;
+    
+    const updatedNotification = { ...notification, read: true };
+    this.notifications.set(id, updatedNotification);
+    return updatedNotification;
+  }
+
+  async markAllNotificationsAsRead(userId: string): Promise<void> {
+    Array.from(this.notifications.entries()).forEach(([id, notification]) => {
+      if (notification.userId === userId && !notification.read) {
+        this.notifications.set(id, { ...notification, read: true });
+      }
+    });
+  }
+
+  async getActiveOrderNotifications(userId: string): Promise<Notification[]> {
+    const now = new Date();
+    return Array.from(this.notifications.values())
+      .filter(n => 
+        n.userId === userId &&
+        n.type === 'order_dispatch' &&
+        !n.read &&
+        (!n.expiresAt || n.expiresAt > now)
+      )
+      .sort((a, b) => (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0));
+  }
+
+  async deleteExpiredNotifications(): Promise<void> {
+    const now = new Date();
+    Array.from(this.notifications.entries()).forEach(([id, notification]) => {
+      if (notification.expiresAt && notification.expiresAt < now) {
+        this.notifications.delete(id);
+      }
+    });
   }
 }
 

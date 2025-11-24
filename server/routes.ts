@@ -127,6 +127,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Create the order directly (simplified for MVP)
       const order = await storage.createOrder(orderData);
 
+      // SMART DISPATCH: Find and notify matching providers
+      try {
+        const rankedProviders = await storage.getRankedProvidersForOrder(order.id);
+        
+        // Notify top 5 matched providers (or all if less than 5)
+        const providersToNotify = rankedProviders.slice(0, 5);
+        
+        // Create order expires 30 minutes from now for provider notifications
+        const expiresAt = new Date(Date.now() + 30 * 60 * 1000);
+        
+        for (const ranking of providersToNotify) {
+          await storage.createNotification({
+            userId: ranking.userId,
+            type: 'order_dispatch',
+            title: `New Order Match: ${order.title}`,
+            message: `Match Score: ${ranking.dispatchScore.toFixed(0)}% | Distance: ${ranking.factors.distance.toFixed(1)}km | ${order.price} ${order.currency}`,
+            orderId: order.id,
+            metadata: JSON.stringify({
+              dispatchScore: ranking.dispatchScore,
+              distance: ranking.factors.distance,
+              rank: ranking.rank,
+              orderLocation: {
+                latitude: order.latitude,
+                longitude: order.longitude,
+                address: order.address
+              }
+            }),
+            expiresAt
+          });
+        }
+        
+        console.log(`✅ Dispatched order ${order.id} to ${providersToNotify.length} matched providers`);
+      } catch (dispatchError) {
+        console.error('Dispatch notification error (non-critical):', dispatchError);
+        // Don't fail the order creation if dispatch fails
+      }
+
       res.status(201).json({
         success: true,
         data: order,
@@ -514,6 +551,133 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
+
+  // Update user profile
+  app.patch("/api/users/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updates = req.body;
+
+      // Remove sensitive fields that shouldn't be updated via this endpoint
+      const { password, id: _, createdAt, ...allowedUpdates } = updates;
+
+      const updatedUser = await storage.updateUser(id, allowedUpdates);
+      
+      if (!updatedUser) {
+        return res.status(404).json({
+          success: false,
+          message: "User not found"
+        });
+      }
+
+      // Don't expose password
+      const { password: pwd, ...userWithoutPassword } = updatedUser;
+
+      res.json({
+        success: true,
+        data: userWithoutPassword,
+        message: "Profile updated successfully"
+      });
+    } catch (error) {
+      console.error('Error updating user:', error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to update user profile"
+      });
+    }
+  });
+
+  // ========== NOTIFICATION ROUTES ==========
+
+  // Get user notifications
+  app.get("/api/users/:userId/notifications", async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const { unreadOnly } = req.query;
+      
+      const notifications = await storage.getUserNotifications(
+        userId,
+        unreadOnly === 'true'
+      );
+      
+      res.json({
+        success: true,
+        data: notifications
+      });
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to fetch notifications"
+      });
+    }
+  });
+
+  // Get active order dispatch notifications for provider
+  app.get("/api/users/:userId/notifications/orders", async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const notifications = await storage.getActiveOrderNotifications(userId);
+      
+      res.json({
+        success: true,
+        data: notifications
+      });
+    } catch (error) {
+      console.error('Error fetching order notifications:', error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to fetch order notifications"
+      });
+    }
+  });
+
+  // Mark notification as read
+  app.patch("/api/notifications/:id/read", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const notification = await storage.markNotificationAsRead(id);
+      
+      if (!notification) {
+        return res.status(404).json({
+          success: false,
+          message: "Notification not found"
+        });
+      }
+      
+      res.json({
+        success: true,
+        data: notification
+      });
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to mark notification as read"
+      });
+    }
+  });
+
+  // Mark all notifications as read for user
+  app.post("/api/users/:userId/notifications/read-all", async (req, res) => {
+    try {
+      const { userId } = req.params;
+      await storage.markAllNotificationsAsRead(userId);
+      
+      res.json({
+        success: true,
+        message: "All notifications marked as read"
+      });
+    } catch (error) {
+      console.error('Error marking all notifications as read:', error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to mark all notifications as read"
+      });
+    }
+  });
+
+  // ========== RATING ROUTES ==========
 
   // Create a rating
   app.post("/api/ratings", async (req, res) => {
