@@ -309,7 +309,7 @@ export function CreateOrderModal({ open, onOpenChange, selectedLocation }: Creat
                   <FormLabel><TranslatedText>Stream Title</TranslatedText></FormLabel>
                   <FormControl>
                     <Input 
-                      placeholder="您想要直播什么内容？" 
+                      placeholder="What would you like to stream?" 
                       {...field} 
                       data-testid="input-title"
                     />
@@ -327,7 +327,7 @@ export function CreateOrderModal({ open, onOpenChange, selectedLocation }: Creat
                   <FormLabel><TranslatedText>Description</TranslatedText></FormLabel>
                   <FormControl>
                     <Textarea 
-                      placeholder="描述您想要的直播体验..." 
+                      placeholder="Describe your streaming experience..." 
                       rows={3}
                       {...field} 
                       data-testid="input-description"
@@ -347,7 +347,7 @@ export function CreateOrderModal({ open, onOpenChange, selectedLocation }: Creat
                   <FormControl>
                     <div className="relative">
                       <Input 
-                        placeholder="输入地点 (例如：北京市朝阳区)" 
+                        placeholder="Enter location (e.g., New York, NY)" 
                         {...field} 
                         data-testid="input-location"
                         className={isGeocoding ? "pr-8" : ""}
@@ -397,7 +397,7 @@ export function CreateOrderModal({ open, onOpenChange, selectedLocation }: Creat
                     <Select onValueChange={(value) => field.onChange(parseInt(value))}>
                       <FormControl>
                         <SelectTrigger data-testid="select-duration">
-                          <SelectValue placeholder="选择时长" />
+                          <SelectValue placeholder="Select duration" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent className="z-[10000]">
@@ -422,7 +422,7 @@ export function CreateOrderModal({ open, onOpenChange, selectedLocation }: Creat
                   <Select onValueChange={field.onChange}>
                     <FormControl>
                       <SelectTrigger data-testid="select-category">
-                        <SelectValue placeholder="选择分类" />
+                        <SelectValue placeholder="Select category" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent className="z-[10000]">
