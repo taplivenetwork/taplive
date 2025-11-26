@@ -13,7 +13,7 @@ import { type ProviderRanking, rankProvidersForOrder, updateUserDispatchScore } 
 import { calculateCommission } from "@shared/payment";
 import { randomUUID } from "crypto";
 import { db } from "./db";
-import { eq, and, isNotNull } from "drizzle-orm";
+import { eq, and, isNotNull, desc, or, isNull, gt, lt } from "drizzle-orm";
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
@@ -1449,7 +1449,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateUser(id: string, updates: Partial<User>): Promise<User | undefined> {
-    const [user] = await db.update(users).set({ ...updates, updatedAt: new Date() }).where(eq(users.id, id)).returning();
+    const [user] = await db.update(users).set(updates).where(eq(users.id, id)).returning();
     return user || undefined;
   }
 
@@ -1685,6 +1685,70 @@ export class DatabaseStorage implements IStorage {
     return payout;
   }
 
+  // Notification operations
+  async createNotification(notification: InsertNotification): Promise<Notification> {
+    const [newNotification] = await db.insert(notifications).values({
+      ...notification,
+      read: notification.read ?? false,
+    }).returning();
+    return newNotification;
+  }
+
+  async getUserNotifications(userId: string, unreadOnly: boolean = false): Promise<Notification[]> {
+    let query = db.select().from(notifications).where(eq(notifications.userId, userId));
+    
+    if (unreadOnly) {
+      query = query.where(eq(notifications.read, false)) as any;
+    }
+    
+    const userNotifications = await query.orderBy(desc(notifications.createdAt));
+    return userNotifications;
+  }
+
+  async markNotificationAsRead(id: string): Promise<Notification | undefined> {
+    const [updatedNotification] = await db.update(notifications)
+      .set({ read: true })
+      .where(eq(notifications.id, id))
+      .returning();
+    return updatedNotification || undefined;
+  }
+
+  async markAllNotificationsAsRead(userId: string): Promise<void> {
+    await db.update(notifications)
+      .set({ read: true })
+      .where(eq(notifications.userId, userId));
+  }
+
+  async getActiveOrderNotifications(userId: string): Promise<Notification[]> {
+    const now = new Date();
+    const activeNotifications = await db.select()
+      .from(notifications)
+      .where(
+        and(
+          eq(notifications.userId, userId),
+          eq(notifications.type, 'order_dispatch'),
+          eq(notifications.read, false),
+          or(
+            isNull(notifications.expiresAt),
+            gt(notifications.expiresAt, now)
+          )
+        )
+      )
+      .orderBy(desc(notifications.createdAt));
+    return activeNotifications;
+  }
+
+  async deleteExpiredNotifications(): Promise<void> {
+    const now = new Date();
+    await db.delete(notifications)
+      .where(
+        and(
+          isNotNull(notifications.expiresAt),
+          lt(notifications.expiresAt, now)
+        )
+      );
+  }
+
   // Stub implementations for other methods
   async createDispute(dispute: InsertDispute): Promise<Dispute> { throw new Error("Not implemented"); }
   async getDisputeById(id: string): Promise<Dispute | undefined> { return undefined; }
@@ -1739,4 +1803,5 @@ export class DatabaseStorage implements IStorage {
   async updateLocationTimezone(id: string, updates: Partial<LocationTimezone>): Promise<LocationTimezone | undefined> { return undefined; }
 }
 
-export const storage = new MemStorage();
+// Use DatabaseStorage for production (PostgreSQL)
+export const storage = new DatabaseStorage();

@@ -18,13 +18,14 @@ export const violationTypeEnum = pgEnum('violation_type', ['keyword_detected', '
 export const notificationTypeEnum = pgEnum('notification_type', ['order_dispatch', 'order_accepted', 'order_completed', 'payment_received', 'rating_received', 'system_alert']);
 
 export const users = pgTable("users", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  id: varchar("id").primaryKey(), // Clerk user ID
   username: text("username").notNull().unique(),
-  password: text("password").notNull(),
+  password: text("password").notNull(), // Set to 'clerk_managed' for Clerk users
   email: text("email").notNull().unique(),
   name: text("name").notNull(),
   avatar: text("avatar"),
-  role: text("role").default('user'),
+  bio: text("bio"), // User bio/description
+  role: text("role").default('customer'),
   rating: decimal("rating", { precision: 3, scale: 2 }).default('0.00'), // Average rating (0.00-5.00)
   totalRatings: integer("total_ratings").default(0), // Total number of ratings received
   completedOrders: integer("completed_orders").default(0), // Total completed orders
@@ -32,10 +33,12 @@ export const users = pgTable("users", {
   trustScore: decimal("trust_score", { precision: 3, scale: 2 }).default('0.00'), // Overall trust score
   
   // Dispatch algorithm fields
-  networkSpeed: decimal("network_speed", { precision: 5, scale: 2 }).default('0.00'), // Mbps
-  devicePerformance: decimal("device_performance", { precision: 3, scale: 2 }).default('0.00'), // 0-100 score
+  networkSpeed: decimal("network_speed", { precision: 6, scale: 2 }).default('0.00'), // Mbps (up to 9999.99)
+  devicePerformance: decimal("device_performance", { precision: 5, scale: 2 }).default('0.00'), // 0-100 score
+  deviceName: text("device_name"), // Device name
   currentLatitude: decimal("current_latitude", { precision: 10, scale: 7 }), // Current location
   currentLongitude: decimal("current_longitude", { precision: 10, scale: 7 }), // Current location
+  availableRadius: integer("available_radius").default(10), // Service radius in km
   availability: boolean("availability").default(true), // Available for orders
   lastActive: timestamp("last_active").defaultNow(), // Last activity timestamp
   dispatchScore: decimal("dispatch_score", { precision: 5, scale: 2 }).default('0.00'), // Overall dispatch ranking
@@ -44,6 +47,15 @@ export const users = pgTable("users", {
   totalEarnings: decimal("total_earnings", { precision: 12, scale: 2 }).default('0.00'), // Total lifetime earnings
   walletAddress: text("wallet_address"), // Crypto wallet address for payouts
   preferredPaymentMethod: paymentMethodEnum("preferred_payment_method"), // Preferred payout method
+  
+  // Preferences
+  timezone: text("timezone").default('America/New_York'), // User timezone
+  notifyNewOrders: boolean("notify_new_orders").default(true),
+  notifyMessages: boolean("notify_messages").default(true),
+  notifyUpdates: boolean("notify_updates").default(true),
+  notifyPromotions: boolean("notify_promotions").default(false),
+  profileVisibility: boolean("profile_visibility").default(true),
+  locationSharing: boolean("location_sharing").default(true),
   
   createdAt: timestamp("created_at").defaultNow(),
 });
@@ -185,11 +197,13 @@ export const transactions = pgTable("transactions", {
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
+  id: true, // Include ID for Clerk user sync
   username: true,
   password: true,
   email: true,
   name: true,
   avatar: true,
+  role: true,
 });
 
 export const insertOrderSchema = createInsertSchema(orders).omit({

@@ -4,10 +4,12 @@ import { Link, useLocation } from "wouter";
 import { SimpleLanguageSelector } from "@/components/SimpleLanguageSelector";
 import { T } from "@/components/T";
 import { useSimpleTranslation } from "@/hooks/useSimpleTranslation";
+import { useUser, SignInButton, SignUpButton, UserButton } from "@clerk/clerk-react";
 
 export function Sidebar() {
   const [location] = useLocation();
   const { currentLanguage, changeLanguage } = useSimpleTranslation();
+  const { user, isLoaded } = useUser();
 
   const navigation = [
     { name: "Discover", href: "/", icon: MapPin, current: location === "/" },
@@ -66,25 +68,51 @@ export function Sidebar() {
 
       {/* User Profile */}
       <div className="pt-4 border-t border-border">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center">
-            <User className="w-5 h-5 text-primary" />
+        {isLoaded && user ? (
+          <div className="flex items-center gap-3">
+            {user.imageUrl ? (
+              <img 
+                src={user.imageUrl} 
+                alt={user.firstName || user.username || 'User'}
+                className="w-10 h-10 rounded-full"
+              />
+            ) : (
+              <div className="w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center">
+                <User className="w-5 h-5 text-primary" />
+              </div>
+            )}
+            <div className="flex-1">
+              <p className="text-sm font-medium" data-testid="user-name">
+                {user.firstName || user.username || 'User'}
+              </p>
+              <p className="text-xs text-muted-foreground" data-testid="user-role">
+                {user.emailAddresses[0]?.emailAddress || ''}
+              </p>
+            </div>
+            <UserButton afterSignOutUrl="/" />
           </div>
-          <div className="flex-1">
-            <p className="text-sm font-medium" data-testid="user-name"><T category="navigation" k="Sarah Chen" /></p>
-            <p className="text-xs text-muted-foreground" data-testid="user-role">
-              <T category="navigation" k="Content Creator" />
-            </p>
+        ) : isLoaded ? (
+          <div className="space-y-2">
+            <SignInButton mode="modal">
+              <Button variant="outline" className="w-full">
+                Sign In
+              </Button>
+            </SignInButton>
+            <SignUpButton mode="modal">
+              <Button className="w-full bg-blue-600 hover:bg-blue-700">
+                Sign Up
+              </Button>
+            </SignUpButton>
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-muted-foreground hover:text-foreground"
-            data-testid="button-logout"
-          >
-            <LogOut className="w-4 h-4" />
-          </Button>
-        </div>
+        ) : (
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-primary/20 rounded-full animate-pulse" />
+            <div className="flex-1">
+              <div className="h-4 bg-primary/20 rounded animate-pulse mb-1" />
+              <div className="h-3 bg-primary/10 rounded animate-pulse w-2/3" />
+            </div>
+          </div>
+        )}
       </div>
     </aside>
   );

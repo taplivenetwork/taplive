@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Plus, Search, Filter, Play, Users, MapPin, Clock, X } from "lucide-react";
+import { useUser } from "@clerk/clerk-react";
+import { Link } from "wouter";
+import { Plus, Search, Filter, Play, Users, MapPin, Clock, X, Settings } from "lucide-react";
 import { LanguageSelector } from "@/components/language-selector";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -30,6 +32,7 @@ declare global {
 export default function Home() {
   const { toast } = useToast();
   const { currentLanguage, setCurrentLanguage } = useTranslation();
+  const { user, isLoaded } = useUser(); // Get Clerk user
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | undefined>();
   const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number } | undefined>();
@@ -40,9 +43,32 @@ export default function Home() {
   const [viewMode, setViewMode] = useState<'cards' | 'grid'>('cards');
   const [dismissedOrders, setDismissedOrders] = useState<Set<string>>(new Set()); // 跟踪被关闭的订单
   
-  // Mock current user ID - in production this would come from auth
-  const CURRENT_USER_ID = "demo-user-1";
+  // Use Clerk user ID instead of dummy user ID
+  const CURRENT_USER_ID = user?.id || "guest";
 
+  // Fetch user data to get role
+  const { data: userData } = useQuery({
+    queryKey: [`/api/users/${CURRENT_USER_ID}`],
+    queryFn: async () => {
+      if (CURRENT_USER_ID === "guest") return null;
+      const response = await apiRequest('GET', `/api/users/${CURRENT_USER_ID}`);
+      const data = await response.json();
+      console.log('Fetched user data:', data); // Debug log
+      return data;
+    },
+    enabled: CURRENT_USER_ID !== "guest" && isLoaded,
+    refetchOnWindowFocus: true, // Refetch when window regains focus
+    staleTime: 0, // Always consider data stale to refetch on mount
+  });
+
+  console.log('userData:', userData); // Debug log
+  console.log('userData.role:', userData?.role); // Debug log
+  console.log('userData.data?.role:', userData?.data?.role); // Debug log
+  
+  // The API might return { data: { role: ... } } structure
+  const userRole = (userData?.data?.role || userData?.role) === 'provider' ? 'provider' : 'customer';
+  console.log('this is the userRole', userRole); // Keep your existing log
+ console.log("this is the userRole", userRole)
   // Health check
   const { data: healthData } = useQuery({
     queryKey: ['/healthz'],
@@ -66,6 +92,37 @@ export default function Home() {
   useEffect(() => {
     setHealthStatus(healthData ? "connected" : "disconnected");
   }, [healthData]);
+
+  // Sync Clerk user to database on first load
+  useEffect(() => {
+    const syncUser = async () => {
+      if (user?.id) {
+        try {
+          // Try to sync user to database
+          await fetch('/api/users/sync', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              id: user.id,
+              username: user.username || user.emailAddresses[0]?.emailAddress.split('@')[0] || `user_${user.id.slice(0, 8)}`,
+              email: user.emailAddresses[0]?.emailAddress || '',
+              name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'TapLive User',
+              avatar: user.imageUrl || null,
+            }),
+          });
+          console.log('✅ User synced to database:', user.id);
+        } catch (error) {
+          console.error('Failed to sync user:', error);
+        }
+      }
+    };
+    
+    if (isLoaded && user) {
+      syncUser();
+    }
+  }, [user, isLoaded]);
 
   // Fetch orders
   const { data: ordersResponse, isLoading, error } = useQuery({
@@ -277,7 +334,10 @@ export default function Home() {
 
   const handleAcceptOrder = async (orderId: string) => {
     try {
-      await api.orders.update(orderId, { status: 'accepted' });
+      await api.orders.update(orderId, { 
+        status: 'accepted',
+        providerId: CURRENT_USER_ID  // Assign the provider who accepted the order
+      });
       toast({
         title: <TranslatedText context="home">Order accepted successfully!</TranslatedText>,
         description: <TranslatedText context="home">Redirecting to live page...</TranslatedText>,
@@ -455,7 +515,7 @@ export default function Home() {
         {/* Live Streams Main Area */}
         <main className="flex-1 p-4 lg:p-6">
           {/* Provider: Recent Requests Section */}
-          {notifications.length > 0 && (
+          {/* {notifications.length > 0 && (
             <div className="mb-6">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-2xl font-bold text-slate-900">
@@ -493,7 +553,7 @@ export default function Home() {
                 </Button>
               )}
             </div>
-          )}
+          )} */}
 
           {/* Filter Tabs */}
           <Tabs defaultValue="live" className="mb-6">
@@ -733,7 +793,40 @@ export default function Home() {
                 )}
               </div>
               
-              {isLoading ? (
+              {CURRENT_USER_ID === 'guest' ? (
+                <div className="text-center py-8 px-4 bg-gradient-to-br from-green-50 to-blue-50 rounded-lg border-2 border-dashed border-green-200">
+                  <div className="w-16 h-16 mx-auto mb-4 bg-green-100 rounded-full flex items-center justify-center">
+                    <Users className="w-8 h-8 text-green-600" />
+                  </div>
+                  <h4 className="font-semibold text-foreground mb-2">
+                    <TranslatedText context="home">Sign Up to Activate</TranslatedText>
+                  </h4>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    <TranslatedText context="home">Sign in or create an account to view and accept live stream requests</TranslatedText>
+                  </p>
+                </div>
+              ) : userRole === 'customer' ? (
+                <div className="text-center py-8 px-4 bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg border-2 border-dashed border-blue-200">
+                  <div className="w-16 h-16 mx-auto mb-4 bg-blue-100 rounded-full flex items-center justify-center">
+                    <Users className="w-8 h-8 text-blue-600" />
+                  </div>
+                  <h4 className="font-semibold text-foreground mb-2">
+                    <TranslatedText context="home">Provider Feature</TranslatedText>
+                  </h4>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    <TranslatedText context="home">Change to provider mode to receive and accept live stream requests</TranslatedText>
+                  </p>
+                  <Link href="/settings">
+                    <Button 
+                      size="sm" 
+                      className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
+                    >
+                      <Settings className="w-4 h-4 mr-2" />
+                      <TranslatedText context="home">Go to Settings</TranslatedText>
+                    </Button>
+                  </Link>
+                </div>
+              ) : isLoading ? (
                 <div className="space-y-3">
                   {[1, 2, 3].map((i) => (
                     <div key={i} className="bg-muted rounded-lg p-3 animate-pulse">

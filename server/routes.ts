@@ -2,7 +2,9 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { WebSocketServer, WebSocket } from "ws";
 import Stripe from "stripe";
+import { Webhook } from "svix";
 import { storage } from "./storage";
+import { syncClerkUserToDatabase } from "./auth";
 import { insertOrderSchema, ratingValidationSchema, paymentValidationSchema, cryptoPaymentSchema, disputeSubmissionSchema, geoLocationSchema, aaGroupCreationSchema, type Order } from "@shared/schema";
 import { calculateCommission, PAYMENT_METHODS } from "@shared/payment";
 import { assessGeoRisk, checkContentViolations, checkVoiceContent, formatRiskLevel } from "@shared/geo-safety";
@@ -18,6 +20,53 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY||"empty", {
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Clerk webhook for user sync
+  app.post("/api/webhooks/clerk", async (req, res) => {
+    try {
+      const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET;
+      
+      if (!WEBHOOK_SECRET) {
+        console.error('Missing CLERK_WEBHOOK_SECRET');
+        return res.status(500).json({ error: 'Webhook secret not configured' });
+      }
+
+      const svix_id = req.headers["svix-id"] as string;
+      const svix_timestamp = req.headers["svix-timestamp"] as string;
+      const svix_signature = req.headers["svix-signature"] as string;
+
+      if (!svix_id || !svix_timestamp || !svix_signature) {
+        return res.status(400).json({ error: 'Missing svix headers' });
+      }
+
+      const wh = new Webhook(WEBHOOK_SECRET);
+      const payload = JSON.stringify(req.body);
+      
+      let evt: any;
+      try {
+        evt = wh.verify(payload, {
+          "svix-id": svix_id,
+          "svix-timestamp": svix_timestamp,
+          "svix-signature": svix_signature,
+        });
+      } catch (err) {
+        console.error('Webhook verification failed:', err);
+        return res.status(400).json({ error: 'Webhook verification failed' });
+      }
+
+      // Handle user.created event
+      if (evt.type === 'user.created') {
+        const clerkUserId = evt.data.id;
+        await syncClerkUserToDatabase(clerkUserId, storage);
+        console.log(`✅ Synced Clerk user ${clerkUserId} to database`);
+      }
+
+      res.status(200).json({ success: true });
+    } catch (error) {
+      console.error('Clerk webhook error:', error);
+      res.status(500).json({ error: 'Webhook handler failed' });
+    }
+  });
+
   // Health check endpoint
   app.get("/healthz", (req, res) => {
     res.json({
@@ -27,6 +76,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
       version: "1.0.0",
       environment: process.env.NODE_ENV || "development"
     });
+  });
+
+  // Sync Clerk user to database (manual sync endpoint)
+  app.post("/api/users/sync", async (req, res) => {
+    try {
+      const { id, username, email, name, avatar } = req.body;
+
+      if (!id || !email) {
+        return res.status(400).json({
+          success: false,
+          message: "Missing required fields: id, email"
+        });
+      }
+
+      // Check if user already exists
+      const existingUser = await storage.getUser(id);
+      
+      if (existingUser) {
+        return res.json({
+          success: true,
+          message: "User already exists",
+          data: existingUser
+        });
+      }
+
+      // Create new user
+      const newUser = await storage.createUser({
+        id,
+        username,
+        password: 'clerk_managed',
+        email,
+        name,
+        avatar,
+        role: 'customer', // Default role for new users
+      });
+
+      res.json({
+        success: true,
+        message: "User synced successfully",
+        data: newUser
+      });
+    } catch (error) {
+      console.error('Error syncing user:', error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to sync user"
+      });
+    }
   });
 
   // Get all orders

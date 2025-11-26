@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useUser } from "@clerk/clerk-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -14,12 +15,13 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { User, Bell, Shield, Globe, Camera, Save, MapPin, Wifi, Smartphone, UserCheck, ShoppingCart } from "lucide-react";
 
-// Mock user ID - in production this would come from auth context
-const CURRENT_USER_ID = "demo-user-1";
-
 export default function Settings() {
   const { currentLanguage, setCurrentLanguage } = useTranslation();
   const { toast } = useToast();
+  const { user, isLoaded } = useUser();
+  
+  // Use Clerk user ID
+  const CURRENT_USER_ID = user?.id || "guest";
   
   // User mode state
   const [userMode, setUserMode] = useState<'customer' | 'provider'>('customer');
@@ -38,6 +40,15 @@ export default function Settings() {
     deviceName: 'iPhone 14 Pro',
     availability: true,
     walletAddress: '',
+    // Preferences
+    timezone: 'America/New_York',
+    notifyNewOrders: true,
+    notifyMessages: true,
+    notifyUpdates: true,
+    notifyPromotions: false,
+    // Privacy settings
+    profileVisibility: true,
+    locationSharing: true,
   });
 
   // Fetch user data
@@ -45,15 +56,20 @@ export default function Settings() {
     queryKey: [`/api/users/${CURRENT_USER_ID}`],
     queryFn: async () => {
       const response = await apiRequest('GET', `/api/users/${CURRENT_USER_ID}`);
-      return response;
+      const data = await response.json();
+      return data;
     },
     retry: false,
+    enabled: CURRENT_USER_ID !== 'guest',
   });
 
   // Update profile from fetched data
   useEffect(() => {
     if (userData?.data) {
       const user = userData.data;
+      // Sync user role from database
+      setUserMode(user.role === 'provider' ? 'provider' : 'customer');
+      
       setProfile({
         name: user.name || 'Sarah Chen',
         email: user.email || 'sarah.chen@example.com',
@@ -66,6 +82,13 @@ export default function Settings() {
         deviceName: user.deviceName || 'iPhone 14 Pro',
         availability: user.availability !== false,
         walletAddress: user.walletAddress || '',
+        timezone: user.timezone || 'America/New_York',
+        notifyNewOrders: user.notifyNewOrders !== false,
+        notifyMessages: user.notifyMessages !== false,
+        notifyUpdates: user.notifyUpdates !== false,
+        notifyPromotions: user.notifyPromotions === true,
+        profileVisibility: user.profileVisibility !== false,
+        locationSharing: user.locationSharing !== false,
       });
     }
   }, [userData]);
@@ -88,6 +111,31 @@ export default function Settings() {
         description: error.message || "Failed to update profile",
         variant: "destructive",
       });
+    },
+  });
+
+  // Update user role mutation
+  const updateRoleMutation = useMutation({
+    mutationFn: async (role: 'customer' | 'provider') => {
+      return await apiRequest('PATCH', `/api/users/${CURRENT_USER_ID}`, { role });
+    },
+    onSuccess: (_, role) => {
+      toast({
+        title: "Role Updated",
+        description: `You are now in ${role} mode.`,
+      });
+      queryClient.invalidateQueries({ queryKey: [`/api/users/${CURRENT_USER_ID}`] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Update Failed",
+        description: error.message || "Failed to update role",
+        variant: "destructive",
+      });
+      // Revert the UI change on error
+      if (userData?.data?.role) {
+        setUserMode(userData.data.role === 'provider' ? 'provider' : 'customer');
+      }
     },
   });
 
@@ -140,7 +188,7 @@ export default function Settings() {
   // Update availability mutation
   const updateAvailabilityMutation = useMutation({
     mutationFn: async (availability: boolean) => {
-      return await apiRequest('POST', `/api/users/${CURRENT_USER_ID}/availability`, {
+      return await apiRequest('PATCH', `/api/users/${CURRENT_USER_ID}`, {
         availability,
       });
     },
@@ -149,6 +197,7 @@ export default function Settings() {
         title: "Availability Updated",
         description: `You are now ${availability ? 'available' : 'unavailable'} for orders.`,
       });
+      queryClient.invalidateQueries({ queryKey: [`/api/users/${CURRENT_USER_ID}`] });
     },
     onError: (error: any) => {
       toast({
@@ -163,32 +212,47 @@ export default function Settings() {
     updateProfileMutation.mutate({
       name: profile.name,
       email: profile.email,
+      bio: profile.bio,
       walletAddress: profile.walletAddress,
     });
   };
 
   const handleSaveProviderSettings = () => {
-    // Update location
-    updateLocationMutation.mutate({
-      latitude: profile.currentLatitude,
-      longitude: profile.currentLongitude,
-    });
-    
-    // Update network metrics
-    updateNetworkMutation.mutate({
-      networkSpeed: profile.networkSpeed,
-      devicePerformance: profile.devicePerformance,
-    });
-    
-    toast({
-      title: "Provider Settings Saved",
-      description: "All provider settings have been updated successfully.",
+    updateProfileMutation.mutate({
+      currentLatitude: profile.currentLatitude.toString(),
+      currentLongitude: profile.currentLongitude.toString(),
+      availableRadius: profile.availableRadius,
+      networkSpeed: profile.networkSpeed.toString(),
+      devicePerformance: profile.devicePerformance.toString(),
+      deviceName: profile.deviceName,
     });
   };
 
   const handleAvailabilityToggle = (checked: boolean) => {
     setProfile({ ...profile, availability: checked });
     updateAvailabilityMutation.mutate(checked);
+  };
+
+  const handleRoleChange = (newRole: 'customer' | 'provider') => {
+    setUserMode(newRole);
+    updateRoleMutation.mutate(newRole);
+  };
+
+  const handleNotificationToggle = (key: 'notifyNewOrders' | 'notifyMessages' | 'notifyUpdates' | 'notifyPromotions', value: boolean) => {
+    const updatedProfile = { ...profile, [key]: value };
+    setProfile(updatedProfile);
+    updateProfileMutation.mutate({ [key]: value });
+  };
+
+  const handleTimezoneChange = (timezone: string) => {
+    setProfile({ ...profile, timezone });
+    updateProfileMutation.mutate({ timezone });
+  };
+
+  const handlePrivacyToggle = (key: 'profileVisibility' | 'locationSharing', value: boolean) => {
+    const updatedProfile = { ...profile, [key]: value };
+    setProfile(updatedProfile);
+    updateProfileMutation.mutate({ [key]: value });
   };
 
   const handleChangePassword = () => {
@@ -252,7 +316,8 @@ export default function Settings() {
                       ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/30'
                       : 'bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200'
                   }`}
-                  onClick={() => setUserMode('customer')}
+                  onClick={() => handleRoleChange('customer')}
+                  disabled={updateRoleMutation.isPending || CURRENT_USER_ID === 'guest'}
                 >
                   <ShoppingCart className="w-7 h-7" />
                   <div className="text-center">
@@ -267,7 +332,8 @@ export default function Settings() {
                       ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/30'
                       : 'bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200'
                   }`}
-                  onClick={() => setUserMode('provider')}
+                  onClick={() => handleRoleChange('provider')}
+                  disabled={updateRoleMutation.isPending || CURRENT_USER_ID === 'guest'}
                 >
                   <Camera className="w-7 h-7" />
                   <div className="text-center">
@@ -636,43 +702,55 @@ export default function Settings() {
                     <TranslatedText context="settings">Get notified when someone places a new order</TranslatedText>
                   </p>
                 </div>
-                <Switch defaultChecked />
+                <Switch 
+                  checked={profile.notifyNewOrders}
+                  onCheckedChange={(checked) => handleNotificationToggle('notifyNewOrders', checked)}
+                />
               </div>
               
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
                   <Label>
-                    <TranslatedText context="settings">Stream Reminders</TranslatedText>
+                    <TranslatedText context="settings">Message Notifications</TranslatedText>
                   </Label>
                   <p className="text-sm text-muted-foreground">
-                    <TranslatedText context="settings">Remind you before scheduled streams</TranslatedText>
+                    <TranslatedText context="settings">Get notified about new messages</TranslatedText>
                   </p>
                 </div>
-                <Switch defaultChecked />
+                <Switch 
+                  checked={profile.notifyMessages}
+                  onCheckedChange={(checked) => handleNotificationToggle('notifyMessages', checked)}
+                />
               </div>
               
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
                   <Label>
-                    <TranslatedText context="settings">Payment Notifications</TranslatedText>
+                    <TranslatedText context="settings">Platform Updates</TranslatedText>
                   </Label>
                   <p className="text-sm text-muted-foreground">
-                    <TranslatedText context="settings">Get notified when you receive payments</TranslatedText>
+                    <TranslatedText context="settings">Get notified about platform updates and features</TranslatedText>
                   </p>
                 </div>
-                <Switch defaultChecked />
+                <Switch 
+                  checked={profile.notifyUpdates}
+                  onCheckedChange={(checked) => handleNotificationToggle('notifyUpdates', checked)}
+                />
               </div>
               
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
                   <Label>
-                    <TranslatedText context="settings">Marketing Emails</TranslatedText>
+                    <TranslatedText context="settings">Promotional Emails</TranslatedText>
                   </Label>
                   <p className="text-sm text-muted-foreground">
-                    <TranslatedText context="settings">Receive tips and updates about the platform</TranslatedText>
+                    <TranslatedText context="settings">Receive promotional offers and updates</TranslatedText>
                   </p>
                 </div>
-                <Switch />
+                <Switch 
+                  checked={profile.notifyPromotions}
+                  onCheckedChange={(checked) => handleNotificationToggle('notifyPromotions', checked)}
+                />
               </div>
             </CardContent>
           </Card>
@@ -706,16 +784,24 @@ export default function Settings() {
                 <Label htmlFor="timezone">
                   <TranslatedText context="settings">Timezone</TranslatedText>
                 </Label>
-                <Select defaultValue="pst">
+                <Select 
+                  value={profile.timezone} 
+                  onValueChange={handleTimezoneChange}
+                >
                   <SelectTrigger className="w-full md:w-64">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="pst"><TranslatedText context="settings">Pacific Standard Time (PST)</TranslatedText></SelectItem>
-                    <SelectItem value="mst"><TranslatedText context="settings">Mountain Standard Time (MST)</TranslatedText></SelectItem>
-                    <SelectItem value="cst"><TranslatedText context="settings">Central Standard Time (CST)</TranslatedText></SelectItem>
-                    <SelectItem value="est"><TranslatedText context="settings">Eastern Standard Time (EST)</TranslatedText></SelectItem>
-                    <SelectItem value="utc"><TranslatedText context="settings">Coordinated Universal Time (UTC)</TranslatedText></SelectItem>
+                    <SelectItem value="America/New_York"><TranslatedText context="settings">Eastern Time (ET)</TranslatedText></SelectItem>
+                    <SelectItem value="America/Chicago"><TranslatedText context="settings">Central Time (CT)</TranslatedText></SelectItem>
+                    <SelectItem value="America/Denver"><TranslatedText context="settings">Mountain Time (MT)</TranslatedText></SelectItem>
+                    <SelectItem value="America/Los_Angeles"><TranslatedText context="settings">Pacific Time (PT)</TranslatedText></SelectItem>
+                    <SelectItem value="Europe/London"><TranslatedText context="settings">London (GMT)</TranslatedText></SelectItem>
+                    <SelectItem value="Europe/Paris"><TranslatedText context="settings">Paris (CET)</TranslatedText></SelectItem>
+                    <SelectItem value="Asia/Tokyo"><TranslatedText context="settings">Tokyo (JST)</TranslatedText></SelectItem>
+                    <SelectItem value="Asia/Shanghai"><TranslatedText context="settings">Shanghai (CST)</TranslatedText></SelectItem>
+                    <SelectItem value="Australia/Sydney"><TranslatedText context="settings">Sydney (AEDT)</TranslatedText></SelectItem>
+                    <SelectItem value="UTC"><TranslatedText context="settings">UTC</TranslatedText></SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -745,7 +831,10 @@ export default function Settings() {
                     <TranslatedText context="settings">Make your profile visible to other users</TranslatedText>
                   </p>
                 </div>
-                <Switch defaultChecked />
+                <Switch 
+                  checked={profile.profileVisibility}
+                  onCheckedChange={(checked) => handlePrivacyToggle('profileVisibility', checked)}
+                />
               </div>
               
               <div className="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-100">
@@ -757,7 +846,10 @@ export default function Settings() {
                     <TranslatedText context="settings">Allow sharing your location during streams</TranslatedText>
                   </p>
                 </div>
-                <Switch defaultChecked />
+                <Switch 
+                  checked={profile.locationSharing}
+                  onCheckedChange={(checked) => handlePrivacyToggle('locationSharing', checked)}
+                />
               </div>
               
               <div className="pt-2 space-y-3">
