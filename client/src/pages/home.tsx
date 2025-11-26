@@ -2,11 +2,12 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useUser } from "@clerk/clerk-react";
 import { Link } from "wouter";
-import { Plus, Search, Filter, Play, Users, MapPin, Clock, X, Settings } from "lucide-react";
+import { Plus, Search, Filter, Play, Users, MapPin, Clock, X, Settings, Bell } from "lucide-react";
 import { LanguageSelector } from "@/components/language-selector";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
@@ -134,123 +135,29 @@ export default function Home() {
   const { data: notificationsResponse, isLoading: notificationsLoading } = useQuery({
     queryKey: [`/api/users/${CURRENT_USER_ID}/notifications/orders`],
     queryFn: async () => {
-      const response: any = await apiRequest('GET', `/api/users/${CURRENT_USER_ID}/notifications/orders`);
-      return response.data || [];
+      const response = await apiRequest('GET', `/api/users/${CURRENT_USER_ID}/notifications/orders`);
+      const jsonData = await response.json();
+      console.log("fetched notifications response:", jsonData);
+      return jsonData.data || [];
     },
-    refetchInterval: 30000, // Refetch every 30 seconds for near-real-time updates
+    refetchInterval: 3000, // Refetch every 5 minutes for near-real-time updates
     
   });
 
   const notifications: Notification[] = notificationsResponse || [];
 
-  // 创建国外著名景点的模拟订单（MVP阶段补充内容）
-  const mockTouristOrders = [
-    {
-      id: 'mock-tokyo-tower',
-      title: '东京塔实时景观直播',
-      description: '360度俯瞰东京夜景，感受日本都市魅力',
-      price: '25.00',
-      status: 'pending' as const,
-      category: 'travel',
-      address: '日本东京都港区芝公园4-2-8',
-      latitude: "35.6586",
-      longitude: "139.7454",
-      type: 'single' as const,
-      creatorId: 'tourist-jp',
-      providerId: null,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    },
-    {
-      id: 'mock-times-square',
-      title: '纽约时代广场现场直播',
-      description: '感受纽约不夜城的繁华，实时人流车流',
-      price: '30.00',
-      status: 'pending' as const,
-      category: 'events',
-      address: '美国纽约州纽约市曼哈顿时代广场',
-      latitude: "40.7589",
-      longitude: "-73.9851",
-      type: 'single' as const,
-      creatorId: 'tourist-ny',
-      providerId: null,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    },
-    {
-      id: 'mock-eiffel-tower',
-      title: '埃菲尔铁塔日落直播',
-      description: '巴黎地标建筑，浪漫日落时分现场直播',
-      price: '35.00',
-      status: 'pending' as const,
-      category: 'travel',
-      address: '法国巴黎第七区战神广场5号',
-      latitude: "48.8584",
-      longitude: "2.2945",
-      type: 'single' as const,
-      creatorId: 'tourist-paris',
-      providerId: null,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    },
-    {
-      id: 'mock-big-ben',
-      title: '伦敦大本钟整点报时',
-      description: '英国标志性建筑，听取整点报时钟声',
-      price: '20.00',
-      status: 'pending' as const,
-      category: 'events',
-      address: '英国伦敦威斯敏斯特宫',
-      latitude: "51.5007",
-      longitude: "-0.1246",
-      type: 'single' as const,
-      creatorId: 'tourist-london',
-      providerId: null,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    },
-    {
-      id: 'mock-sydney-opera',
-      title: '悉尼歌剧院海港全景',
-      description: '澳洲地标建筑，悉尼海港大桥全景直播',
-      price: '28.00',
-      status: 'pending' as const,
-      category: 'travel',
-      address: '澳大利亚新南威尔士州悉尼本尼朗角',
-      latitude: "-33.8568",
-      longitude: "151.2153",
-      type: 'single' as const,
-      creatorId: 'tourist-sydney',
-      providerId: null,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    },
-    {
-      id: 'mock-santorini',
-      title: '圣托里尼日落观景直播',
-      description: '希腊最美岛屿，爱琴海蓝白建筑群',
-      price: '40.00',
-      status: 'pending' as const,
-      category: 'travel',
-      address: '希腊圣托里尼岛伊亚镇',
-      latitude: "36.4618",
-      longitude: "25.3753",
-      type: 'single' as const,
-      creatorId: 'tourist-greece',
-      providerId: null,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    }
-  ];
-
-  // 去重订单 - 基于订单ID去重，然后添加模拟订单
+  // Use only real orders from database
   const allOrders = ordersResponse?.data || [];
-  const realOrders = allOrders.filter((order: Order, index: number, arr: Order[]) => 
+  const orders = allOrders.filter((order: Order, index: number, arr: Order[]) => 
     arr.findIndex(o => o.id === order.id) === index
+  ) as Order[];
+
+  // Get dispatched orders from notifications
+  const dispatchedOrderIds = notifications.map(n => n.orderId).filter(Boolean);
+
+  const dispatchedOrders = orders.filter(order => 
+    dispatchedOrderIds.includes(order.id) && order.status === 'pending'
   );
-  
-  // 合并真实订单和模拟订单
-  const orders = [...realOrders, ...mockTouristOrders] as Order[];
 
   // Mutation for cancelling orders
   const cancelOrderMutation = useMutation({
@@ -437,15 +344,61 @@ export default function Home() {
           
           {/* 桌面版语言选择器 - 右上角显眼位置 */}
           <div className="hidden lg:flex items-center gap-3 mb-4">
-            {/* User Mode Toggle */}
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-white/80 backdrop-blur-sm rounded-lg shadow-sm border border-slate-200">
-           
-              { notifications.length > 0 && (
-                <Badge variant="destructive" className="ml-1 animate-pulse">
-                  {notifications.length}
-                </Badge>
-              )}
-            </div>
+            {/* Notification Bell with Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="relative">
+                  <Bell className="h-5 w-5" />
+                  {notifications.length > 0 && (
+                    <Badge 
+                      variant="destructive" 
+                      className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs animate-pulse"
+                    >
+                      {notifications.length}
+                    </Badge>
+                  )}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-80">
+                {notifications.length === 0 ? (
+                  <div className="p-4 text-center text-muted-foreground">
+                    <TranslatedText>No new notifications</TranslatedText>
+                  </div>
+                ) : (
+                  notifications.map((notification) => {
+                    const metadata = typeof notification.metadata === 'string' 
+                      ? JSON.parse(notification.metadata) 
+                      : notification.metadata;
+                    const order = orders.find(o => o.id === notification.orderId);
+                    
+                    return (
+                      <DropdownMenuItem key={notification.id} className="flex flex-col items-start p-3 cursor-pointer">
+                        <div className="flex justify-between w-full items-start">
+                          <div className="flex-1">
+                            <p className="font-semibold text-sm">{order?.title || 'New Order'}</p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              ${order?.price || 0} • {Math.round(metadata?.distance || 0)}km away
+                            </p>
+                          </div>
+                          <Button
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (order?.id) {
+                                handleAcceptOrder(order.id);
+                              }
+                            }}
+                            className="ml-2"
+                          >
+                            <TranslatedText>Accept</TranslatedText>
+                          </Button>
+                        </div>
+                      </DropdownMenuItem>
+                    );
+                  })
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
             
             <LanguageSelector 
               currentLanguage={currentLanguage}
@@ -514,47 +467,6 @@ export default function Home() {
       <div className="flex-1 flex flex-col lg:flex-row">
         {/* Live Streams Main Area */}
         <main className="flex-1 p-4 lg:p-6">
-          {/* Provider: Recent Requests Section */}
-          {/* {notifications.length > 0 && (
-            <div className="mb-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-2xl font-bold text-slate-900">
-                  <TranslatedText context="home">Recent Requests</TranslatedText>
-                </h2>
-                <Badge variant="default" className="bg-blue-500">
-                  {notifications.length} <TranslatedText context="home">New</TranslatedText>
-                </Badge>
-              </div>
-              <div className="space-y-3">
-                {notifications.slice(0, 3).map((notification) => (
-                  <NotificationCard
-                    key={notification.id}
-                    notification={notification}
-                    onAccept={handleAcceptOrder}
-                    onDismiss={() => {
-                      queryClient.invalidateQueries({ queryKey: [`/api/users/${CURRENT_USER_ID}/notifications/orders`] });
-                    }}
-                  />
-                ))}
-              </div>
-              {notifications.length > 3 && (
-                <Button
-                  variant="outline"
-                  className="w-full mt-3"
-                  onClick={() => {
-                    // Navigate to notifications page
-                    toast({
-                      title: "View All Notifications",
-                      description: `You have ${notifications.length} order matches`,
-                    });
-                  }}
-                >
-                  <TranslatedText context="home">View All {notifications.length} Requests</TranslatedText>
-                </Button>
-              )}
-            </div>
-          )} */}
-
           {/* Filter Tabs */}
           <Tabs defaultValue="live" className="mb-6">
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-4">
@@ -835,74 +747,59 @@ export default function Home() {
                     </div>
                   ))}
                 </div>
-              ) : filteredOrders.length > 0 ? (
+              ) : dispatchedOrders.length > 0 ? (
                 <div className="space-y-3 max-h-96 overflow-y-auto">
-                  {filteredOrders.slice(0, 5).map((order) => (
-                    <Card key={order.id} className="relative group p-3 hover:bg-accent/50 transition-colors cursor-pointer">
-                      {/* 关闭按钮 */}
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="absolute top-1 right-1 w-5 h-5 p-0 bg-red-500 hover:bg-red-600 border-0 text-white z-10 opacity-0 group-hover:opacity-100 transition-opacity"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDismissOrder(order.id);
-                        }}
-                        title="关闭此订单"
-                      >
-                        <X className="w-3 h-3" />
-                      </Button>
-
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <Badge variant="secondary" className="text-xs">
-                            {order.category || 'General'}
-                          </Badge>
-                          <span className="text-sm font-medium text-primary">
-                            ${order.price}
-                          </span>
+                  {dispatchedOrders.map((order) => {
+                    const notification = notifications.find(n => n.orderId === order.id);
+                    const metadata = notification?.metadata 
+                      ? typeof notification.metadata === 'string' ? JSON.parse(notification.metadata) : notification.metadata
+                      : null;
+                    
+                    return (
+                      <Card key={order.id} className="relative group p-3 hover:bg-accent/50 transition-colors cursor-pointer border-l-4 border-l-blue-500">
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <Badge variant="secondary" className="text-xs">
+                              {order.category || 'General'}
+                            </Badge>
+                            <span className="text-sm font-medium text-primary">
+                              ${order.price}
+                            </span>
+                          </div>
+                          <h4 className="font-medium text-sm line-clamp-1 pr-6">
+                            {order.title}
+                          </h4>
+                          <p className="text-xs text-muted-foreground line-clamp-2">
+                            {order.address}
+                          </p>
+                          
+                          {/* Distance indicator */}
+                          {metadata?.distance && (
+                            <Badge className="text-xs bg-green-500 text-white">
+                              📍 {Math.round(metadata.distance)}km away
+                            </Badge>
+                          )}
+                          
+                          <Button 
+                            size="sm" 
+                            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700" 
+                            onClick={() => handleAcceptOrder(order.id)}
+                          >
+                            <TranslatedText>Accept Request</TranslatedText>
+                          </Button>
                         </div>
-                        <h4 className="font-medium text-sm line-clamp-1 pr-6">
-                          {order.title}
-                        </h4>
-                        <p className="text-xs text-muted-foreground line-clamp-2">
-                          {order.address}
-                        </p>
-                        
-                        {/* 模拟订单标识 */}
-                        {order.id.startsWith('mock-') && (
-                          <Badge className="text-xs bg-blue-500 text-white">
-                            🌍 <TranslatedText context="home">International Attraction</TranslatedText>
-                          </Badge>
-                        )}
-                        
-                        <Button size="sm" className="w-full" onClick={() => handleAcceptOrder(order.id)}>
-                          <TranslatedText>Accept Request</TranslatedText>
-                        </Button>
-                      </div>
-                    </Card>
-                  ))}
-                </div>
-              ) : dismissedOrders.size > 0 ? (
-                <div className="text-center py-6">
-                  <p className="text-sm text-muted-foreground mb-3">
-                    <TranslatedText context="home">All orders closed</TranslatedText>
-                  </p>
-                  <p className="text-xs text-muted-foreground mb-3">
-                    📺 <TranslatedText context="home">MVP phase has limited orders, future will have unlimited order sources</TranslatedText>
-                  </p>
-                  <Button size="sm" variant="outline" onClick={handleResetDismissedOrders}>
-                    <TranslatedText context="home">Restore all orders</TranslatedText>
-                  </Button>
+                      </Card>
+                    );
+                  })}
                 </div>
               ) : (
                 <div className="text-center py-6">
                   <p className="text-sm text-muted-foreground mb-3">
                     <TranslatedText>No active requests</TranslatedText>
                   </p>
-                  <Button size="sm" variant="outline" onClick={() => setCreateModalOpen(true)}>
-                    <TranslatedText>Create First Request</TranslatedText>
-                  </Button>
+                  <p className="text-xs text-muted-foreground">
+                    💡 <TranslatedText context="home">New orders matching your profile will appear here</TranslatedText>
+                  </p>
                 </div>
               )}
             </div>

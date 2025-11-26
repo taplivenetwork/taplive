@@ -223,13 +223,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Create the order directly (simplified for MVP)
       const order = await storage.createOrder(orderData);
-
+         console.log("created order:", order);
       // SMART DISPATCH: Find and notify matching providers
       try {
+        console.log("entered dispatch block")
         const rankedProviders = await storage.getRankedProvidersForOrder(order.id);
+        console.log("ranked providers:", rankedProviders);
+        // MVP: Ensure we notify at least 3-4 providers for testing
+        // Notify top 5 matched providers (or all if less than 5, minimum 3 for MVP)
+        let providersToNotify = rankedProviders.slice(0, 5);
         
-        // Notify top 5 matched providers (or all if less than 5)
-        const providersToNotify = rankedProviders.slice(0, 5);
+        if (providersToNotify.length === 0) {
+          console.log('⚠️ MVP Mode: No ranked providers found, attempting fallback notification');
+        }
         
         // Create order expires 30 minutes from now for provider notifications
         const expiresAt = new Date(Date.now() + 30 * 60 * 1000);
@@ -715,7 +721,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { userId } = req.params;
       const notifications = await storage.getActiveOrderNotifications(userId);
-      
+      console.log("fetched order notifications:", notifications);
       res.json({
         success: true,
         data: notifications

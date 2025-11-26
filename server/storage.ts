@@ -172,415 +172,8 @@ export class MemStorage implements IStorage {
     this.timezoneRules = new Map();
     this.locationTimezones = new Map();
     this.notifications = new Map();
-    this.initializeTestData();
   }
 
-  private initializeTestData(): void {
-    // Create sample users
-    const sampleUsers: User[] = [
-      {
-        id: "user-sarah-chen",
-        username: "sarah_chen",
-        password: "hashed_password",
-        email: "sarah@example.com",
-        name: "Sarah Chen",
-        avatar: "https://pixabay.com/get/g21614bd3823a762ba03923929667a272b114dcafc0552a50f5d76427db7aee6d3ea1b14f612df2bf94afc17baa7e901cc9feeb0e3a4826d0b0706dab24266a26_1280.jpg",
-        role: "creator",
-        rating: "4.8",
-        totalRatings: 24,
-        completedOrders: 15,
-        responseTime: 12,
-        trustScore: "4.7",
-        // Dispatch fields
-        networkSpeed: "45.50",
-        devicePerformance: "85.00",
-        currentLatitude: "40.7580",
-        currentLongitude: "-73.9855",
-        availability: true,
-        lastActive: new Date(),
-        dispatchScore: "78.45",
-        // Financial fields
-        totalEarnings: "0.00",
-        walletAddress: null,
-        preferredPaymentMethod: null,
-        createdAt: new Date(),
-      },
-      {
-        id: "user-mike-rodriguez",
-        username: "mike_rodriguez",
-        password: "hashed_password", 
-        email: "mike@example.com",
-        name: "Mike Rodriguez",
-        avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=32&h=32",
-        role: "provider",
-        rating: "4.6",
-        totalRatings: 18,
-        completedOrders: 22,
-        responseTime: 8,
-        trustScore: "4.5",
-        // Dispatch fields
-        networkSpeed: "52.30",
-        devicePerformance: "92.00",
-        currentLatitude: "40.7614",
-        currentLongitude: "-73.9776",
-        availability: true,
-        lastActive: new Date(),
-        dispatchScore: "82.60",
-        // Financial fields
-        totalEarnings: "0.00",
-        walletAddress: null,
-        preferredPaymentMethod: null,
-        createdAt: new Date(),
-      },
-      // Additional provider samples with different metrics
-      {
-        id: "user-alex-kim",
-        username: "alex_kim",
-        password: "hashed_password",
-        email: "alex@example.com",
-        name: "Alex Kim",
-        avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=32&h=32",
-        role: "provider",
-        rating: "4.9",
-        totalRatings: 35,
-        completedOrders: 45,
-        responseTime: 5,
-        trustScore: "4.8",
-        // Dispatch fields - high performance provider
-        networkSpeed: "75.20",
-        devicePerformance: "95.00",
-        currentLatitude: "40.7505",
-        currentLongitude: "-73.9934",
-        availability: true,
-        lastActive: new Date(),
-        dispatchScore: "88.20",
-        // Financial fields
-        totalEarnings: "0.00",
-        walletAddress: null,
-        preferredPaymentMethod: null,
-        createdAt: new Date(),
-      },
-      {
-        id: "user-emma-wilson",
-        username: "emma_wilson",
-        password: "hashed_password",
-        email: "emma@example.com",
-        name: "Emma Wilson",
-        avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b786?ixlib=rb-4.0.3&auto=format&fit=crop&w=32&h=32",
-        role: "provider",
-        rating: "4.2",
-        totalRatings: 12,
-        completedOrders: 8,
-        responseTime: 15,
-        trustScore: "4.1",
-        // Dispatch fields - lower performance provider
-        networkSpeed: "25.80",
-        devicePerformance: "65.00",
-        currentLatitude: "40.7830",
-        currentLongitude: "-73.9712",
-        availability: true,
-        lastActive: new Date(),
-        dispatchScore: "65.30",
-        // Financial fields
-        totalEarnings: "0.00",
-        walletAddress: null,
-        preferredPaymentMethod: null,
-        createdAt: new Date(),
-      }
-    ];
-
-    sampleUsers.forEach(user => this.users.set(user.id, user));
-
-    // Create sample orders - Global landmarks live streaming
-    const sampleOrders: Order[] = [
-      // Live streaming orders for demonstration
-      {
-        id: "eiffel-tower-stream",
-        title: "Eiffel Tower Sunset Stream",
-        description: "Live streaming of the iconic Eiffel Tower during sunset, showcasing the romantic Parisian evening atmosphere",
-        type: "group",
-        status: "live",
-        latitude: "48.8584",
-        longitude: "2.2945",
-        address: "Eiffel Tower, Paris, France",
-        price: "35.00",
-        currency: "USD" as const,
-        platformFee: "7.00",
-        providerEarnings: "28.00",
-        maxParticipants: 8,
-        currentParticipants: 5,
-        scheduledAt: new Date(Date.now() - 30 * 60 * 1000), // Started 30 minutes ago
-        duration: 90,
-        creatorId: sampleUsers[0].id,
-        category: "travel",
-        tags: ["paris", "eiffel-tower", "sunset", "landmarks"],
-        isPaid: true,
-        isPayoutProcessed: false,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        liveUrl: "wss://stream.taplive.com/live/eiffel-sunset",
-        replayUrl: null,
-        providerId: sampleUsers[1].id,
-        // Required new fields
-        groupType: "group_booking",
-        groupId: null,
-        splitAmount: null,
-        minParticipants: 3,
-        riskLevel: "safe",
-        weatherAlert: "clear",
-        geoFenceStatus: null,
-        isHighRiskArea: false,
-        isMilitaryZone: false,
-        weatherConditions: null,
-        // Content Safety
-        contentFlags: [],
-        keywordViolations: [],
-        voiceAlerts: 0,
-        // Recording
-        recordingUrl: null,
-        replayAvailable: false,
-        recordingDuration: null,
-      },
-      {
-        id: "mount-fuji-stream",
-        title: "Mount Fuji Cherry Blossom Stream",
-        description: "Beautiful cherry blossoms around Mount Fuji in Japan, experiencing the most beautiful natural scenery of spring",
-        type: "single",
-        status: "live",
-        latitude: "35.3606",
-        longitude: "138.7274",
-        address: "Mount Fuji, Shizuoka, Japan",
-        price: "45.00",
-        currency: "USD" as const,
-        platformFee: "9.00",
-        providerEarnings: "36.00",
-        maxParticipants: null,
-        currentParticipants: 1,
-        scheduledAt: new Date(Date.now() - 15 * 60 * 1000), // Started 15 minutes ago
-        duration: 120,
-        creatorId: sampleUsers[0].id,
-        category: "nature",
-        tags: ["japan", "mount-fuji", "cherry-blossoms", "spring"],
-        isPaid: true,
-        isPayoutProcessed: false,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        liveUrl: "wss://stream.taplive.com/live/fuji-sakura",
-        replayUrl: null,
-        providerId: sampleUsers[2].id,
-        // Required new fields
-        groupType: "single",
-        groupId: null,
-        splitAmount: null,
-        minParticipants: 1,
-        riskLevel: "safe",
-        weatherAlert: "clear",
-        geoFenceStatus: null,
-        isHighRiskArea: false,
-        isMilitaryZone: false,
-        weatherConditions: null,
-        // Content Safety
-        contentFlags: [],
-        keywordViolations: [],
-        voiceAlerts: 0,
-        // Recording
-        recordingUrl: null,
-        replayAvailable: false,
-        recordingDuration: null,
-      },
-      {
-        id: "pyramids-stream",
-        title: "Pyramids Sunset Exploration",
-        description: "Exploring the Great Pyramids of Giza during sunset, discovering the mysterious charm of ancient civilization",
-        type: "group",
-        status: "live",
-        latitude: "29.9792",
-        longitude: "31.1342",
-        address: "Giza Pyramids, Cairo, Egypt",
-        price: "50.00",
-        currency: "USD" as const,
-        platformFee: "10.00",
-        providerEarnings: "40.00",
-        maxParticipants: 6,
-        currentParticipants: 4,
-        scheduledAt: new Date(Date.now() - 45 * 60 * 1000), // Started 45 minutes ago
-        duration: 100,
-        creatorId: sampleUsers[0].id,
-        category: "history",
-        tags: ["egypt", "pyramids", "ancient", "history"],
-        isPaid: true,
-        isPayoutProcessed: false,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        liveUrl: "wss://stream.taplive.com/live/giza-pyramids",
-        replayUrl: null,
-        providerId: sampleUsers[3].id,
-        // Required new fields
-        groupType: "group_booking",
-        groupId: null,
-        splitAmount: null,
-        minParticipants: 2,
-        riskLevel: "safe",
-        weatherAlert: "clear",
-        geoFenceStatus: null,
-        isHighRiskArea: false,
-        isMilitaryZone: false,
-        weatherConditions: null,
-        // Content Safety
-        contentFlags: [],
-        keywordViolations: [],
-        voiceAlerts: 0,
-        // Recording
-        recordingUrl: null,
-        replayAvailable: false,
-        recordingDuration: null,
-      },
-      // Upcoming streams
-      {
-        id: "taj-mahal-stream",
-        title: "Taj Mahal Moonlight Night",
-        description: "The stunning beauty of the Taj Mahal in Agra, India under moonlight, feeling the eternal power of love",
-        type: "group",
-        status: "open",
-        latitude: "27.1751",
-        longitude: "78.0421",
-        address: "Taj Mahal, Agra, India",
-        price: "40.00",
-        currency: "USD" as const,
-        platformFee: "8.00",
-        providerEarnings: "0.00",
-        maxParticipants: 10,
-        currentParticipants: 3,
-        scheduledAt: new Date(Date.now() + 2 * 60 * 60 * 1000),
-        duration: 80,
-        creatorId: sampleUsers[0].id,
-        category: "culture",
-        tags: ["india", "taj-mahal", "moonlight", "architecture"],
-        isPaid: false,
-        isPayoutProcessed: false,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        liveUrl: null,
-        replayUrl: null,
-        providerId: null,
-        // Required new fields
-        groupType: "group_booking",
-        groupId: null,
-        splitAmount: null,
-        minParticipants: 3,
-        riskLevel: "safe",
-        weatherAlert: "clear",
-        geoFenceStatus: null,
-        isHighRiskArea: false,
-        isMilitaryZone: false,
-        weatherConditions: null,
-        // Content Safety
-        contentFlags: [],
-        keywordViolations: [],
-        voiceAlerts: 0,
-        // Recording
-        recordingUrl: null,
-        replayAvailable: false,
-        recordingDuration: null,
-      },
-      {
-        id: "machu-picchu-stream",
-        title: "Machu Picchu Sunrise Above Clouds",
-        description: "Spectacular sunrise at the ancient ruins of Machu Picchu in Peru, mysterious ancient city surrounded by sea of clouds",
-        type: "single",
-        status: "open",
-        latitude: "-13.1631",
-        longitude: "-72.5450",
-        address: "Machu Picchu, Cusco, Peru",
-        price: "55.00",
-        currency: "USD" as const,
-        platformFee: "11.00",
-        providerEarnings: "0.00",
-        maxParticipants: null,
-        currentParticipants: 1,
-        scheduledAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
-        duration: 90,
-        creatorId: sampleUsers[0].id,
-        category: "adventure",
-        tags: ["peru", "machu-picchu", "sunrise", "ancient"],
-        isPaid: false,
-        isPayoutProcessed: false,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        liveUrl: null,
-        replayUrl: null,
-        providerId: null,
-        // Required new fields
-        groupType: "single",
-        groupId: null,
-        splitAmount: null,
-        minParticipants: 1,
-        riskLevel: "safe",
-        weatherAlert: "clear",
-        geoFenceStatus: null,
-        isHighRiskArea: false,
-        isMilitaryZone: false,
-        weatherConditions: null,
-        // Content Safety
-        contentFlags: [],
-        keywordViolations: [],
-        voiceAlerts: 0,
-        // Recording
-        recordingUrl: null,
-        replayAvailable: false,
-        recordingDuration: null,
-      },
-      {
-        id: "sydney-opera-stream",
-        title: "Sydney Opera House Night View",
-        description: "Brilliant light show of Sydney Opera House in Australia during the night, showcasing the beauty of modern architecture",
-        type: "group",
-        status: "open",
-        latitude: "-33.8568",
-        longitude: "151.2153",
-        address: "Sydney Opera House, Sydney, Australia",
-        price: "38.00",
-        currency: "USD" as const,
-        platformFee: "7.60",
-        providerEarnings: "0.00",
-        maxParticipants: 7,
-        currentParticipants: 2,
-        scheduledAt: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-        duration: 75,
-        creatorId: sampleUsers[0].id,
-        category: "architecture",
-        tags: ["australia", "sydney", "opera-house", "night"],
-        isPaid: false,
-        isPayoutProcessed: false,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        liveUrl: null,
-        replayUrl: null,
-        providerId: null,
-        // Required new fields
-        groupType: "group_booking",
-        groupId: null,
-        splitAmount: null,
-        minParticipants: 2,
-        riskLevel: "safe",
-        weatherAlert: "clear",
-        geoFenceStatus: null,
-        isHighRiskArea: false,
-        isMilitaryZone: false,
-        weatherConditions: null,
-        // Content Safety
-        contentFlags: [],
-        keywordViolations: [],
-        voiceAlerts: 0,
-        // Recording
-        recordingUrl: null,
-        replayAvailable: false,
-        recordingDuration: null,
-      }
-    ];
-
-    sampleOrders.forEach(order => this.orders.set(order.id, order));
-  }
 
   // Payment operations implementation
   async createPayment(insertPayment: InsertPayment): Promise<Payment> {
@@ -1074,20 +667,66 @@ export class MemStorage implements IStorage {
 
   // Dispatch operations implementation
   async getAvailableProviders(): Promise<User[]> {
-    return Array.from(this.users.values()).filter(user => 
+    // First try to get providers with full criteria
+    let providers = Array.from(this.users.values()).filter(user => 
       user.role === 'provider' && 
       user.availability &&
       user.currentLatitude &&
       user.currentLongitude
     );
+
+    // MVP: If no providers match strict criteria, get any providers for testing
+    if (providers.length === 0) {
+      console.log('⚠️ MVP Mode: No providers with full criteria, using any available providers for testing');
+      providers = Array.from(this.users.values()).filter(user => 
+        user.role === 'provider'
+      );
+      
+      // Set default location for providers without location (for MVP testing)
+      providers = providers.map(provider => {
+        if (!provider.currentLatitude || !provider.currentLongitude) {
+          return {
+            ...provider,
+            currentLatitude: '40.7128', // Default NYC location
+            currentLongitude: '-74.0060',
+            availability: true,
+            networkSpeed: provider.networkSpeed || '50',
+            devicePerformance: provider.devicePerformance || '75'
+          };
+        }
+        return provider;
+      });
+    }
+
+    return providers;
   }
 
   async getRankedProvidersForOrder(orderId: string): Promise<ProviderRanking[]> {
     const order = await this.getOrderById(orderId);
+    console.log("this is the order that we are getting providers for", order);
     if (!order) return [];
 
-    const availableProviders = await this.getAvailableProviders();
-    return rankProvidersForOrder(order, availableProviders);
+    let availableProviders = await this.getAvailableProviders();
+    
+    // MVP: If still no providers, just get 3-4 users with provider role for testing
+    if (availableProviders.length === 0) {
+      console.log('⚠️ MVP Mode: No available providers, picking random users for notification testing');
+      const allUsers = Array.from(this.users.values());
+      availableProviders = allUsers.slice(0, 4).map(user => ({
+        ...user,
+        role: 'provider' as const,
+        currentLatitude: user.currentLatitude || '40.7128',
+        currentLongitude: user.currentLongitude || '-74.0060',
+        availability: true,
+        networkSpeed: user.networkSpeed || '50',
+        devicePerformance: user.devicePerformance || '75',
+        trustScore: user.trustScore || '4.0'
+      }));
+    }
+
+    const rankings = rankProvidersForOrder(order, availableProviders);
+    console.log(`✅ Found ${rankings.length} providers for order, dispatching to top matches`);
+    return rankings;
   }
 
   async updateUserLocation(userId: string, latitude: number, longitude: number): Promise<User | undefined> {
@@ -1430,6 +1069,12 @@ export class MemStorage implements IStorage {
   }
 }
 
+
+
+
+
+
+
 // Database Storage Implementation
 export class DatabaseStorage implements IStorage {
   // User operations
@@ -1553,14 +1198,68 @@ export class DatabaseStorage implements IStorage {
     console.log(`Applied cancellation penalty to user ${userId}. Rating: ${currentRating} → ${newRating}, Trust Score: ${currentTrustScore} → ${newTrustScore}`);
   }
 
-  // Dispatch operations
+  // Dispatch operations implementation
   async getAvailableProviders(): Promise<User[]> {
-    return await db.select().from(users).where(eq(users.availability, true));
+    // First try to get providers with full criteria using database query
+    let providers = await db.select().from(users).where(
+      and(
+        eq(users.role, 'provider'),
+        eq(users.availability, true),
+        isNotNull(users.currentLatitude),
+        isNotNull(users.currentLongitude)
+      )
+    );
+
+    // MVP: If no providers match strict criteria, get any providers for testing
+    if (providers.length === 0) {
+      console.log('⚠️ MVP Mode: No providers with full criteria, using any available providers for testing');
+      providers = await db.select().from(users).where(eq(users.role, 'provider'));
+      
+      // Set default location for providers without location (for MVP testing)
+      providers = providers.map(provider => {
+        if (!provider.currentLatitude || !provider.currentLongitude) {
+          return {
+            ...provider,
+            currentLatitude: '40.7128', // Default NYC location
+            currentLongitude: '-74.0060',
+            availability: true,
+            networkSpeed: provider.networkSpeed || '50',
+            devicePerformance: provider.devicePerformance || '75'
+          };
+        }
+        return provider;
+      });
+    }
+
+    return providers;
   }
 
   async getRankedProvidersForOrder(orderId: string): Promise<ProviderRanking[]> {
-    // Implementation for provider ranking
-    return [];
+    const order = await this.getOrderById(orderId);
+    console.log("this is the order that we are getting providers for", order);
+    if (!order) return [];
+
+    let availableProviders = await this.getAvailableProviders();
+    
+    // MVP: If still no providers, just get 3-4 users for notification testing
+    if (availableProviders.length === 0) {
+      console.log('⚠️ MVP Mode: No available providers, picking random users for notification testing');
+      const allUsers = await db.select().from(users).limit(4);
+      availableProviders = allUsers.map(user => ({
+        ...user,
+        role: 'provider' as const,
+        currentLatitude: user.currentLatitude || '40.7128',
+        currentLongitude: user.currentLongitude || '-74.0060',
+        availability: true,
+        networkSpeed: user.networkSpeed || '50',
+        devicePerformance: user.devicePerformance || '75',
+        trustScore: user.trustScore || '4.0'
+      }));
+    }
+
+    const rankings = rankProvidersForOrder(order, availableProviders);
+    console.log(`✅ Found ${rankings.length} providers for order, dispatching to top matches`);
+    return rankings;
   }
 
   async updateUserLocation(userId: string, latitude: number, longitude: number): Promise<User | undefined> {
