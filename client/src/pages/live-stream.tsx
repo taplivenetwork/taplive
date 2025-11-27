@@ -20,15 +20,19 @@ export default function LiveStreamPage() {
   const [match, params] = useRoute('/stream/:orderId');
   const [viewerCount, setViewerCount] = useState(0);
   
-  // 检查URL参数决定默认模式
+  // Check URL parameters
   const urlParams = new URLSearchParams(window.location.search);
   const modeParam = urlParams.get('mode');
+  const paymentStatus = urlParams.get('payment'); // 'paid' or 'pending'
   const [userRole, setUserRole] = useState<'viewer' | 'broadcaster'>(
-    modeParam === 'viewer' ? 'viewer' : 'viewer' // 默认为观看模式，除非是主播
+    modeParam === 'viewer' ? 'viewer' : 'viewer' // Default to viewer mode
   );
   const queryClient = useQueryClient();
 
   const orderId = params?.orderId || '';
+
+  // Check if scheduled date has arrived
+  const [canStartBroadcast, setCanStartBroadcast] = useState(false);
 
   // Fetch order details
   const { data: orderResponse, isLoading } = useQuery({
@@ -50,9 +54,16 @@ export default function LiveStreamPage() {
   });
 
   useEffect(() => {
-    // Determine user role (simplified - in real app would check authentication)
-    // For demo, if order status is 'accepted' OR 'live', show broadcaster controls
-    // Also allow broadcaster controls for 'pending' and 'open' status for testing
+    // Check if scheduled date has arrived
+    if (order?.scheduledAt) {
+      const scheduledDate = new Date(order.scheduledAt);
+      const now = new Date();
+      setCanStartBroadcast(scheduledDate <= now);
+    } else {
+      setCanStartBroadcast(true); // If no scheduled date, allow broadcast
+    }
+
+    // Determine user role
     if (order && ['pending', 'open', 'accepted', 'live'].includes(order.status)) {
       console.log('🎬 Setting user role to broadcaster for status:', order.status);
       setUserRole('broadcaster');
@@ -236,15 +247,27 @@ export default function LiveStreamPage() {
           <div className="lg:col-span-2">
             {userRole === 'broadcaster' ? (
               <div className="space-y-4">
-                {/* 主播界面 - 原生WebRTC直播 */}
+                {/* Broadcaster interface - Native WebRTC streaming */}
                 <div className="text-sm text-green-600 bg-green-50 p-3 rounded border font-semibold">
-                  🎬 <TranslatedText>主播模式：您正在直播</TranslatedText>
+                  🎬 <TranslatedText>Broadcaster Mode: You are streaming</TranslatedText>
                 </div>
-                <NativeWebRTCBroadcaster
-                  orderId={orderId}
-                  onStreamStart={handleStreamStart}
-                  onStreamEnd={handleStreamEnd}
-                />
+                {!canStartBroadcast && order.scheduledAt && (
+                  <div className="text-sm text-orange-600 bg-orange-50 p-3 rounded border font-semibold">
+                    ⏰ Broadcast will be available at: {new Date(order.scheduledAt).toLocaleString()}
+                  </div>
+                )}
+                <div className={!canStartBroadcast ? 'opacity-50 pointer-events-none' : ''}>
+                  <NativeWebRTCBroadcaster
+                    orderId={orderId}
+                    onStreamStart={handleStreamStart}
+                    onStreamEnd={handleStreamEnd}
+                  />
+                </div>
+                {!canStartBroadcast && (
+                  <div className="text-center text-sm text-muted-foreground">
+                    <TranslatedText>Broadcast controls will be enabled when the scheduled time arrives</TranslatedText>
+                  </div>
+                )}
                 
                 {/* Provider cancel order button */}
                 {(order.status === 'accepted' || order.status === 'live') && (
@@ -344,6 +367,31 @@ export default function LiveStreamPage() {
                       </TranslatedText>
                     </Badge>
                   </div>
+                  
+                  {userRole === 'broadcaster' && (
+                    <>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">
+                          <TranslatedText>Payment</TranslatedText>
+                        </span>
+                        <Badge variant={paymentStatus === 'paid' ? 'default' : 'secondary'} 
+                               className={paymentStatus === 'paid' ? 'bg-green-600' : 'bg-orange-500'}>
+                          {paymentStatus === 'paid' ? '✅ Paid' : '⏳ Pending'}
+                        </Badge>
+                      </div>
+                      
+                      {!canStartBroadcast && order.scheduledAt && (
+                        <div className="pt-2 border-t">
+                          <p className="text-sm text-orange-600 font-medium">
+                            ⏰ <TranslatedText>Broadcast available at:</TranslatedText>
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {new Date(order.scheduledAt).toLocaleString()}
+                          </p>
+                        </div>
+                      )}
+                    </>
+                  )}
                   
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-muted-foreground">

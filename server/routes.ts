@@ -287,6 +287,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { id } = req.params;
       const updates = req.body;
 
+      // Get current order for validation
+      const order = await storage.getOrderById(id);
+      if (!order) {
+        return res.status(404).json({
+          success: false,
+          message: "Order not found"
+        });
+      }
+
+      // Handle provider acceptance (status change to 'accepted')
+      if (updates.status === 'accepted' && order.status === 'pending') {
+        console.log(`[MOCK PAYMENT] Freezing payment for order ${id} until stream completion`);
+        // In production: Create Stripe payment authorization here
+      }
+
+      // Handle order completion (status change to 'done')
+      if (updates.status === 'done' && (order.status === 'live' || order.status === 'accepted')) {
+        const price = typeof order.price === 'number' ? order.price : parseFloat(order.price);
+        const providerEarnings = price * 0.9;
+        const platformFee = price * 0.1;
+        
+        console.log(`[MOCK PAYMENT] Releasing $${providerEarnings.toFixed(2)} to provider ${order.providerId} (Platform fee: $${platformFee.toFixed(2)})`);
+        // In production: Capture Stripe payment and transfer to provider
+      }
+
       const updatedOrder = await storage.updateOrder(id, updates);
       
       if (!updatedOrder) {
@@ -296,10 +321,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
+      // Custom success messages based on status change
+      let message = "Order updated successfully";
+      if (updates.status === 'accepted') {
+        message = "Order accepted! Payment has been frozen until stream completion.";
+      } else if (updates.status === 'done') {
+        const price = typeof order.price === 'number' ? order.price : parseFloat(order.price);
+        const providerEarnings = price * 0.9;
+        message = `Payment released! You earned $${providerEarnings.toFixed(2)}`;
+      }
+
       res.json({
         success: true,
         data: updatedOrder,
-        message: "Order updated successfully"
+        message: message
       });
     } catch (error) {
       console.error('Error updating order:', error);
@@ -349,6 +384,98 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error) {
       console.error('Error cancelling order by provider:', error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to cancel order"
+      });
+    }
+  });
+
+  // Customer cancels order with penalty calculation
+  app.post("/api/orders/:id/cancel", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const customerId = req.user!.id;
+
+      // Fetch order
+      const order = await storage.getOrder(parseInt(id));
+      if (!order) {
+        return res.status(404).json({
+          success: false,
+          message: "Order not found"
+        });
+      }
+
+      // Validate customer owns this order
+      if (order.customerId !== customerId) {
+        return res.status(403).json({
+          success: false,
+          message: "You are not authorized to cancel this order"
+        });
+      }
+
+      // Cannot cancel if already done or cancelled
+      if (order.status === 'done' || order.status === 'cancelled') {
+        return res.status(400).json({
+          success: false,
+          message: `Order is already ${order.status}`
+        });
+      }
+
+      const price = typeof order.price === 'number' ? order.price : parseFloat(order.price);
+      let penaltyPercent = 0;
+      let penaltyAmount = 0;
+      let refundAmount = price;
+
+      // Calculate penalty based on order status
+      if (order.status === 'pending') {
+        // Free cancellation before provider accepts
+        penaltyPercent = 0;
+        refundAmount = price;
+      } else if (order.status === 'accepted' || order.status === 'live') {
+        // 5% penalty after provider accepts (can be tiered by time)
+        penaltyPercent = 5;
+        penaltyAmount = price * 0.05;
+        refundAmount = price - penaltyAmount;
+
+        // Optional: Tiered penalty based on time until scheduled date
+        if (order.scheduledAt) {
+          const hoursUntilStream = (new Date(order.scheduledAt).getTime() - Date.now()) / (1000 * 60 * 60);
+          if (hoursUntilStream < 2) {
+            penaltyPercent = 15;
+            penaltyAmount = price * 0.15;
+            refundAmount = price - penaltyAmount;
+          } else if (hoursUntilStream < 24) {
+            penaltyPercent = 10;
+            penaltyAmount = price * 0.10;
+            refundAmount = price - penaltyAmount;
+          }
+        }
+      }
+
+      // Update order status
+      const updatedOrder = await storage.updateOrder(id, { 
+        status: 'cancelled' as const
+      });
+
+      // Mock Stripe refund
+      console.log(`[MOCK PAYMENT] Refunding $${refundAmount.toFixed(2)} to customer ${customerId}`);
+      if (penaltyAmount > 0 && order.providerId) {
+        console.log(`[MOCK PAYMENT] Transferring penalty $${penaltyAmount.toFixed(2)} to provider ${order.providerId}`);
+      }
+
+      res.json({
+        success: true,
+        data: updatedOrder,
+        refundAmount,
+        penaltyAmount,
+        penaltyPercent,
+        message: penaltyPercent === 0 
+          ? "Order cancelled successfully. Full refund processed."
+          : `Order cancelled. Refund: $${refundAmount.toFixed(2)} (${penaltyPercent}% cancellation fee: $${penaltyAmount.toFixed(2)})`
+      });
+    } catch (error) {
+      console.error('Error cancelling order:', error);
       res.status(500).json({
         success: false,
         message: "Failed to cancel order"

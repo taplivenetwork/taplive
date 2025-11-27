@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useUser } from "@clerk/clerk-react";
 import { X, Move } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -45,12 +46,17 @@ interface CreateOrderModalProps {
 
 export function CreateOrderModal({ open, onOpenChange, selectedLocation }: CreateOrderModalProps) {
   const { toast } = useToast();
+  const { user } = useUser();
   const [paymentType, setPaymentType] = useState<"single" | "group">("single");
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const modalRef = useRef<HTMLDivElement>(null);
   const [isGeocoding, setIsGeocoding] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [pendingOrderData, setPendingOrderData] = useState<CreateOrderForm | null>(null);
+
+  const CURRENT_USER_ID = user?.id || "guest";
 
   // Set default scheduled time to 2 hours from now
   const getDefaultScheduledTime = () => {
@@ -126,6 +132,9 @@ export function CreateOrderModal({ open, onOpenChange, selectedLocation }: Creat
 
   const createOrderMutation = useMutation({
     mutationFn: async (data: CreateOrderForm) => {
+      // Mock payment processing - simulate 2 second delay
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
       const orderData: InsertOrder = {
         title: data.title,
         description: data.description,
@@ -133,23 +142,25 @@ export function CreateOrderModal({ open, onOpenChange, selectedLocation }: Creat
         latitude: data.latitude.toString(),
         longitude: data.longitude.toString(),
         address: data.address,
-        scheduledAt: data.scheduledAt,
+        scheduledAt: new Date(data.scheduledAt),
         duration: data.duration,
         price: parseFloat(data.price).toString(),
         type: data.type,
         maxParticipants: data.type === "group" ? data.maxParticipants : null,
         tags: data.tags || [],
-        creatorId: null, // Would be set from auth context
+        creatorId: CURRENT_USER_ID !== "guest" ? CURRENT_USER_ID : null,
+        isPaid: true, // Mock payment confirmed
       };
 
       return api.orders.create(orderData);
     },
     onSuccess: () => {
       toast({
-        title: "Success",
-        description: "Order created successfully!",
+        title: "Payment Successful!",
+        description: "Your order has been created and payment confirmed.",
       });
       invalidateOrders();
+      setShowPaymentModal(false);
       onOpenChange(false);
       form.reset();
     },
@@ -159,11 +170,25 @@ export function CreateOrderModal({ open, onOpenChange, selectedLocation }: Creat
         description: error.message || "Failed to create order",
         variant: "destructive",
       });
+      setShowPaymentModal(false);
     },
   });
 
   const onSubmit = (data: CreateOrderForm) => {
-    createOrderMutation.mutate(data);
+    // Show payment confirmation modal
+    setPendingOrderData(data);
+    setShowPaymentModal(true);
+  };
+
+  const handleConfirmPayment = () => {
+    if (pendingOrderData) {
+      createOrderMutation.mutate(pendingOrderData);
+    }
+  };
+
+  const handleCancelPayment = () => {
+    setShowPaymentModal(false);
+    setPendingOrderData(null);
   };
 
   // Multi-provider geocoding with automatic fallback
@@ -543,12 +568,110 @@ export function CreateOrderModal({ open, onOpenChange, selectedLocation }: Creat
                 disabled={createOrderMutation.isPending}
                 data-testid="button-create-order"
               >
-                {createOrderMutation.isPending ? <TranslatedText>Creating...</TranslatedText> : <TranslatedText>Create Order</TranslatedText>}
+                {createOrderMutation.isPending ? <TranslatedText>Creating...</TranslatedText> : <TranslatedText>Proceed to Payment</TranslatedText>}
               </Button>
             </div>
           </form>
         </Form>
       </DialogContent>
+
+      {/* Mock Payment Confirmation Modal */}
+      <Dialog open={showPaymentModal} onOpenChange={setShowPaymentModal}>
+        <DialogContent className="sm:max-w-[440px] bg-white border-2 border-gray-300 shadow-xl p-0">
+          <div className="p-5">
+            <DialogHeader className="mb-4">
+              <DialogTitle className="text-lg font-bold text-gray-900">💳 Confirm Payment</DialogTitle>
+            </DialogHeader>
+            
+            <div className="space-y-3">
+              {/* Order Summary */}
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                <h4 className="font-semibold text-blue-900 text-sm mb-2">📋 Order Summary</h4>
+                {pendingOrderData && (
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600 text-xs">Title:</span>
+                      <span className="font-medium text-xs text-gray-900 max-w-[240px] truncate" title={pendingOrderData.title}>
+                        {pendingOrderData.title}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600 text-xs">Location:</span>
+                      <span className="font-medium text-xs text-gray-900 max-w-[240px] truncate" title={pendingOrderData.address}>
+                        {pendingOrderData.address}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600 text-xs">Duration:</span>
+                      <span className="font-medium text-xs text-gray-900">{pendingOrderData.duration} min</span>
+                    </div>
+                    <div className="flex justify-between items-center pt-2 mt-2 border-t border-blue-300">
+                      <span className="font-semibold text-blue-900 text-sm">Total Amount:</span>
+                      <span className="text-xl font-bold text-blue-900">${pendingOrderData.price}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Payment Policy */}
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                <p className="text-xs font-semibold text-yellow-900 mb-2">
+                  ℹ️ Payment Policy
+                </p>
+                <ul className="text-xs text-yellow-800 space-y-1">
+                  <li className="flex items-start gap-1.5">
+                    <span className="text-yellow-600 flex-shrink-0">•</span>
+                    <span className="leading-tight">Payment held securely until completion</span>
+                  </li>
+                  <li className="flex items-start gap-1.5">
+                    <span className="text-yellow-600 flex-shrink-0">•</span>
+                    <span className="leading-tight">Free cancellation before provider accepts</span>
+                  </li>
+                  <li className="flex items-start gap-1.5">
+                    <span className="text-yellow-600 flex-shrink-0">•</span>
+                    <span className="leading-tight">5% penalty after provider accepts</span>
+                  </li>
+                </ul>
+              </div>
+
+              {/* Mock Payment Notice */}
+              <div className="bg-gray-100 border border-gray-300 rounded-lg p-2.5">
+                <p className="text-xs text-gray-700 text-center leading-relaxed">
+                  🔒 Mock payment for testing. No actual charges.
+                </p>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-2 pt-2">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  className="flex-1 h-10 border-gray-300"
+                  onClick={handleCancelPayment}
+                  disabled={createOrderMutation.isPending}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  type="button"
+                  className="flex-1 h-10 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold"
+                  onClick={handleConfirmPayment}
+                  disabled={createOrderMutation.isPending}
+                >
+                  {createOrderMutation.isPending ? (
+                    <div className="flex items-center gap-2">
+                      <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <span>Processing...</span>
+                    </div>
+                  ) : (
+                    <span>✓ Pay ${pendingOrderData?.price || '0'}</span>
+                  )}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 }

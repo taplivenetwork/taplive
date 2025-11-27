@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { useUser } from "@clerk/clerk-react";
 import { useToast } from "@/hooks/use-toast";
-import { queryClient } from "@/lib/queryClient";
+import { queryClient, apiRequest } from "@/lib/queryClient";
 import { OrderCard } from "@/components/order-card";
 import { LiveStreamCard } from "@/components/live-stream-card";
 import { TranslatedText } from "@/components/translated-text";
@@ -14,15 +15,32 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Search, Filter, Calendar, TrendingUp, Plus } from "lucide-react";
+import { Search, Filter, Calendar, TrendingUp, Plus, Play, CreditCard, Star, CheckCircle, Clock, Video } from "lucide-react";
 import type { Order } from "@shared/schema";
 
 export default function Orders() {
   const { toast } = useToast();
   const { currentLanguage } = useTranslation();
+  const { user, isLoaded } = useUser();
   const [searchFilter, setSearchFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [sortBy, setSortBy] = useState("recent");
+  
+  const CURRENT_USER_ID = user?.id || "guest";
+  
+  // Fetch user data to get role
+  const { data: userData } = useQuery({
+    queryKey: [`/api/users/${CURRENT_USER_ID}`],
+    queryFn: async () => {
+      if (CURRENT_USER_ID === "guest") return null;
+      const response = await apiRequest('GET', `/api/users/${CURRENT_USER_ID}`);
+      const data = await response.json();
+      return data;
+    },
+    enabled: CURRENT_USER_ID !== "guest" && isLoaded,
+  });
+
+  const userRole = (userData?.data?.role || userData?.role) === 'provider' ? 'provider' : 'customer';
   
   // Helper function to get translated text for placeholders
   const getTranslation = (key: string) => {
@@ -41,8 +59,19 @@ export default function Orders() {
 
   const orders = ordersResponse?.data || [];
   
+  // Role-based order filtering
+  const relevantOrders = orders.filter((order: Order) => {
+    if (userRole === 'provider') {
+      // Provider sees orders they've accepted or are assigned to
+      return order.providerId === CURRENT_USER_ID;
+    } else {
+      // Customer sees orders they've created
+      return order.creatorId === CURRENT_USER_ID;
+    }
+  });
+  
   // Filter and sort orders
-  const filteredOrders = orders.filter((order: Order) => {
+  const filteredOrders = relevantOrders.filter((order: Order) => {
     const matchesSearch = !searchFilter || 
       order.title.toLowerCase().includes(searchFilter.toLowerCase()) ||
       order.description.toLowerCase().includes(searchFilter.toLowerCase());
@@ -63,12 +92,78 @@ export default function Orders() {
     }
   });
 
-  // Filter orders by status
-  const pendingOrders = orders.filter((order: Order) => order.status === 'pending');
-  const openOrders = orders.filter((order: Order) => order.status === 'open');
-  const acceptedOrders = orders.filter((order: Order) => order.status === 'accepted');
-  const liveOrders = orders.filter((order: Order) => order.status === 'live');
-  const completedOrders = orders.filter((order: Order) => order.status === 'done');
+  // Filter orders by status for role-specific views
+  let pendingOrders: Order[], acceptedOrders: Order[], liveOrders: Order[], completedOrders: Order[], goLiveOrders: Order[];
+  
+  if (userRole === 'provider') {
+    // Provider view: pending (not started), go-live (date arrived), accepted (streaming), completed
+    const now = new Date();
+    pendingOrders = relevantOrders.filter((order: Order) => 
+      order.status === 'accepted' && order.scheduledAt && new Date(order.scheduledAt) > now
+    );
+    goLiveOrders = relevantOrders.filter((order: Order) => 
+      order.status === 'accepted' && order.scheduledAt && new Date(order.scheduledAt) <= now
+    );
+    acceptedOrders = relevantOrders.filter((order: Order) => order.status === 'accepted');
+    liveOrders = relevantOrders.filter((order: Order) => order.status === 'live');
+    completedOrders = relevantOrders.filter((order: Order) => order.status === 'done');
+  } else {
+    // Customer view: pending (awaiting provider), accepted (needs payment), live, completed (rate provider)
+    pendingOrders = relevantOrders.filter((order: Order) => order.status === 'pending');
+    acceptedOrders = relevantOrders.filter((order: Order) => order.status === 'accepted');
+    liveOrders = relevantOrders.filter((order: Order) => order.status === 'live');
+    completedOrders = relevantOrders.filter((order: Order) => order.status === 'done');
+    goLiveOrders = []; // Not applicable for customers
+  }
+  
+  const openOrders = relevantOrders.filter((order: Order) => order.status === 'open');
+
+  // Helper function to check if stream date has arrived
+  const isStreamDateArrived = (order: Order): boolean => {
+    if (!order.scheduledAt) return true; // If no scheduled date, can go live anytime
+    return new Date(order.scheduledAt) <= new Date();
+  };
+
+  // Handle Go Live action for providers
+  const handleGoLive = async (orderId: string) => {
+    try {
+      await api.orders.update(orderId, { status: 'live' });
+      queryClient.invalidateQueries({ queryKey: ['/api/orders'] });
+      toast({
+        title: "Going Live!",
+        description: "Redirecting to stream page...",
+      });
+      setTimeout(() => {
+        window.location.href = `/stream/${orderId}?mode=broadcaster`;
+      }, 1000);
+    } catch (error) {
+      toast({
+        title: "Failed to start stream",
+        description: "Please try again",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Handle payment confirmation for customers
+  const handlePayment = async (orderId: string) => {
+    toast({
+      title: "Processing Payment",
+      description: "Redirecting to payment gateway...",
+    });
+    // TODO: Integrate actual payment gateway
+    // For now, just redirect to a payment page or show a modal
+    window.location.href = `/payment/${orderId}`;
+  };
+
+  // Handle rating provider for customers
+  const handleRateProvider = (_orderId: string, _providerId: string) => {
+    // TODO: Open rating modal
+    toast({
+      title: "Rate Provider",
+      description: "Rating feature coming soon...",
+    });
+  };
 
   // Delete order mutation for live streams
   const deleteOrderMutation = useMutation({
@@ -114,6 +209,220 @@ export default function Orders() {
     window.location.href = `/stream/${orderId}?mode=viewer`;
   };
 
+  // Role-specific order card renderer
+  const renderRoleBasedOrderCard = (order: Order) => {
+    const dateArrived = isStreamDateArrived(order);
+    
+    if (userRole === 'provider') {
+      // Provider view
+      if (order.status === 'live') {
+        return (
+          <Card key={order.id} className="p-4 border-green-500 border-2">
+            <div className="space-y-3">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h3 className="font-bold text-lg">{order.title}</h3>
+                  <Badge className="bg-green-500 mt-1">🔴 Live Now</Badge>
+                </div>
+                <span className="text-xl font-bold text-green-600">${order.price}</span>
+              </div>
+              <p className="text-sm text-muted-foreground line-clamp-2">{order.description}</p>
+              <div className="text-xs font-medium">
+                Payment: <span className={order.isPaid ? "text-green-600" : "text-orange-600"}>
+                  {order.isPaid ? "✅ Confirmed" : "⏳ Pending"}
+                </span>
+              </div>
+              <Button 
+                onClick={() => window.location.href = `/stream/${order.id}?mode=broadcaster&payment=${order.isPaid ? 'paid' : 'pending'}`}
+                className="w-full bg-green-600 hover:bg-green-700"
+              >
+                <Video className="w-4 h-4 mr-2" />
+                Continue Streaming
+              </Button>
+            </div>
+          </Card>
+        );
+      }
+      
+      if (order.status === 'accepted') {
+        return (
+          <Card key={order.id} className="p-4 border-blue-500 border-2">
+            <div className="space-y-3">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h3 className="font-bold text-lg">{order.title}</h3>
+                  <Badge className={dateArrived ? "bg-orange-500" : "bg-blue-500"}>
+                    {dateArrived ? "⏰ Ready to Go Live" : "📅 Scheduled"}
+                  </Badge>
+                </div>
+                <span className="text-xl font-bold">${order.price}</span>
+              </div>
+              <p className="text-sm text-muted-foreground line-clamp-2">{order.description}</p>
+              <div className="text-xs text-muted-foreground">
+                <Clock className="w-3 h-3 inline mr-1" />
+                {order.scheduledAt ? new Date(order.scheduledAt).toLocaleString() : 'Not scheduled'}
+              </div>
+              <div className="text-xs font-medium">
+                Payment: <span className={order.isPaid ? "text-green-600" : "text-orange-600"}>
+                  {order.isPaid ? "✅ Confirmed" : "⏳ Pending"}
+                </span>
+              </div>
+              {dateArrived ? (
+                <Button 
+                  onClick={() => handleGoLive(order.id)}
+                  className="w-full bg-green-600 hover:bg-green-700"
+                >
+                  <Play className="w-4 h-4 mr-2" />
+                  Go Live Now
+                </Button>
+              ) : (
+                <Button 
+                  onClick={() => window.location.href = `/stream/${order.id}?mode=broadcaster&payment=${order.isPaid ? 'paid' : 'pending'}`}
+                  className="w-full"
+                  variant="outline"
+                >
+                  <Video className="w-4 h-4 mr-2" />
+                  Enter Room (Prepare)
+                </Button>
+              )}
+            </div>
+          </Card>
+        );
+      }
+      
+      if (order.status === 'done') {
+        return (
+          <Card key={order.id} className="p-4">
+            <div className="space-y-3">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h3 className="font-bold text-lg">{order.title}</h3>
+                  <Badge className="bg-gray-500">✅ Completed</Badge>
+                </div>
+                <span className="text-xl font-bold text-green-600">${order.price}</span>
+              </div>
+              <p className="text-sm text-muted-foreground line-clamp-2">{order.description}</p>
+              <Button 
+                variant="outline"
+                className="w-full"
+                onClick={() => toast({ title: "Reviews", description: "View reviews feature coming soon..." })}
+              >
+                <Star className="w-4 h-4 mr-2" />
+                View Reviews
+              </Button>
+            </div>
+          </Card>
+        );
+      }
+    } else {
+      // Customer view
+      if (order.status === 'pending') {
+        return (
+          <Card key={order.id} className="p-4 border-orange-500 border-2">
+            <div className="space-y-3">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h3 className="font-bold text-lg">{order.title}</h3>
+                  <Badge className="bg-orange-500">⏳ Awaiting Provider</Badge>
+                </div>
+                <span className="text-xl font-bold">${order.price}</span>
+              </div>
+              <p className="text-sm text-muted-foreground line-clamp-2">{order.description}</p>
+              <div className="text-xs text-muted-foreground">
+                <Clock className="w-3 h-3 inline mr-1" />
+                {order.scheduledAt ? new Date(order.scheduledAt).toLocaleString() : 'Not scheduled'}
+              </div>
+              <p className="text-xs text-muted-foreground">Waiting for a provider to accept your request...</p>
+            </div>
+          </Card>
+        );
+      }
+      
+      if (order.status === 'accepted') {
+        return (
+          <Card key={order.id} className="p-4 border-blue-500 border-2">
+            <div className="space-y-3">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h3 className="font-bold text-lg">{order.title}</h3>
+                  <Badge className="bg-blue-500">✓ Accepted</Badge>
+                </div>
+                <span className="text-xl font-bold">${order.price}</span>
+              </div>
+              <p className="text-sm text-muted-foreground line-clamp-2">{order.description}</p>
+              <div className="text-xs text-muted-foreground">
+                <Clock className="w-3 h-3 inline mr-1" />
+                {order.scheduledAt ? new Date(order.scheduledAt).toLocaleString() : 'Not scheduled'}
+              </div>
+              <Button 
+                onClick={() => handlePayment(order.id)}
+                className="w-full bg-blue-600 hover:bg-blue-700"
+              >
+                <CreditCard className="w-4 h-4 mr-2" />
+                {order.isPaid ? "Payment Confirmed" : "Confirm Payment"}
+              </Button>
+            </div>
+          </Card>
+        );
+      }
+      
+      if (order.status === 'live') {
+        return (
+          <Card key={order.id} className="p-4 border-green-500 border-2">
+            <div className="space-y-3">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h3 className="font-bold text-lg">{order.title}</h3>
+                  <Badge className="bg-green-500 animate-pulse">🔴 Live Now</Badge>
+                </div>
+                <span className="text-xl font-bold">${order.price}</span>
+              </div>
+              <p className="text-sm text-muted-foreground line-clamp-2">{order.description}</p>
+              <Button 
+                onClick={() => handleJoinStream(order.id)}
+                className="w-full bg-green-600 hover:bg-green-700"
+              >
+                <Play className="w-4 h-4 mr-2" />
+                Watch Stream
+              </Button>
+            </div>
+          </Card>
+        );
+      }
+      
+      if (order.status === 'done') {
+        return (
+          <Card key={order.id} className="p-4">
+            <div className="space-y-3">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h3 className="font-bold text-lg">{order.title}</h3>
+                  <Badge className="bg-gray-500">✅ Completed</Badge>
+                </div>
+                <span className="text-xl font-bold">${order.price}</span>
+              </div>
+              <p className="text-sm text-muted-foreground line-clamp-2">{order.description}</p>
+              <Button 
+                onClick={() => order.providerId && handleRateProvider(order.id, order.providerId)}
+                className="w-full"
+              >
+                <Star className="w-4 h-4 mr-2" />
+                Rate Provider
+              </Button>
+            </div>
+          </Card>
+        );
+      }
+    }
+    
+    // Default fallback
+    return (
+      <div key={order.id} className="col-span-1">
+        <OrderCard order={order} showActions={true} />
+      </div>
+    );
+  };
+
   const renderOrderList = (orderList: Order[], emptyMessage: string) => {
     if (isLoading) {
       return (
@@ -152,29 +461,10 @@ export default function Orders() {
       );
     }
 
-    // Use LiveStreamCard for live orders, OrderCard for others
+    // Use role-based card renderer
     return (
       <div className="grid gap-4 md:gap-6 grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
-        {orderList.map((order) => {
-          if (order.status === 'live' || order.status === 'accepted') {
-            return (
-              <LiveStreamCard
-                key={order.id}
-                stream={order}
-                onJoin={handleJoinStream}
-                onDelete={handleDeleteStream}
-              />
-            );
-          }
-          return (
-            <div key={order.id} className="col-span-1">
-              <OrderCard
-                order={order}
-                showActions={true}
-              />
-            </div>
-          );
-        })}
+        {orderList.map((order) => renderRoleBasedOrderCard(order))}
       </div>
     );
   };
@@ -186,10 +476,16 @@ export default function Orders() {
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <h2 className="text-2xl lg:text-3xl font-bold text-foreground mb-2">
-              <TranslatedText context="orders">My Orders Dashboard</TranslatedText>
+              <TranslatedText context="orders">
+                {userRole === 'provider' ? 'Provider Dashboard' : 'My Orders Dashboard'}
+              </TranslatedText>
             </h2>
             <p className="text-muted-foreground">
-              <TranslatedText context="orders">Manage your streaming orders and track their progress</TranslatedText>
+              <TranslatedText context="orders">
+                {userRole === 'provider' 
+                  ? 'Manage your accepted orders and streaming schedule' 
+                  : 'Manage your streaming orders and track their progress'}
+              </TranslatedText>
             </p>
           </div>
           
@@ -197,7 +493,7 @@ export default function Orders() {
           <div className="flex gap-4">
             <Card className="p-3">
               <div className="text-center">
-                <div className="text-2xl font-bold text-primary">{orders.length}</div>
+                <div className="text-2xl font-bold text-primary">{relevantOrders.length}</div>
                 <div className="text-xs text-muted-foreground"><TranslatedText context="orders">Total</TranslatedText></div>
               </div>
             </Card>
@@ -210,9 +506,19 @@ export default function Orders() {
             <Card className="p-3">
               <div className="text-center">
                 <div className="text-2xl font-bold text-orange-600">{pendingOrders.length}</div>
-                <div className="text-xs text-muted-foreground"><TranslatedText context="orders">Pending</TranslatedText></div>
+                <div className="text-xs text-muted-foreground">
+                  {userRole === 'provider' ? 'Scheduled' : 'Pending'}
+                </div>
               </div>
             </Card>
+            {userRole === 'provider' && (
+              <Card className="p-3">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-blue-600">{goLiveOrders.length}</div>
+                  <div className="text-xs text-muted-foreground">Ready</div>
+                </div>
+              </Card>
+            )}
           </div>
         </div>
       </header>
@@ -261,56 +567,107 @@ export default function Orders() {
       {/* Main Content */}
       <div className="flex-1 p-4 lg:p-6">
         <Tabs defaultValue="all" className="w-full">
-          <TabsList className="grid w-full grid-cols-6 bg-secondary mb-6">
-            <TabsTrigger value="all" data-testid="tab-all">
-              <TranslatedText context="orders">All</TranslatedText>
-              <Badge variant="secondary" className="ml-2">{orders.length}</Badge>
-            </TabsTrigger>
-            <TabsTrigger value="pending" data-testid="tab-pending">
-              <TranslatedText context="orders">Pending</TranslatedText>
-              <Badge variant="secondary" className="ml-2">{pendingOrders.length}</Badge>
-            </TabsTrigger>
-            <TabsTrigger value="open" data-testid="tab-open">
-              <TranslatedText context="orders">Open</TranslatedText>
-              <Badge variant="secondary" className="ml-2">{openOrders.length}</Badge>
-            </TabsTrigger>
-            <TabsTrigger value="accepted" data-testid="tab-accepted">
-              <TranslatedText context="orders">Accepted</TranslatedText>
-              <Badge variant="secondary" className="ml-2">{acceptedOrders.length}</Badge>
-            </TabsTrigger>
-            <TabsTrigger value="live" data-testid="tab-live">
-              <TranslatedText context="orders">Live</TranslatedText>
-              <Badge variant="secondary" className="ml-2">{liveOrders.length}</Badge>
-            </TabsTrigger>
-            <TabsTrigger value="completed" data-testid="tab-completed">
-              <TranslatedText context="orders">Completed</TranslatedText>
-              <Badge variant="secondary" className="ml-2">{completedOrders.length}</Badge>
-            </TabsTrigger>
-          </TabsList>
+          {userRole === 'provider' ? (
+            // Provider Tabs
+            <>
+              <TabsList className="grid w-full grid-cols-5 bg-secondary mb-6">
+                <TabsTrigger value="all" data-testid="tab-all">
+                  <TranslatedText context="orders">All</TranslatedText>
+                  <Badge variant="secondary" className="ml-2">{relevantOrders.length}</Badge>
+                </TabsTrigger>
+                <TabsTrigger value="pending" data-testid="tab-pending">
+                  <Clock className="w-4 h-4 mr-1" />
+                  <TranslatedText context="orders">Scheduled</TranslatedText>
+                  <Badge variant="secondary" className="ml-2">{pendingOrders.length}</Badge>
+                </TabsTrigger>
+                <TabsTrigger value="golive" data-testid="tab-golive">
+                  <Play className="w-4 h-4 mr-1" />
+                  <TranslatedText context="orders">Go Live</TranslatedText>
+                  <Badge variant="secondary" className="ml-2">{goLiveOrders.length}</Badge>
+                </TabsTrigger>
+                <TabsTrigger value="live" data-testid="tab-live">
+                  <Video className="w-4 h-4 mr-1" />
+                  <TranslatedText context="orders">Live</TranslatedText>
+                  <Badge variant="secondary" className="ml-2">{liveOrders.length}</Badge>
+                </TabsTrigger>
+                <TabsTrigger value="completed" data-testid="tab-completed">
+                  <CheckCircle className="w-4 h-4 mr-1" />
+                  <TranslatedText context="orders">Completed</TranslatedText>
+                  <Badge variant="secondary" className="ml-2">{completedOrders.length}</Badge>
+                </TabsTrigger>
+              </TabsList>
 
-          <TabsContent value="all">
-            {renderOrderList(filteredOrders, "You haven't created any orders yet")}
-          </TabsContent>
+              <TabsContent value="all">
+                {renderOrderList(filteredOrders, "You haven't accepted any orders yet")}
+              </TabsContent>
 
-          <TabsContent value="pending">
-            {renderOrderList(pendingOrders, "No pending orders")}
-          </TabsContent>
+              <TabsContent value="pending">
+                {renderOrderList(pendingOrders, "No scheduled orders")}
+              </TabsContent>
 
-          <TabsContent value="open">
-            {renderOrderList(openOrders, "No open orders")}
-          </TabsContent>
+              <TabsContent value="golive">
+                {renderOrderList(goLiveOrders, "No orders ready to go live")}
+              </TabsContent>
 
-          <TabsContent value="accepted">
-            {renderOrderList(acceptedOrders, "No accepted orders")}
-          </TabsContent>
+              <TabsContent value="live">
+                {renderOrderList(liveOrders, "No active streams")}
+              </TabsContent>
 
-          <TabsContent value="live">
-            {renderOrderList(liveOrders, "No live streams")}
-          </TabsContent>
+              <TabsContent value="completed">
+                {renderOrderList(completedOrders, "No completed orders")}
+              </TabsContent>
+            </>
+          ) : (
+            // Customer Tabs
+            <>
+              <TabsList className="grid w-full grid-cols-5 bg-secondary mb-6">
+                <TabsTrigger value="all" data-testid="tab-all">
+                  <TranslatedText context="orders">All</TranslatedText>
+                  <Badge variant="secondary" className="ml-2">{relevantOrders.length}</Badge>
+                </TabsTrigger>
+                <TabsTrigger value="pending" data-testid="tab-pending">
+                  <Clock className="w-4 h-4 mr-1" />
+                  <TranslatedText context="orders">Pending</TranslatedText>
+                  <Badge variant="secondary" className="ml-2">{pendingOrders.length}</Badge>
+                </TabsTrigger>
+                <TabsTrigger value="accepted" data-testid="tab-accepted">
+                  <CreditCard className="w-4 h-4 mr-1" />
+                  <TranslatedText context="orders">Accepted</TranslatedText>
+                  <Badge variant="secondary" className="ml-2">{acceptedOrders.length}</Badge>
+                </TabsTrigger>
+                <TabsTrigger value="live" data-testid="tab-live">
+                  <Video className="w-4 h-4 mr-1" />
+                  <TranslatedText context="orders">Live</TranslatedText>
+                  <Badge variant="secondary" className="ml-2">{liveOrders.length}</Badge>
+                </TabsTrigger>
+                <TabsTrigger value="completed" data-testid="tab-completed">
+                  <Star className="w-4 h-4 mr-1" />
+                  <TranslatedText context="orders">Completed</TranslatedText>
+                  <Badge variant="secondary" className="ml-2">{completedOrders.length}</Badge>
+                </TabsTrigger>
+              </TabsList>
 
-          <TabsContent value="completed">
-            {renderOrderList(completedOrders, "No completed orders")}
-          </TabsContent>
+              <TabsContent value="all">
+                {renderOrderList(filteredOrders, "You haven't created any orders yet")}
+              </TabsContent>
+
+              <TabsContent value="pending">
+                {renderOrderList(pendingOrders, "No pending orders")}
+              </TabsContent>
+
+              <TabsContent value="accepted">
+                {renderOrderList(acceptedOrders, "No accepted orders")}
+              </TabsContent>
+
+              <TabsContent value="live">
+                {renderOrderList(liveOrders, "No live streams")}
+              </TabsContent>
+
+              <TabsContent value="completed">
+                {renderOrderList(completedOrders, "No completed orders")}
+              </TabsContent>
+            </>
+          )}
         </Tabs>
       </div>
     </div>
