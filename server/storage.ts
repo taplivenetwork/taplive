@@ -1209,7 +1209,7 @@ export class DatabaseStorage implements IStorage {
         isNotNull(users.currentLongitude)
       )
     );
-
+//change
     // MVP: If no providers match strict criteria, get any providers for testing
     if (providers.length === 0) {
       console.log('⚠️ MVP Mode: No providers with full criteria, using any available providers for testing');
