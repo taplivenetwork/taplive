@@ -2315,6 +2315,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         message: "Failed to fetch stream"
       });
     }
+  });
+
   // ========== EARNINGS ENDPOINTS ==========
 
   // Get user earnings summary

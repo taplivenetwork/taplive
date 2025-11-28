@@ -1,89 +1,186 @@
-# TapLive - 全球实时视频流市场平台
+# 🌍 TapLive — Real-time Human Collaboration Network
 
-## 🚀 项目概述
+> “Connecting people to real-world actions through on-demand live collaboration.”
 
-**TapLive** 是一个基于位置的全球实时视频流市场平台，致力于整合全球闲置人员和智能设备资源，构建一个去中心化的视频流供应链网络。
-
-## 📖 文档导航
-
-本文档包含完整的项目规划、技术实现和团队协作指南，适用于ETH Global黑客松参赛和团队招募。
-
-### 📋 核心文档
-
-1. **[项目缘起与愿景](./01-project-origin-and-vision.md)** - 项目背景、市场分析和长远愿景
-2. **[技术架构设计](./02-technical-architecture.md)** - 完整技术栈和系统设计
-3. **[开发路线图](./03-development-roadmap.md)** - 分阶段开发计划和里程碑
-4. **[MVP实现指南](./04-mvp-implementation.md)** - 当前MVP版本技术实现
-5. **[团队招募指南](./05-team-recruitment.md)** - 团队组建和角色需求
-
-### 🛠️ 技术文档
-
-- **[API开发者指南](./api-developer-guide.md)** - RESTful API接口文档
-- **[前端开发规范](./frontend-development-guide.md)** - React/TypeScript开发规范
-- **[部署运维手册](./deployment-guide.md)** - 生产环境部署指南
-
-### 🏆 竞赛资料
-
-- **[ETH Global参赛方案](./eth-global-proposal.md)** - 黑客松参赛技术方案
-- **[演示文稿资料](./presentation-materials.md)** - 项目演示和路演材料
-
-## 🎯 快速开始
-
-### 当前MVP功能
-
-- ✅ 基于地理位置的直播订单创建和管理
-- ✅ 实时WebRTC视频流传输
-- ✅ 智能多屏网格显示系统
-- ✅ 完整的佣金和支付演示系统
-- ✅ 响应式移动端和桌面端界面
-- ✅ 5种语言国际化支持
-
-### 技术栈
-
-- **前端**: React 18 + TypeScript + shadcn/ui + Tailwind CSS
-- **后端**: Node.js + Express.js + PostgreSQL
-- **实时通信**: WebRTC + WebSocket
-- **数据库**: Drizzle ORM + Neon Database
-- **部署**: Replit + 自动化部署
-
-## 🌟 项目特色
-
-### 创新特点
-1. **全球供应链整合** - 整合闲置人员和设备资源
-2. **智能任务匹配** - 基于地理位置的智能派单系统
-3. **多元化应用场景** - 支持直播、监控、任务服务等
-4. **去中心化架构** - 支持全球分布式网络部署
-
-### 市场优势
-1. **巨大市场潜力** - 全球直播和任务服务市场规模数千亿美元
-2. **技术创新领先** - WebRTC + 区块链的创新结合
-3. **商业模式清晰** - 佣金分成 + 增值服务的盈利模式
-4. **可扩展架构** - 支持从MVP到全球平台的无缝扩展
-
-## 🤝 参与项目
-
-### 寻求合作伙伴
-
-我们正在寻找以下领域的合作伙伴：
-
-- **前端开发工程师** - React/TypeScript专家
-- **后端架构师** - Node.js/区块链开发专家  
-- **产品经理** - 具有互联网产品经验
-- **市场推广专家** - 全球市场推广和用户获取
-- **投资合作伙伴** - 种子轮和A轮投资机构
-
-### 联系方式
-
-- **GitHub仓库**: [项目链接待更新]
-- **技术讨论**: [Discord/Telegram待创建]
-- **商务合作**: [邮箱待更新]
-
-## 📄 开源协议
-
-本项目采用 MIT 开源协议，欢迎社区贡献和商业应用。
+TapLive is a location-based livestream collaboration platform that allows users to place and respond to on-demand livestream tasks in real time, enabling trusted human presence anywhere in the world.
 
 ---
 
-**最后更新**: 2025年1月
-**版本**: MVP v1.0  
-**状态**: 积极开发中，寻求团队合作伙伴
+## 🪄 Why It Matters
+- 🌐 Real-time, location-based human collaboration  
+- 🔐 Trust layer with geolocation verification  
+- 🤝 Open, modular developer ecosystem  
+- ⚖️ Compliant: no token, no assetization
+
+## 🚀 Tech Stack
+
+- **Frontend:** Vite + React + TailwindCSS
+- **Backend:** Node.js + Express.js
+- **Database:** PostgreSQL (Neon DB)
+
+---
+
+## 📦 Project Structure
+
+/client → React Frontend
+/server → Node.js Backend + Web3 APIs
+
+
+## 🔧 Setup Instructions
+
+### ✅ Clone the repository
+
+```bash
+git clone <your-repo-url>
+cd <repo-folder>
+```
+
+### Database Setup (Neon DB)
+
+1. **Create a Neon Database Account**
+   - Go to [neon.tech](https://neon.tech) and sign up for a free account
+   - Create a new project
+
+2. **Get Your Database Connection String**
+   - In your Neon dashboard, go to the "Connection Details" section
+   - Copy the connection string (it should look like: `postgresql://username:password@hostname/database?sslmode=require`)
+   - This will be your `DATABASE_URL`
+
+3. **Run Database Migrations**
+   ```bash
+   npm run db:migrate
+   ```
+
+### Backend Setup
+```bash
+cd server
+npm install
+```
+
+### Configure Backend Environment Variables
+Create `.env` file in the root directory:
+
+```bash
+# Database
+DATABASE_URL="your_neon_database_connection_string_here"
+
+# Server
+PORT=5000
+
+# Clerk Authentication (Backend)
+CLERK_SECRET_KEY="your_clerk_secret_key_here"
+CLERK_PUBLISHABLE_KEY="your_clerk_publishable_key_here"
+```
+
+**How to get Clerk keys:**
+1. Go to [clerk.com](https://clerk.com) and create an account
+2. Create a new application
+3. In your Clerk dashboard, go to "API Keys" section
+4. Copy the "Secret key" for `CLERK_SECRET_KEY`
+5. Copy the "Publishable key" for `CLERK_PUBLISHABLE_KEY`
+
+Start server:
+```bash
+npm run dev
+```
+Backend runs on:
+➡ http://localhost:5000
+
+### Frontend Setup
+```bash
+cd client
+npm install
+```
+
+### Configure Frontend Environment Variables
+Create `.env.local` file inside the `/client` folder:
+
+```bash
+# Clerk Authentication (Frontend)
+VITE_CLERK_PUBLISHABLE_KEY="your_clerk_publishable_key_here"
+
+# Stripe (leave empty for now)
+VITE_STRIPE_PUBLIC_KEY=""
+```
+
+**Note:** Use the same `CLERK_PUBLISHABLE_KEY` from your Clerk dashboard.
+
+Start frontend:
+```bash
+npm run dev
+```
+Frontend runs on:
+➡ http://localhost:5173
+
+## 📚 Documentation
+
+- [00 Project Overview](./docs/00_project-overview.md)
+- [01 Pitch Summary](./docs/01_pitch-summary.md)
+- [02 Pitch](./docs/02_pitch.md)
+- [03 MVP-architecture.md](./docs/03_mvp-architecture.md)
+- [04 roadmap-phase-1-2.md](./docs/04_roadmap-phase-1-2.md)
+- [05 Contribution Guide](./docs/05_contribution-guide.md)
+- [06 Legal Notice](./docs/06_legal-notice.md)
+- [07 Risk Control Basics](./docs/07_risk-control-basics.md)
+- [08 Tech Stack](./docs/08_tech-stack.md)
+- [09 API Draft](./docs/09_api-draft.md)
+- [10 Workflow Diagram](./docs/10_workflow-diagram.md)
+- [11 roadmap-phase-3-4.md](./docs/11_roadmap-phase-3-4.md)
+
+📘 [TapLive Project Pitch](https://www.notion.so/TapLive-Project-Pitch-289943c0201980249cafd292b7d904d8)  
+🧭 [TapLive Roadmap Phase 1–2](https://www.notion.so/TapLive-Roadmap-Phase-1-2-289943c0201980f4a78aeb7cc191c17a)  
+💬 [Telegram](https://t.me/taplive_global)  
+🎧 [Discord](https://discord.gg/bJfcHpvwBw)
+
+---
+
+## 🧭 Roadmap (Public)
+| Phase | Description                                    | Status          |
+|------:|-----------------------------------------------|-----------------|
+| 1     | MVP & on-demand live order system             | 🚧 In progress  |
+| 2     | Trust layer & geo-verification mechanisms     | 🧭 Planned      |
+
+👉 [🧭 View Roadmap](./docs/articles/roadmap-phase1-2.md)
+
+---
+
+## 👥 Collaboration
+We’re currently looking for:
+- 🧑‍💻 Backend / Full-stack developers
+- 🛰️ WebRTC / real-time communication engineers
+- 🧭 UI/UX designers (optional)
+We welcome developers, designers, and contributors worldwide.
+
+- Tech: WebRTC / Node.js / GraphQL
+- Infra: Distributed LBS scheduling, Replay Viewer
+- Contribution: Open modules, clear attribution
+
+👉 [🤝 Collaboration Guide](./docs/developer/collaboration-guide.md)
+
+---
+
+## ⚖️ Legal & Compliance
+TapLive does **not** issue or trade any tokens or assets.  
+Platform credits are **non-financial activity markers** only.  
+⚠️ This project should not be interpreted as financial advice or a financial product.
+
+👉 [📜 Legal Notice](./LEGAL_NOTICE.md)
+
+---
+
+Development Plan:
+##Development plan
+ -Phase 1: File structure and project overview
+ -Second phase: MVP code module and documentation updates
+Final submission of integrated features
+
+Earlier drafts only reflect conceptual discussions and do **not** include pre-built product code.
+---
+
+## Contact & Feedback
+
+If you identify any security risks, have suggestions for improvements, or want to report an issue, please feel free to:
+- Submit your feedback through our [GitHub Issues](https://github.com/taplivenetwork/taplive/issues)
+- Or, send us an email at [taplive.team@outlook.com](mailto:taplive.team@outlook.com)
+
+A limited live demo (Phase 1–2) is available upon request for reviewers and collaborators.
