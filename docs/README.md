@@ -23,7 +23,7 @@ TapLive is a location-based livestream collaboration platform that allows users 
 ## 📦 Project Structure
 
 /client → React Frontend
-/server → Node.js Backend + Web3 APIs
+/server → Node.js Backend
 
 
 ## 🔧 Setup Instructions
@@ -78,6 +78,13 @@ CLERK_PUBLISHABLE_KEY="your_clerk_publishable_key_here"
 3. In your Clerk dashboard, go to "API Keys" section
 4. Copy the "Secret key" for `CLERK_SECRET_KEY`
 5. Copy the "Publishable key" for `CLERK_PUBLISHABLE_KEY`
+
+**Setting up JWT Template in Clerk:**
+1. In your Clerk dashboard, go to "JWT Templates" section
+2. Click "Create template" 
+3. Name the template "neon" (this will be used for JWT authentication)
+4. Configure the template with your desired claims and settings
+5. Save the template
 
 Start server:
 ```bash
