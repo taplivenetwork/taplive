@@ -31,25 +31,33 @@ export async function authenticateUser(req: Request, res: Response, next: NextFu
 
     const token = authHeader.substring(7); // Remove 'Bearer ' prefix
     
-    // Verify the session token with Clerk
-    const payload = await verifyToken(token, {
-      secretKey: process.env.CLERK_SECRET_KEY!,
-    });
-    
-    if (!payload || !payload.sub) {
+    // Use networkless verification (recommended by Clerk)
+    try {
+      const payload = await verifyToken(token, {
+        secretKey: process.env.CLERK_SECRET_KEY!,
+      });
+      
+      if (!payload || !payload.sub) {
+        return res.status(401).json({
+          success: false,
+          message: "Unauthorized - Invalid token"
+        });
+      }
+
+      // Attach user info to request
+      req.auth = {
+        userId: payload.sub,
+        sessionId: payload.sid as string,
+      };
+
+      next();
+    } catch (verifyError: any) {
+      console.error('Token verification failed:', verifyError.message || verifyError);
       return res.status(401).json({
         success: false,
-        message: "Unauthorized - Invalid token"
+        message: "Unauthorized - Token verification failed"
       });
     }
-
-    // Attach user info to request
-    req.auth = {
-      userId: payload.sub,
-      sessionId: payload.sid as string,
-    };
-
-    next();
   } catch (error) {
     console.error('Authentication error:', error);
     return res.status(401).json({
@@ -66,15 +74,19 @@ export async function optionalAuth(req: Request, res: Response, next: NextFuncti
     
     if (authHeader && authHeader.startsWith('Bearer ')) {
       const token = authHeader.substring(7);
-      const payload = await verifyToken(token, {
-        secretKey: process.env.CLERK_SECRET_KEY!,
-      });
-      
-      if (payload && payload.sub) {
-        req.auth = {
-          userId: payload.sub,
-          sessionId: payload.sid as string,
-        };
+      try {
+        const payload = await verifyToken(token, {
+          secretKey: process.env.CLERK_SECRET_KEY!,
+        });
+        
+        if (payload && payload.sub) {
+          req.auth = {
+            userId: payload.sub,
+            sessionId: payload.sid as string,
+          };
+        }
+      } catch {
+        // Silently fail for optional auth
       }
     }
     

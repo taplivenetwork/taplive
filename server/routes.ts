@@ -4,7 +4,7 @@ import { WebSocketServer, WebSocket } from "ws";
 import Stripe from "stripe";
 import { Webhook } from "svix";
 import { storage } from "./storage";
-import { syncClerkUserToDatabase } from "./auth";
+import { syncClerkUserToDatabase, authenticateUser } from "./auth";
 import { insertOrderSchema, ratingValidationSchema, paymentValidationSchema, cryptoPaymentSchema, disputeSubmissionSchema, geoLocationSchema, aaGroupCreationSchema, type Order } from "@shared/schema";
 import { calculateCommission, PAYMENT_METHODS } from "@shared/payment";
 import { assessGeoRisk, checkContentViolations, checkVoiceContent, formatRiskLevel } from "@shared/geo-safety";
@@ -226,9 +226,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
          console.log("created order:", order);
       // SMART DISPATCH: Find and notify matching providers
       try {
-        console.log("entered dispatch block")
+        // console.log("entered dispatch block")
         const rankedProviders = await storage.getRankedProvidersForOrder(order.id);
-        console.log("ranked providers:", rankedProviders);
+        // console.log("ranked providers:", rankedProviders);
         // MVP: Ensure we notify at least 3-4 providers for testing
         // Notify top 5 matched providers (or all if less than 5, minimum 3 for MVP)
         let providersToNotify = rankedProviders.slice(0, 5);
@@ -321,6 +321,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
+      // Mark notification as read when order is accepted
+      if (updates.status === 'accepted' && updatedOrder.providerId) {
+        try {
+          const userNotifications = await storage.getUserNotifications(updatedOrder.providerId, false);
+          const orderNotification = userNotifications.find(n => n.orderId === id);
+          if (orderNotification) {
+            await storage.markNotificationAsRead(orderNotification.id);
+            console.log(`Marked notification ${orderNotification.id} as read for accepted order ${id}`);
+          }
+        } catch (notificationError) {
+          console.error('Error marking notification as read:', notificationError);
+          // Don't fail the order update if notification marking fails
+        }
+      }
+
       // Custom success messages based on status change
       let message = "Order updated successfully";
       if (updates.status === 'accepted') {
@@ -392,13 +407,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Customer cancels order with penalty calculation
-  app.post("/api/orders/:id/cancel", async (req, res) => {
+  app.post("/api/orders/:id/cancel", authenticateUser, async (req, res) => {
     try {
       const { id } = req.params;
-      const customerId = req.user!.id;
+      const customerId = req.auth?.userId; 
 
       // Fetch order
-      const order = await storage.getOrder(parseInt(id));
+      const order = await storage.getOrderById(id);
       if (!order) {
         return res.status(404).json({
           success: false,
@@ -407,7 +422,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Validate customer owns this order
-      if (order.customerId !== customerId) {
+      if (order.creatorId !== customerId) {
         return res.status(403).json({
           success: false,
           message: "You are not authorized to cancel this order"
@@ -829,7 +844,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         userId,
         unreadOnly === 'true'
       );
-      
+      console.log("got the notification", notifications)
       res.json({
         success: true,
         data: notifications
@@ -848,7 +863,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { userId } = req.params;
       const notifications = await storage.getActiveOrderNotifications(userId);
-      console.log("fetched order notifications:", notifications);
+      // console.log("fetched order notifications:", notifications);
       res.json({
         success: true,
         data: notifications
@@ -1278,7 +1293,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/orders/:id/payment", async (req, res) => {
     try {
       const { id: orderId } = req.params;
-      const validation = paymentValidationSchema.safeParse(req.body);
+      const validation = paymentValidationSchema.safeParse({
+        orderId,
+        ...req.body
+      });
 
       if (!validation.success) {
         return res.status(400).json({
@@ -1298,7 +1316,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           message: "Order not found"
         });
       }
-
+ console.log("this is the order", order);
       if (order.isPaid) {
         return res.status(400).json({
           success: false,
@@ -1316,9 +1334,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
         paymentMetadata: JSON.stringify(paymentData.paymentMetadata || {}),
       });
 
+      // Create Stripe payment intent if using Stripe (MOCKED FOR MVP)
+      let clientSecret = null;
+      if (paymentData.paymentMethod === 'stripe') {
+        // Mock Stripe payment intent creation
+        const mockPaymentIntentId = `pi_mock_${Date.now()}`;
+        clientSecret = `cs_mock_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+        // Update payment with mock Stripe metadata
+        await storage.updatePayment(payment.id, {
+          paymentMetadata: JSON.stringify({
+            ...paymentData.paymentMetadata,
+            clientSecret: clientSecret,
+            externalPaymentId: mockPaymentIntentId,
+            mockPayment: true,
+            mockData: {
+              amount: Math.round(paymentData.amount * 100),
+              currency: paymentData.currency.toLowerCase(),
+              status: 'requires_payment_method'
+            }
+          })
+        });
+      }
+
       res.status(201).json({
         success: true,
-        data: payment,
+        data: {
+          payment,
+          clientSecret
+        },
         message: "Payment created successfully"
       });
     } catch (error) {
@@ -1963,66 +2007,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Payment endpoints for MVP
   
-  // Create payment intent for order
-  app.post("/api/orders/:id/payment", async (req, res) => {
-    try {
-      const { id } = req.params;
-      const order = await storage.getOrderById(id);
-      
-      if (!order) {
-        return res.status(404).json({
-          success: false,
-          message: "Order not found"
-        });
-      }
-
-      if (order.isPaid) {
-        return res.status(400).json({
-          success: false,
-          message: "Order is already paid"
-        });
-      }
-
-      // Create Stripe payment intent
-      const paymentIntent = await stripe.paymentIntents.create({
-        amount: Math.round(parseFloat(order.price) * 100), // Convert to cents
-        currency: order.currency.toLowerCase(),
-        metadata: {
-          orderId: order.id,
-          orderTitle: order.title,
-          creatorId: order.creatorId || ''
-        }
-      });
-
-      // Create payment record
-      const payment = await storage.createPayment({
-        orderId: order.id,
-        payerId: req.body.payerId || order.creatorId || '', // Assuming authenticated user
-        amount: order.price,
-        currency: order.currency,
-        paymentMethod: 'stripe',
-        paymentMetadata: JSON.stringify({
-          clientSecret: paymentIntent.client_secret,
-          externalPaymentId: paymentIntent.id
-        })
-      });
-
-      res.json({
-        success: true,
-        data: {
-          clientSecret: paymentIntent.client_secret,
-          paymentId: payment.id
-        }
-      });
-    } catch (error) {
-      console.error('Error creating payment:', error);
-      res.status(500).json({
-        success: false,
-        message: "Failed to create payment"
-      });
-    }
-  });
-
   // Webhook endpoint for Stripe payment status updates
   app.post("/api/webhooks/stripe", async (req, res) => {
     try {
@@ -2156,6 +2140,277 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({
         success: false,
         message: "Failed to cancel order"
+      });
+    }
+  });
+
+  // ========== STREAM ENDPOINTS ==========
+
+  // Get live streams
+  app.get("/api/streams/live", async (req, res) => {
+    try {
+      const liveStreams = await storage.getOrdersByStatus('live');
+
+      // Enrich with user data
+      const enrichedStreams = await Promise.all(
+        liveStreams.map(async (stream) => {
+          const creator = stream.creatorId ? await storage.getUser(stream.creatorId) : null;
+          const provider = stream.providerId ? await storage.getUser(stream.providerId) : null;
+
+          return {
+            id: stream.id,
+            title: stream.title,
+            description: stream.description,
+            location: stream.address,
+            latitude: stream.latitude,
+            longitude: stream.longitude,
+            viewers: Math.floor(Math.random() * 50) + 1, // Mock viewer count for now
+            duration: stream.duration,
+            streamer: provider?.name || creator?.name || 'Anonymous',
+            streamerId: provider?.id || creator?.id,
+            status: stream.status,
+            thumbnail: stream.liveUrl || '/api/placeholder/300/200',
+            liveUrl: stream.liveUrl,
+            scheduledAt: stream.scheduledAt,
+            createdAt: stream.createdAt,
+            category: stream.category,
+            price: stream.price,
+            currency: stream.currency
+          };
+        })
+      );
+
+      res.json({
+        success: true,
+        data: enrichedStreams,
+        meta: {
+          total: enrichedStreams.length,
+          timestamp: new Date().toISOString()
+        }
+      });
+    } catch (error) {
+      console.error('Error fetching live streams:', error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to fetch live streams"
+      });
+    }
+  });
+
+  // Get upcoming streams
+  app.get("/api/streams/upcoming", async (req, res) => {
+    try {
+      const upcomingStreams = await storage.getOrdersByStatus('accepted');
+
+      // Filter for future scheduled streams
+      const now = new Date();
+      const futureStreams = upcomingStreams.filter(stream =>
+        new Date(stream.scheduledAt) > now
+      );
+
+      // Enrich with user data
+      const enrichedStreams = await Promise.all(
+        futureStreams.map(async (stream) => {
+          const creator = stream.creatorId ? await storage.getUser(stream.creatorId) : null;
+          const provider = stream.providerId ? await storage.getUser(stream.providerId) : null;
+
+          return {
+            id: stream.id,
+            title: stream.title,
+            description: stream.description,
+            location: stream.address,
+            latitude: stream.latitude,
+            longitude: stream.longitude,
+            scheduledTime: new Date(stream.scheduledAt).toLocaleTimeString('en-US', {
+              hour: 'numeric',
+              minute: '2-digit',
+              hour12: true
+            }),
+            duration: stream.duration,
+            streamer: provider?.name || creator?.name || 'Anonymous',
+            streamerId: provider?.id || creator?.id,
+            status: stream.status,
+            thumbnail: '/api/placeholder/300/200',
+            scheduledAt: stream.scheduledAt,
+            createdAt: stream.createdAt,
+            category: stream.category,
+            price: stream.price,
+            currency: stream.currency
+          };
+        })
+      );
+
+      // Sort by scheduled time
+      enrichedStreams.sort((a, b) =>
+        new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime()
+      );
+
+      res.json({
+        success: true,
+        data: enrichedStreams,
+        meta: {
+          total: enrichedStreams.length,
+          timestamp: new Date().toISOString()
+        }
+      });
+    } catch (error) {
+      console.error('Error fetching upcoming streams:', error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to fetch upcoming streams"
+      });
+    }
+  });
+
+  // Get stream by ID
+  app.get("/api/streams/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const stream = await storage.getOrderById(id);
+
+      if (!stream) {
+        return res.status(404).json({
+          success: false,
+          message: "Stream not found"
+        });
+      }
+
+      // Enrich with user data
+      const creator = stream.creatorId ? await storage.getUser(stream.creatorId) : null;
+      const provider = stream.providerId ? await storage.getUser(stream.providerId) : null;
+
+      const enrichedStream = {
+        id: stream.id,
+        title: stream.title,
+        description: stream.description,
+        location: stream.address,
+        latitude: stream.latitude,
+        longitude: stream.longitude,
+        viewers: Math.floor(Math.random() * 50) + 1, // Mock viewer count
+        duration: stream.duration,
+        streamer: provider?.name || creator?.name || 'Anonymous',
+        streamerId: provider?.id || creator?.id,
+        status: stream.status,
+        thumbnail: stream.liveUrl || '/api/placeholder/300/200',
+        liveUrl: stream.liveUrl,
+        scheduledAt: stream.scheduledAt,
+        createdAt: stream.createdAt,
+        category: stream.category,
+        price: stream.price,
+        currency: stream.currency,
+        tags: stream.tags,
+        isPaid: stream.isPaid,
+        maxParticipants: stream.maxParticipants,
+        currentParticipants: stream.currentParticipants
+      };
+
+      res.json({
+        success: true,
+        data: enrichedStream
+      });
+    } catch (error) {
+      console.error('Error fetching stream:', error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to fetch stream"
+      });
+    }
+  // ========== EARNINGS ENDPOINTS ==========
+
+  // Get user earnings summary
+  app.get("/api/users/:userId/earnings", async (req, res) => {
+    try {
+      const { userId } = req.params;
+      
+      // Get user to verify they are a provider
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          message: "User not found"
+        });
+      }
+
+      if (user.role !== 'provider') {
+        return res.status(403).json({
+          success: false,
+          message: "Earnings data is only available for providers"
+        });
+      }
+
+      // Get payouts for the user
+      const payouts = await storage.getPayoutsByUser(userId);
+      
+      // Calculate total earnings
+      const totalEarnings = payouts
+        .filter(p => p.status === 'completed')
+        .reduce((sum, payout) => sum + parseFloat(payout.amount.toString()), 0);
+
+      // Calculate monthly earnings (current month)
+      const now = new Date();
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      const monthlyEarnings = payouts
+        .filter(p => p.status === 'completed' && new Date(p.createdAt!) >= startOfMonth)
+        .reduce((sum, payout) => sum + parseFloat(payout.amount.toString()), 0);
+
+      // Get completed orders count (this month)
+      const completedOrdersThisMonth = await storage.getOrdersByStatus('done');
+      const providerCompletedOrders = completedOrdersThisMonth.filter(order => 
+        order.providerId === userId && new Date(order.updatedAt!) >= startOfMonth
+      ).length;
+
+      // Get average rating from completed orders
+      const completedOrders = await storage.getOrdersByStatus('done');
+      const providerOrders = completedOrders.filter(order => order.providerId === userId);
+      
+      let avgRating = 0;
+      if (providerOrders.length > 0) {
+        const ratings = await Promise.all(
+          providerOrders.map(order => storage.getRatingsByOrder(order.id))
+        );
+        const allRatings = ratings.flat();
+        if (allRatings.length > 0) {
+          avgRating = allRatings.reduce((sum, rating) => sum + rating.rating, 0) / allRatings.length;
+        }
+      }
+
+      // Get recent earnings (last 10 payouts)
+      const recentPayouts = payouts
+        .filter(p => p.status === 'completed')
+        .sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime())
+        .slice(0, 10);
+
+      // Enrich recent payouts with order data
+      const recentEarnings = await Promise.all(
+        recentPayouts.map(async (payout) => {
+          const order = await storage.getOrderById(payout.orderId);
+          return {
+            id: payout.id,
+            title: order?.title || 'Unknown Order',
+            amount: parseFloat(payout.amount.toString()),
+            date: new Date(payout.createdAt!).toISOString().split('T')[0],
+            duration: order?.duration || 0,
+            orderId: payout.orderId,
+            status: payout.status
+          };
+        })
+      );
+
+      res.json({
+        success: true,
+        data: {
+          totalEarnings,
+          monthlyEarnings,
+          completedStreams: providerCompletedOrders,
+          avgRating: parseFloat(avgRating.toFixed(1)),
+          recentEarnings
+        }
+      });
+    } catch (error) {
+      console.error('Error fetching earnings:', error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to fetch earnings data"
       });
     }
   });

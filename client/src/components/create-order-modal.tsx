@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useUser } from "@clerk/clerk-react";
-import { X, Move } from "lucide-react";
+import { X, Move, CreditCard, FileText, MapPin, Clock, DollarSign, Info, Lock, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -149,12 +149,54 @@ export function CreateOrderModal({ open, onOpenChange, selectedLocation }: Creat
         maxParticipants: data.type === "group" ? data.maxParticipants : null,
         tags: data.tags || [],
         creatorId: CURRENT_USER_ID !== "guest" ? CURRENT_USER_ID : null,
-        isPaid: true, // Mock payment confirmed
+        isPaid: false, // Will be updated after payment
       };
 
-      return api.orders.create(orderData);
+      const order = await api.orders.create(orderData);
+
+      // Create payment record
+      const paymentResponse = await fetch(`/api/orders/${order.data.id}/payment`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          payerId: CURRENT_USER_ID,
+          amount: parseFloat(data.price),
+          currency: 'USD',
+          paymentMethod: 'stripe', // Mock payment method
+        }),
+      });
+
+      if (!paymentResponse.ok) {
+        throw new Error('Payment creation failed');
+      }
+
+      const payment = await paymentResponse.json();
+
+      // For Stripe payments, we don't need to manually complete - Stripe handles this
+      // The payment will be completed via webhook when the user pays
+      if (payment.data.clientSecret) {
+        // Redirect to Stripe checkout or handle client-side payment
+        // For now, we'll simulate completion for MVP
+        const completeResponse = await fetch(`/api/payments/${payment.data.payment.id}/complete`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            externalPaymentId: `mock_${Date.now()}`,
+          }),
+        });
+
+        if (!completeResponse.ok) {
+          throw new Error('Payment completion failed');
+        }
+      }
+
+      return order;
     },
-    onSuccess: () => {
+    onSuccess: (order) => {
       toast({
         title: "Payment Successful!",
         description: "Your order has been created and payment confirmed.",
@@ -163,11 +205,13 @@ export function CreateOrderModal({ open, onOpenChange, selectedLocation }: Creat
       setShowPaymentModal(false);
       onOpenChange(false);
       form.reset();
+      // Redirect to payment success page
+      window.location.href = `/payment/${order.data.id}`;
     },
     onError: (error: Error) => {
       toast({
-        title: "Error",
-        description: error.message || "Failed to create order",
+        title: "Payment Failed",
+        description: error.message || "Failed to process payment",
         variant: "destructive",
       });
       setShowPaymentModal(false);
@@ -580,13 +624,19 @@ export function CreateOrderModal({ open, onOpenChange, selectedLocation }: Creat
         <DialogContent className="sm:max-w-[440px] bg-white border-2 border-gray-300 shadow-xl p-0">
           <div className="p-5">
             <DialogHeader className="mb-4">
-              <DialogTitle className="text-lg font-bold text-gray-900">💳 Confirm Payment</DialogTitle>
+              <DialogTitle className="flex items-center gap-2 text-lg font-bold text-gray-900">
+                <CreditCard className="h-5 w-5 text-blue-600" />
+                Confirm Payment
+              </DialogTitle>
             </DialogHeader>
             
             <div className="space-y-3">
               {/* Order Summary */}
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                <h4 className="font-semibold text-blue-900 text-sm mb-2">📋 Order Summary</h4>
+                <h4 className="flex items-center gap-1.5 font-semibold text-blue-900 text-sm mb-2">
+                  <FileText className="h-4 w-4" />
+                  Order Summary
+                </h4>
                 {pendingOrderData && (
                   <div className="space-y-1.5">
                     <div className="flex justify-between items-center">
@@ -615,8 +665,9 @@ export function CreateOrderModal({ open, onOpenChange, selectedLocation }: Creat
 
               {/* Payment Policy */}
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-                <p className="text-xs font-semibold text-yellow-900 mb-2">
-                  ℹ️ Payment Policy
+                <p className="flex items-center gap-1.5 text-xs font-semibold text-yellow-900 mb-2">
+                  <Info className="h-3.5 w-3.5" />
+                  Payment Policy
                 </p>
                 <ul className="text-xs text-yellow-800 space-y-1">
                   <li className="flex items-start gap-1.5">
@@ -636,8 +687,9 @@ export function CreateOrderModal({ open, onOpenChange, selectedLocation }: Creat
 
               {/* Mock Payment Notice */}
               <div className="bg-gray-100 border border-gray-300 rounded-lg p-2.5">
-                <p className="text-xs text-gray-700 text-center leading-relaxed">
-                  🔒 Mock payment for testing. No actual charges.
+                <p className="flex items-center justify-center gap-1.5 text-xs text-gray-700 leading-relaxed">
+                  <Lock className="h-3.5 w-3.5" />
+                  Mock payment for testing. No actual charges.
                 </p>
               </div>
 
@@ -664,7 +716,10 @@ export function CreateOrderModal({ open, onOpenChange, selectedLocation }: Creat
                       <span>Processing...</span>
                     </div>
                   ) : (
-                    <span>✓ Pay ${pendingOrderData?.price || '0'}</span>
+                    <span className="flex items-center gap-1.5">
+                      <CheckCircle className="h-4 w-4" />
+                      Pay ${pendingOrderData?.price || '0'}
+                    </span>
                   )}
                 </Button>
               </div>

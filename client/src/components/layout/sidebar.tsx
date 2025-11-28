@@ -5,21 +5,52 @@ import { SimpleLanguageSelector } from "@/components/SimpleLanguageSelector";
 import { T } from "@/components/T";
 import { useSimpleTranslation } from "@/hooks/useSimpleTranslation";
 import { useUser, SignInButton, SignUpButton, UserButton } from "@clerk/clerk-react";
+import { useState, useEffect } from "react";
 
 export function Sidebar() {
   const [location] = useLocation();
   const { currentLanguage, changeLanguage } = useSimpleTranslation();
   const { user, isLoaded } = useUser();
+  const [userRole, setUserRole] = useState<string | null>(null);
 
-  const navigation = [
+  // Fetch user role from our database
+  useEffect(() => {
+    if (isLoaded && user?.id) {
+      fetch(`/api/users/${user.id}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            setUserRole(data.data.role);
+          }
+        })
+        .catch(err => {
+          console.error('Error fetching user role:', err);
+        });
+    }
+  }, [isLoaded, user?.id]);
+
+  const baseNavigation = [
     { name: "Discover", href: "/", icon: MapPin, current: location === "/" },
     { name: "Dashboard", href: "/dashboard", icon: BarChart3, current: location === "/dashboard" },
     { name: "My Orders", href: "/orders", icon: List, current: location === "/orders" },
     { name: "Live Streams", href: "/streams", icon: Video, current: location === "/streams" },
     { name: "Smart Dispatch", href: "/dispatch", icon: TrendingUp, current: location === "/dispatch" },
     { name: "Safety & AA", href: "/safety", icon: Shield, current: location === "/safety" },
+  ];
+
+  const providerNavigation = [
     { name: "Earnings", href: "/earnings", icon: Wallet, current: location === "/earnings" },
+  ];
+
+  const settingsNavigation = [
     { name: "Settings", href: "/settings", icon: Settings, current: location === "/settings" },
+  ];
+
+  // Combine navigation based on user role
+  const navigation = [
+    ...baseNavigation,
+    ...(userRole === 'provider' ? providerNavigation : []),
+    ...settingsNavigation
   ];
 
   return (
@@ -86,7 +117,7 @@ export function Sidebar() {
                 {user.firstName || user.username || 'User'}
               </p>
               <p className="text-xs text-muted-foreground" data-testid="user-role">
-                {user.emailAddresses[0]?.emailAddress || ''}
+                {userRole ? `${userRole.charAt(0).toUpperCase() + userRole.slice(1)}` : user.emailAddresses[0]?.emailAddress || ''}
               </p>
             </div>
             <UserButton afterSignOutUrl="/" />

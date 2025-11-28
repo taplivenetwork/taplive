@@ -15,7 +15,7 @@ import {
   CheckCircle2
 } from "lucide-react";
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { invalidateOrders } from "@/lib/api";
+import { invalidateOrders, authFetch } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import type { Order } from "@shared/schema";
 import {
@@ -40,15 +40,15 @@ export default function PaymentPage() {
   // Fetch order details
   const { data: order, isLoading: orderLoading, error: orderError } = useQuery<Order>({
     queryKey: ['/api/orders', orderId],
+    queryFn: () => authFetch(`/api/orders/${orderId}`).then(res => res.json()),
     enabled: !!orderId
   });
 
   // Cancel order mutation
   const cancelOrderMutation = useMutation({
     mutationFn: async () => {
-      const response = await fetch(`/api/orders/${orderId}/cancel`, {
+      const response = await authFetch(`/api/orders/${orderId}/cancel`, {
         method: 'POST',
-        credentials: 'include',
       });
       if (!response.ok) {
         const error = await response.json();
@@ -132,7 +132,7 @@ export default function PaymentPage() {
   }
 
   // Extract order data from the response
-  const orderData = order?.data || order;
+  const orderData = (order as any)?.data || order;
 
   // Debug: Log order data to console
   console.log('Order data:', orderData);
@@ -319,11 +319,11 @@ export default function PaymentPage() {
 
       {/* Cancel Confirmation Dialog */}
       <AlertDialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
-        <AlertDialogContent>
+        <AlertDialogContent className="bg-white">
           <AlertDialogHeader>
-            <AlertDialogTitle>Cancel Order?</AlertDialogTitle>
-            <AlertDialogDescription>
-              {orderData.status === 'pending' ? (
+            <AlertDialogTitle className="text-gray-900">Cancel Order?</AlertDialogTitle>
+            <AlertDialogDescription className="text-gray-600">
+              {orderData.status === 'pending' || orderData.status === 'open' ? (
                 <span>You can cancel this order for free since no provider has accepted yet. You'll receive a full refund.</span>
               ) : (
                 <span>Cancelling after provider acceptance will incur a 5-15% penalty fee. The remaining amount will be refunded.</span>
@@ -331,10 +331,10 @@ export default function PaymentPage() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Keep Order</AlertDialogCancel>
+            <AlertDialogCancel className="bg-gray-100 hover:bg-gray-200 text-gray-900">Keep Order</AlertDialogCancel>
             <AlertDialogAction 
               onClick={confirmCancelOrder}
-              className="bg-red-600 hover:bg-red-700"
+              className="bg-red-600 hover:bg-red-700 text-white"
             >
               Confirm Cancellation
             </AlertDialogAction>

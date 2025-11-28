@@ -1357,6 +1357,22 @@ export class DatabaseStorage implements IStorage {
     await db.update(orders).set({
       isPaid: true,
     }).where(eq(orders.id, orderId));
+
+    // Create transaction record for customer payment
+    await this.createTransaction({
+      userId: payment.payerId || 'anonymous',
+      orderId: orderId,
+      paymentId: paymentId,
+      type: 'payment',
+      amount: payment.amount.toString(),
+      currency: payment.currency,
+      description: `Payment for order: ${order.title}`,
+      metadata: JSON.stringify({
+        orderId,
+        paymentId,
+        completedAt: new Date()
+      }),
+    });
   }
 
   async calculateAndCreatePayout(orderId: string, paymentId: string): Promise<Payout | undefined> {

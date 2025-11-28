@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Search, Filter, Calendar, TrendingUp, Plus, Play, CreditCard, Star, CheckCircle, Clock, Video } from "lucide-react";
+import { Search, Filter, Calendar, TrendingUp, Plus, Play, CreditCard, Star, CheckCircle, Clock, Video, XCircle } from "lucide-react";
 import type { Order } from "@shared/schema";
 
 export default function Orders() {
@@ -93,7 +93,7 @@ export default function Orders() {
   });
 
   // Filter orders by status for role-specific views
-  let pendingOrders: Order[], acceptedOrders: Order[], liveOrders: Order[], completedOrders: Order[], goLiveOrders: Order[];
+  let pendingOrders: Order[], acceptedOrders: Order[], liveOrders: Order[], completedOrders: Order[], goLiveOrders: Order[], cancelledOrders: Order[];
   
   if (userRole === 'provider') {
     // Provider view: pending (not started), go-live (date arrived), accepted (streaming), completed
@@ -107,12 +107,14 @@ export default function Orders() {
     acceptedOrders = relevantOrders.filter((order: Order) => order.status === 'accepted');
     liveOrders = relevantOrders.filter((order: Order) => order.status === 'live');
     completedOrders = relevantOrders.filter((order: Order) => order.status === 'done');
+    cancelledOrders = relevantOrders.filter((order: Order) => order.status === 'cancelled');
   } else {
     // Customer view: pending (awaiting provider), accepted (needs payment), live, completed (rate provider)
     pendingOrders = relevantOrders.filter((order: Order) => order.status === 'pending');
     acceptedOrders = relevantOrders.filter((order: Order) => order.status === 'accepted');
     liveOrders = relevantOrders.filter((order: Order) => order.status === 'live');
     completedOrders = relevantOrders.filter((order: Order) => order.status === 'done');
+    cancelledOrders = relevantOrders.filter((order: Order) => order.status === 'cancelled');
     goLiveOrders = []; // Not applicable for customers
   }
   
@@ -415,6 +417,31 @@ export default function Orders() {
       }
     }
     
+    // Cancelled orders (same for both roles)
+    if (order.status === 'cancelled') {
+      return (
+        <Card key={order.id} className="p-4 bg-gray-50 border-gray-300">
+          <div className="space-y-3">
+            <div className="flex justify-between items-start">
+              <div>
+                <h3 className="font-bold text-lg text-gray-700">{order.title}</h3>
+                <Badge className="bg-gray-400 text-white">✕ Cancelled</Badge>
+              </div>
+              <span className="text-xl font-bold text-gray-500">${order.price}</span>
+            </div>
+            <p className="text-sm text-gray-600 line-clamp-2">{order.description}</p>
+            {order.scheduledAt && (
+              <div className="text-xs text-gray-500">
+                <Clock className="w-3 h-3 inline mr-1" />
+                Was scheduled: {new Date(order.scheduledAt).toLocaleString()}
+              </div>
+            )}
+            <p className="text-xs text-gray-600">This order has been cancelled.</p>
+          </div>
+        </Card>
+      );
+    }
+    
     // Default fallback
     return (
       <div key={order.id} className="col-span-1">
@@ -519,6 +546,12 @@ export default function Orders() {
                 </div>
               </Card>
             )}
+            <Card className="p-3">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-gray-500">{cancelledOrders.length}</div>
+                <div className="text-xs text-muted-foreground">Cancelled</div>
+              </div>
+            </Card>
           </div>
         </div>
       </header>
@@ -570,7 +603,7 @@ export default function Orders() {
           {userRole === 'provider' ? (
             // Provider Tabs
             <>
-              <TabsList className="grid w-full grid-cols-5 bg-secondary mb-6">
+              <TabsList className="grid w-full grid-cols-6 bg-secondary mb-6">
                 <TabsTrigger value="all" data-testid="tab-all">
                   <TranslatedText context="orders">All</TranslatedText>
                   <Badge variant="secondary" className="ml-2">{relevantOrders.length}</Badge>
@@ -595,6 +628,11 @@ export default function Orders() {
                   <TranslatedText context="orders">Completed</TranslatedText>
                   <Badge variant="secondary" className="ml-2">{completedOrders.length}</Badge>
                 </TabsTrigger>
+                <TabsTrigger value="cancelled" data-testid="tab-cancelled">
+                  <XCircle className="w-4 h-4 mr-1" />
+                  <TranslatedText context="orders">Cancelled</TranslatedText>
+                  <Badge variant="secondary" className="ml-2">{cancelledOrders.length}</Badge>
+                </TabsTrigger>
               </TabsList>
 
               <TabsContent value="all">
@@ -616,11 +654,15 @@ export default function Orders() {
               <TabsContent value="completed">
                 {renderOrderList(completedOrders, "No completed orders")}
               </TabsContent>
+
+              <TabsContent value="cancelled">
+                {renderOrderList(cancelledOrders, "No cancelled orders")}
+              </TabsContent>
             </>
           ) : (
             // Customer Tabs
             <>
-              <TabsList className="grid w-full grid-cols-5 bg-secondary mb-6">
+              <TabsList className="grid w-full grid-cols-6 bg-secondary mb-6">
                 <TabsTrigger value="all" data-testid="tab-all">
                   <TranslatedText context="orders">All</TranslatedText>
                   <Badge variant="secondary" className="ml-2">{relevantOrders.length}</Badge>
@@ -645,6 +687,11 @@ export default function Orders() {
                   <TranslatedText context="orders">Completed</TranslatedText>
                   <Badge variant="secondary" className="ml-2">{completedOrders.length}</Badge>
                 </TabsTrigger>
+                <TabsTrigger value="cancelled" data-testid="tab-cancelled">
+                  <XCircle className="w-4 h-4 mr-1" />
+                  <TranslatedText context="orders">Cancelled</TranslatedText>
+                  <Badge variant="secondary" className="ml-2">{cancelledOrders.length}</Badge>
+                </TabsTrigger>
               </TabsList>
 
               <TabsContent value="all">
@@ -665,6 +712,10 @@ export default function Orders() {
 
               <TabsContent value="completed">
                 {renderOrderList(completedOrders, "No completed orders")}
+              </TabsContent>
+
+              <TabsContent value="cancelled">
+                {renderOrderList(cancelledOrders, "No cancelled orders")}
               </TabsContent>
             </>
           )}

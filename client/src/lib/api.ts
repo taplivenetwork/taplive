@@ -17,6 +17,32 @@ export interface ApiError {
   errors?: any[];
 }
 
+// Global auth token getter (will be set by App.tsx)
+let getAuthToken: (() => Promise<string | null>) | null = null;
+
+export const setAuthTokenGetter = (getter: () => Promise<string | null>) => {
+  getAuthToken = getter;
+};
+
+// Authenticated fetch wrapper that automatically adds auth headers
+export const authFetch = async (url: string, options: RequestInit = {}): Promise<Response> => {
+  const token = getAuthToken ? await getAuthToken() : null;
+  
+  const headers = new Headers(options.headers);
+  if (token) {
+    headers.set('Authorization', `Bearer ${token}`);
+  }
+  if (!headers.has('Content-Type') && options.body) {
+    headers.set('Content-Type', 'application/json');
+  }
+  
+  return fetch(url, {
+    ...options,
+    headers,
+    credentials: 'include',
+  });
+};
+
 export const api = {
   orders: {
     getAll: async (params?: { status?: string; latitude?: number; longitude?: number; radius?: number }): Promise<ApiResponse<Order[]>> => {
@@ -27,7 +53,7 @@ export const api = {
       if (params?.radius) searchParams.append('radius', params.radius.toString());
       
       const url = `/api/orders${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
-      const response = await fetch(url);
+      const response = await authFetch(url);
       
       if (!response.ok) {
         throw new Error(`Failed to fetch orders: ${response.statusText}`);
@@ -37,7 +63,7 @@ export const api = {
     },
 
     getById: async (id: string): Promise<ApiResponse<Order>> => {
-      const response = await fetch(`/api/orders/${id}`);
+      const response = await authFetch(`/api/orders/${id}`);
       
       if (!response.ok) {
         throw new Error(`Failed to fetch order: ${response.statusText}`);
@@ -47,11 +73,8 @@ export const api = {
     },
 
     create: async (order: InsertOrder): Promise<ApiResponse<Order>> => {
-      const response = await fetch('/api/orders', {
+      const response = await authFetch('/api/orders', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify(order),
       });
       
@@ -64,11 +87,8 @@ export const api = {
     },
 
     update: async (id: string, updates: Partial<Order>): Promise<ApiResponse<Order>> => {
-      const response = await fetch(`/api/orders/${id}`, {
+      const response = await authFetch(`/api/orders/${id}`, {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify(updates),
       });
       
@@ -80,7 +100,7 @@ export const api = {
     },
 
     delete: async (id: string): Promise<ApiResponse<void>> => {
-      const response = await fetch(`/api/orders/${id}`, {
+      const response = await authFetch(`/api/orders/${id}`, {
         method: 'DELETE',
       });
       
