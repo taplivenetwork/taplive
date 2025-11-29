@@ -35,7 +35,7 @@ export default function LiveStreamPage() {
   const [canStartBroadcast, setCanStartBroadcast] = useState(false);
 
   // Fetch order details
-  const { data: orderResponse, isLoading } = useQuery({
+  const { data: orderResponse, isLoading } = useQuery<{ data: Order | Order[] }>({
     queryKey: ['/api/orders', orderId],
     enabled: !!orderId,
   });
@@ -173,7 +173,7 @@ export default function LiveStreamPage() {
                 </div>
                 <div className="flex items-center gap-2">
                   <Clock className="w-4 h-4" />
-                  <span>{new Date(order.createdAt).toLocaleDateString()}</span>
+                  <span>{order.createdAt ? new Date(order.createdAt as Date).toLocaleDateString() : 'N/A'}</span>
                 </div>
               </div>
             </div>

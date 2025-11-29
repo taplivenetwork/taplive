@@ -192,19 +192,19 @@ export default function Home() {
     
     // 显示提示
     toast({
-      title: <TranslatedText context="home">Order closed</TranslatedText>,
-      description: <TranslatedText context="home">This order will no longer be displayed, the system will automatically recommend new orders</TranslatedText>,
+      title: "Order closed",
+      description: "This order will no longer be displayed, the system will automatically recommend new orders",
       variant: "default",
     });
   };
 
   // 重置关闭的订单
   const handleResetDismissedOrders = () => {
-    console.log('重置所有关闭的订单');
+    
     setDismissedOrders(new Set());
     toast({
-      title: <TranslatedText context="home">Orders restored</TranslatedText>,
-      description: <TranslatedText context="home">All closed orders have been redisplayed</TranslatedText>,
+      title: "Orders restored",
+      description: "All closed orders have been redisplayed",
       variant: "default",
     });
   };
@@ -246,8 +246,8 @@ export default function Home() {
         providerId: CURRENT_USER_ID  // Assign the provider who accepted the order
       });
       toast({
-        title: <TranslatedText context="home">Order accepted successfully!</TranslatedText>,
-        description: <TranslatedText context="home">Redirecting to live page...</TranslatedText>,
+        title: "Order accepted successfully!",
+        description: "Redirecting to live page...",
       });
       // 接单成功后跳转到直播页面
       setTimeout(() => {
@@ -255,8 +255,8 @@ export default function Home() {
       }, 1000);
     } catch (error) {
       toast({
-        title: <TranslatedText context="home">Order acceptance failed</TranslatedText>,
-        description: <TranslatedText context="home">Please try again</TranslatedText>,
+        title: "Order acceptance failed",
+        description: "Please try again",
         variant: "destructive",
       });
     }
@@ -264,8 +264,8 @@ export default function Home() {
 
   const handleJoinStream = (orderId: string) => {
     toast({
-      title: <TranslatedText context="home">Entering live stream</TranslatedText>,
-      description: <TranslatedText context="home">Opening live room...</TranslatedText>,
+      title: "Entering live stream",
+      description: "Opening live room...",
     });
     // 直接跳转到观看模式
     window.location.href = `/stream/${orderId}?mode=viewer`;
@@ -419,8 +419,8 @@ export default function Home() {
                     window.location.href = `/stream/${liveOrder.id}?mode=viewer`;
                   } else {
                     toast({
-                      title: <TranslatedText context="home">No live streams available</TranslatedText>,
-                      description: <TranslatedText context="home">Currently no live streams, please try again later</TranslatedText>,
+                      title: "No live streams available",
+                      description: "Currently no live streams, please try again later",
                     });
                   }
                 }}

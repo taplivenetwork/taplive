@@ -541,24 +541,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
             
             console.log(`✅ Stripe refund processed: $${refundAmount.toFixed(2)} to customer ${customerId}`);
             
-            // Pay penalty to provider if applicable (use automatic payout creation)
+            // Create refund transaction record for customer
+            await storage.createTransaction({
+              userId: customerId,
+              orderId: id,
+              paymentId: completedPayment.id,
+              type: 'refund',
+              amount: refundAmount.toString(),
+              currency: order.currency,
+              description: `Refund for cancelled order: ${order.title}`,
+              metadata: JSON.stringify({
+                refundId: refund.id,
+                refundAmount,
+                penaltyAmount,
+                penaltyPercent,
+                originalAmount: price,
+                cancelledAt: new Date().toISOString()
+              })
+            });
+            
+            // Pay penalty to provider if applicable
             if (penaltyAmount > 0 && order.providerId && completedPayment) {
-              // Create a payout record for the penalty
-              const penaltyPayout = await db.insert(payouts).values({
+              // Create a payout record for the penalty using storage layer
+              const penaltyPayout = await storage.createPayout({
                 orderId: id,
                 paymentId: completedPayment.id,
                 recipientId: order.providerId,
                 amount: penaltyAmount.toString(),
                 platformFee: '0',
                 currency: order.currency,
-                payoutMethod: 'stripe',
+                payoutMethod: 'stripe'
+              });
+              
+              // Update payout to completed
+              await storage.updatePayout(penaltyPayout.id, {
                 status: 'completed',
+                processedAt: new Date(),
+                externalPayoutId: `penalty_${Date.now()}`,
                 payoutMetadata: JSON.stringify({
                   type: 'cancellation_penalty',
                   refundId: refund.id
-                }),
-                processedAt: new Date()
-              }).returning();
+                })
+              });
+              
+              // Create transaction record for penalty payment to provider
+              await storage.createTransaction({
+                userId: order.providerId,
+                orderId: id,
+                paymentId: completedPayment.id,
+                payoutId: penaltyPayout.id,
+                type: 'commission',
+                amount: penaltyAmount.toString(),
+                currency: order.currency,
+                description: `Cancellation penalty compensation: ${order.title}`,
+                metadata: JSON.stringify({
+                  type: 'cancellation_penalty',
+                  refundId: refund.id,
+                  penaltyPercent,
+                  receivedAt: new Date().toISOString()
+                })
+              });
               
               console.log(`✅ Penalty payment: $${penaltyAmount.toFixed(2)} to provider ${order.providerId}`);
             }

@@ -506,6 +506,7 @@ export class MemStorage implements IStorage {
       id, 
       role: 'user',
       avatar: insertUser.avatar || null,
+      bio: null,
       rating: "0.00",
       totalRatings: 0,
       completedOrders: 0,
@@ -514,8 +515,10 @@ export class MemStorage implements IStorage {
       // Dispatch defaults
       networkSpeed: "0.00",
       devicePerformance: "0.00",
+      deviceName: null,
       currentLatitude: null,
       currentLongitude: null,
+      availableRadius: 10,
       availability: true,
       lastActive: new Date(),
       dispatchScore: "0.00",
@@ -523,6 +526,14 @@ export class MemStorage implements IStorage {
       totalEarnings: "0.00",
       walletAddress: null,
       preferredPaymentMethod: null,
+      // Preferences
+      timezone: 'America/New_York',
+      notifyNewOrders: true,
+      notifyMessages: true,
+      notifyUpdates: true,
+      notifyPromotions: false,
+      profileVisibility: true,
+      locationSharing: true,
       createdAt: new Date()
     };
     this.users.set(id, user);
@@ -569,6 +580,22 @@ export class MemStorage implements IStorage {
       providerId: null,
       creatorId: insertOrder.creatorId || null,
       tags: insertOrder.tags || null,
+      groupType: 'single',
+      groupId: null,
+      splitAmount: null,
+      minParticipants: 1,
+      riskLevel: 'safe',
+      weatherAlert: 'clear',
+      geoFenceStatus: null,
+      isHighRiskArea: false,
+      isMilitaryZone: false,
+      weatherConditions: null,
+      contentFlags: null,
+      keywordViolations: null,
+      voiceAlerts: 0,
+      recordingUrl: null,
+      replayAvailable: false,
+      recordingDuration: null,
     };
     this.orders.set(id, order);
     return order;
@@ -773,6 +800,8 @@ export class MemStorage implements IStorage {
     const newZone: GeoRiskZone = {
       id,
       ...zone,
+      isActive: zone.isActive ?? true,
+      restrictions: zone.restrictions || null,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -803,6 +832,9 @@ export class MemStorage implements IStorage {
     const newAlert: WeatherAlert = {
       id,
       ...alert,
+      endTime: alert.endTime || null,
+      isActive: alert.isActive ?? true,
+      source: alert.source || 'weather_api',
       createdAt: new Date(),
     };
     this.weatherAlerts.set(id, newAlert);
@@ -828,6 +860,12 @@ export class MemStorage implements IStorage {
     const newViolation: ContentViolation = {
       id,
       ...violation,
+      content: violation.content || null,
+      confidence: violation.confidence || null,
+      isConfirmed: violation.isConfirmed ?? false,
+      action: violation.action || null,
+      reviewedBy: violation.reviewedBy || null,
+      reviewedAt: violation.reviewedAt || null,
       createdAt: new Date(),
     };
     this.contentViolations.set(id, newViolation);
@@ -848,6 +886,8 @@ export class MemStorage implements IStorage {
     const newGroup: OrderGroup = {
       id,
       ...group,
+      currentParticipants: group.currentParticipants ?? 1,
+      isComplete: group.isComplete ?? false,
       createdAt: new Date(),
     };
     this.orderGroups.set(id, newGroup);
@@ -877,6 +917,7 @@ export class MemStorage implements IStorage {
     const newParticipant: GroupParticipant = {
       id,
       ...participant,
+      isPaid: participant.isPaid ?? false,
       joinedAt: new Date(),
     };
     this.groupParticipants.set(id, newParticipant);
@@ -902,6 +943,10 @@ export class MemStorage implements IStorage {
     const newGeofence: Geofence = {
       id,
       ...geofence,
+      description: geofence.description || null,
+      isActive: geofence.isActive ?? true,
+      priority: geofence.priority ?? 0,
+      timeRestrictions: geofence.timeRestrictions || null,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -951,6 +996,8 @@ export class MemStorage implements IStorage {
     const newRule: TimezoneRule = {
       id,
       ...rule,
+      isActive: rule.isActive ?? true,
+      restrictedDays: rule.restrictedDays || null,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -985,6 +1032,8 @@ export class MemStorage implements IStorage {
     const newLocationTz: LocationTimezone = {
       id,
       ...locationTz,
+      isDst: locationTz.isDst ?? false,
+      timeRestrictionApplied: locationTz.timeRestrictionApplied ?? false,
       createdAt: new Date(),
     };
     this.locationTimezones.set(id, newLocationTz);
@@ -1120,7 +1169,7 @@ export class DatabaseStorage implements IStorage {
 
   async deleteOrder(id: string): Promise<boolean> {
     const result = await db.delete(orders).where(eq(orders.id, id));
-    return result.count > 0;
+    return result.rowCount ? result.rowCount > 0 : false;
   }
 
   async getOrdersByStatus(status: string): Promise<Order[]> {
@@ -1410,13 +1459,21 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUserNotifications(userId: string, unreadOnly: boolean = false): Promise<Notification[]> {
-    let query = db.select().from(notifications).where(eq(notifications.userId, userId));
-    
     if (unreadOnly) {
-      query = query.where(eq(notifications.read, false)) as any;
+      const userNotifications = await db.select()
+        .from(notifications)
+        .where(and(
+          eq(notifications.userId, userId),
+          eq(notifications.read, false)
+        ))
+        .orderBy(desc(notifications.createdAt));
+      return userNotifications;
     }
     
-    const userNotifications = await query.orderBy(desc(notifications.createdAt));
+    const userNotifications = await db.select()
+      .from(notifications)
+      .where(eq(notifications.userId, userId))
+      .orderBy(desc(notifications.createdAt));
     return userNotifications;
   }
 
@@ -1511,7 +1568,7 @@ export class DatabaseStorage implements IStorage {
   async updateTimezoneRule(id: string, updates: Partial<TimezoneRule>): Promise<TimezoneRule | undefined> { return undefined; }
   async deleteTimezoneRule(id: string): Promise<boolean> { return false; }
   async createLocationTimezone(locationTz: InsertLocationTimezone): Promise<LocationTimezone> {
-    const [newLocationTz] = await db.insert(locationTimezones).values(locationTz).returning();
+    const [newLocationTz] = await db.insert(locationTimezone).values(locationTz).returning();
     return newLocationTz;
   }
   async getLocationTimezoneByOrder(orderId: string): Promise<LocationTimezone | undefined> { return undefined; }
