@@ -12,10 +12,10 @@ import { validateAAGroupCreation, getAAGroupStatus, calculateSplitAmount, getAAG
 import { z } from "zod";
 
 // Initialize Stripe
-// if (!process.env.STRIPE_SECRET_KEY) {
-//   throw new Error('Missing required Stripe secret: STRIPE_SECRET_KEY');
-// }
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY||"empty", {
+if (!process.env.STRIPE_SECRET_KEY) {
+  console.warn('⚠️  STRIPE_SECRET_KEY not set - payment processing will fail');
+}
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "empty", {
   apiVersion: "2025-08-27.basil",
 });
 
@@ -298,18 +298,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Handle provider acceptance (status change to 'accepted')
       if (updates.status === 'accepted' && order.status === 'pending') {
-        console.log(`[MOCK PAYMENT] Freezing payment for order ${id} until stream completion`);
-        // In production: Create Stripe payment authorization here
+        // DON'T authorize payment when provider accepts - wait for customer to pay first
+        // The authorization happens during the actual payment process
+        console.log(`Provider accepted order ${id} - payment will be authorized when customer pays`);
       }
 
       // Handle order completion (status change to 'done')
       if (updates.status === 'done' && (order.status === 'live' || order.status === 'accepted')) {
         const price = typeof order.price === 'number' ? order.price : parseFloat(order.price);
-        const providerEarnings = price * 0.9;
-        const platformFee = price * 0.1;
+        const commission = calculateCommission(price);
         
-        console.log(`[MOCK PAYMENT] Releasing $${providerEarnings.toFixed(2)} to provider ${order.providerId} (Platform fee: $${platformFee.toFixed(2)})`);
-        // In production: Capture Stripe payment and transfer to provider
+        // Authorize and capture payment when order is completed
+        if (order.isPaid) {
+          const payments = await storage.getPaymentsByOrder(id);
+          const completedPayment = payments.find(p => p.status === 'completed');
+          
+          if (completedPayment && completedPayment.externalPaymentId && completedPayment.paymentMethod === 'stripe') {
+            try {
+              // Capture the authorized payment
+              const capturedPayment = await stripe.paymentIntents.capture(completedPayment.externalPaymentId, {
+                metadata: {
+                  capturedAt: new Date().toISOString(),
+                  providerId: order.providerId || '',
+                  commissionAmount: commission.providerEarnings.toString()
+                }
+              });
+              
+              console.log(`✅ Payment captured for order ${id}: $${commission.providerEarnings.toFixed(2)} to provider`);
+              
+              // Update payment metadata with capture info
+              await storage.updatePayment(completedPayment.id, {
+                paymentGatewayResponse: JSON.stringify({
+                  ...JSON.parse(completedPayment.paymentGatewayResponse || '{}'),
+                  captured: true,
+                  capturedAt: new Date().toISOString(),
+                  captureAmount: commission.providerEarnings
+                })
+              });
+            } catch (error) {
+              console.error('Error capturing payment:', error);
+            }
+          }
+        }
+        
+        // Process payout to provider
+        if (order.isPaid && order.providerId) {
+          const payments = await storage.getPaymentsByOrder(id);
+          const completedPayment = payments.find(p => p.status === 'completed');
+          
+          if (completedPayment) {
+            await storage.processOrderPayment(id, completedPayment.id);
+            console.log(`✅ Payout processed: $${commission.providerEarnings.toFixed(2)} to provider ${order.providerId}`);
+          }
+        }
       }
 
       const updatedOrder = await storage.updateOrder(id, updates);
@@ -468,16 +509,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
+      // Process Stripe refund if order was paid
+      if (order.isPaid) {
+        const payments = await storage.getPaymentsByOrder(id);
+        const completedPayment = payments.find(p => p.status === 'completed');
+        
+        if (completedPayment && completedPayment.externalPaymentId && completedPayment.paymentMethod === 'stripe') {
+          try {
+            // Create Stripe refund
+            const refund = await stripe.refunds.create({
+              payment_intent: completedPayment.externalPaymentId,
+              amount: Math.round(refundAmount * 100), // Convert to cents
+              reason: 'requested_by_customer',
+              metadata: {
+                orderId: id,
+                customerId: customerId,
+                penaltyPercent: penaltyPercent.toString(),
+                cancelledAt: new Date().toISOString()
+              }
+            });
+            
+            // Update payment record with refund info
+            await storage.updatePayment(completedPayment.id, {
+              paymentGatewayResponse: JSON.stringify({
+                refundId: refund.id,
+                refundAmount,
+                penaltyAmount,
+                refundStatus: refund.status
+              })
+            });
+            
+            console.log(`✅ Stripe refund processed: $${refundAmount.toFixed(2)} to customer ${customerId}`);
+            
+            // Pay penalty to provider if applicable (use automatic payout creation)
+            if (penaltyAmount > 0 && order.providerId && completedPayment) {
+              // Create a payout record for the penalty
+              const penaltyPayout = await db.insert(payouts).values({
+                orderId: id,
+                paymentId: completedPayment.id,
+                recipientId: order.providerId,
+                amount: penaltyAmount.toString(),
+                platformFee: '0',
+                currency: order.currency,
+                payoutMethod: 'stripe',
+                status: 'completed',
+                payoutMetadata: JSON.stringify({
+                  type: 'cancellation_penalty',
+                  refundId: refund.id
+                }),
+                processedAt: new Date()
+              }).returning();
+              
+              console.log(`✅ Penalty payment: $${penaltyAmount.toFixed(2)} to provider ${order.providerId}`);
+            }
+          } catch (error) {
+            console.error('Error processing Stripe refund:', error);
+            // Continue with order cancellation even if refund fails
+          }
+        }
+      }
+
       // Update order status
       const updatedOrder = await storage.updateOrder(id, { 
         status: 'cancelled' as const
       });
-
-      // Mock Stripe refund
-      console.log(`[MOCK PAYMENT] Refunding $${refundAmount.toFixed(2)} to customer ${customerId}`);
-      if (penaltyAmount > 0 && order.providerId) {
-        console.log(`[MOCK PAYMENT] Transferring penalty $${penaltyAmount.toFixed(2)} to provider ${order.providerId}`);
-      }
 
       res.json({
         success: true,
@@ -1324,6 +1419,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
+      // Check if payment already exists for this order
+      const existingPayments = await storage.getPaymentsByOrder(orderId);
+      const existingStripePayment = existingPayments.find(p => p.paymentMethod === 'stripe' && p.externalPaymentId);
+
+      if (existingStripePayment) {
+        // Return existing PaymentIntent data instead of creating new one
+        const existingMetadata = typeof existingStripePayment.paymentMetadata === 'string' 
+          ? JSON.parse(existingStripePayment.paymentMetadata)
+          : (existingStripePayment.paymentMetadata || {});
+
+        console.log(`✅ Using existing PaymentIntent: ${existingStripePayment.externalPaymentId}`);
+        
+        res.status(200).json({
+          success: true,
+          data: {
+            payment: existingStripePayment,
+            clientSecret: existingMetadata.clientSecret
+          },
+          message: "Existing payment found"
+        });
+        return;
+      }
+
       // Create payment record
       const payment = await storage.createPayment({
         orderId,
@@ -1334,27 +1452,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
         paymentMetadata: JSON.stringify(paymentData.paymentMetadata || {}),
       });
 
-      // Create Stripe payment intent if using Stripe (MOCKED FOR MVP)
+      // Create Stripe payment intent if using Stripe
       let clientSecret = null;
       if (paymentData.paymentMethod === 'stripe') {
-        // Mock Stripe payment intent creation
-        const mockPaymentIntentId = `pi_mock_${Date.now()}`;
-        clientSecret = `cs_mock_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        try {
+          if (!process.env.STRIPE_SECRET_KEY || process.env.STRIPE_SECRET_KEY === 'empty') {
+            throw new Error('Stripe is not configured. Please set STRIPE_SECRET_KEY environment variable.');
+          }
 
-        // Update payment with mock Stripe metadata
-        await storage.updatePayment(payment.id, {
-          paymentMetadata: JSON.stringify({
-            ...paymentData.paymentMetadata,
-            clientSecret: clientSecret,
-            externalPaymentId: mockPaymentIntentId,
-            mockPayment: true,
-            mockData: {
-              amount: Math.round(paymentData.amount * 100),
-              currency: paymentData.currency.toLowerCase(),
-              status: 'requires_payment_method'
-            }
-          })
-        });
+          // Create real Stripe PaymentIntent
+          const paymentIntent = await stripe.paymentIntents.create({
+            amount: Math.round(paymentData.amount * 100), // Convert to cents
+            currency: paymentData.currency.toLowerCase(),
+            payment_method_types: ['card'], // Explicitly specify card payments only
+            metadata: {
+              orderId: orderId,
+              payerId: req.body.payerId,
+              paymentId: payment.id,
+              ...(paymentData.paymentMetadata || {})
+            },
+            description: `Payment for order ${orderId}`,
+            capture_method: 'manual' // Changed from automatic_async to manual
+          });
+
+          console.log("this is the payment intent", paymentIntent);
+
+          clientSecret = paymentIntent.client_secret;
+
+          // Update payment with Stripe metadata
+          await storage.updatePayment(payment.id, {
+            externalPaymentId: paymentIntent.id,
+            paymentMetadata: JSON.stringify({
+              ...paymentData.paymentMetadata,
+              clientSecret: clientSecret,
+              paymentIntentId: paymentIntent.id,
+              status: paymentIntent.status
+            })
+          });
+
+          console.log(`✅ Stripe PaymentIntent created: ${paymentIntent.id}`);
+          console.log("status of the payment intent", paymentIntent.status);
+        } catch (error) {
+          console.error('Error creating Stripe PaymentIntent:', error);
+          // Clean up payment record
+          await storage.updatePayment(payment.id, {
+            status: 'failed',
+            failureReason: error instanceof Error ? error.message : 'Failed to create Stripe payment'
+          });
+          throw error;
+        }
       }
 
       res.status(201).json({
@@ -2014,7 +2160,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let event;
 
       try {
-        event = stripe.webhooks.constructEvent(req.body, sig as string, process.env.STRIPE_WEBHOOK_SECRET || '');
+        // Skip signature verification if no webhook secret (local dev without Stripe CLI)
+        if (process.env.STRIPE_WEBHOOK_SECRET) {
+          event = stripe.webhooks.constructEvent(req.body, sig as string, process.env.STRIPE_WEBHOOK_SECRET);
+        } else {
+          console.warn('⚠️  STRIPE_WEBHOOK_SECRET not set - webhook signature verification skipped');
+          event = JSON.parse(req.body);
+        }
       } catch (err) {
         console.error('Webhook signature verification failed:', err);
         return res.status(400).send('Webhook signature verification failed');
@@ -2027,23 +2179,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const orderId = paymentIntent.metadata.orderId;
           
           if (orderId) {
-            // Update payment status
+            // Update payment status to completed
             const payments = await storage.getPaymentsByOrder(orderId);
             const payment = payments.find(p => p.externalPaymentId === paymentIntent.id);
             
             if (payment) {
               await storage.updatePayment(payment.id, {
-                status: 'completed'
+                status: 'completed',
+                paymentGatewayResponse: JSON.stringify({
+                  ...JSON.parse(payment.paymentGatewayResponse || '{}'),
+                  webhookReceived: true,
+                  webhookEvent: 'payment_intent.succeeded',
+                  receivedAt: new Date().toISOString()
+                })
               });
               
-              // Update order payment status
+              // Update order to mark as paid, but don't change status yet
               await storage.updateOrder(orderId, {
-                isPaid: true,
-                status: 'accepted' // Move order to next status
+                isPaid: true
               });
               
-              // Process commission and create payout
-              await storage.processOrderPayment(orderId, payment.id);
+              console.log(`✅ Payment completed for order ${orderId} via webhook`);
             }
           }
           break;
@@ -2075,6 +2231,91 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({
         success: false,
         message: "Webhook processing failed"
+      });
+    }
+  });
+
+  // Confirm payment status from frontend
+  app.post("/api/payments/:paymentIntentId/confirm", async (req, res) => {
+    try {
+      const { paymentIntentId } = req.params;
+      const { status, orderId } = req.body;
+      
+      console.log(`💳 Confirming payment ${paymentIntentId} with status: ${status}`);
+      
+      // Get payment by external payment ID
+      const payments = await storage.getPaymentsByOrder(orderId);
+      const payment = payments.find(p => p.externalPaymentId === paymentIntentId);
+      
+      if (!payment) {
+        return res.status(404).json({
+          success: false,
+          message: "Payment not found"
+        });
+      }
+      
+      // Update payment to completed status (requires_capture is considered completed)
+      const existingMetadata = typeof payment.paymentMetadata === 'string' 
+        ? JSON.parse(payment.paymentMetadata || '{}')
+        : (payment.paymentMetadata || {});
+      
+      const existingGatewayResponse = typeof payment.paymentGatewayResponse === 'string'
+        ? JSON.parse(payment.paymentGatewayResponse || '{}')
+        : (payment.paymentGatewayResponse || {});
+      
+      await storage.updatePayment(payment.id, {
+        status: 'completed',
+        paymentMetadata: JSON.stringify({
+          ...existingMetadata,
+          stripeStatus: status,
+          authorizedAt: new Date().toISOString(),
+          requiresCapture: status === 'requires_capture'
+        }),
+        paymentGatewayResponse: JSON.stringify({
+          ...existingGatewayResponse,
+          frontendConfirmed: true,
+          confirmedStatus: status,
+          confirmedAt: new Date().toISOString()
+        })
+      });
+      
+      // Update order to mark as paid
+      const order = await storage.updateOrder(orderId, {
+        isPaid: true
+      });
+      
+      // Create transaction record for customer payment
+      if (order) {
+        await storage.createTransaction({
+          userId: payment.payerId,
+          orderId: orderId,
+          paymentId: payment.id,
+          type: 'payment',
+          amount: payment.amount.toString(),
+          currency: payment.currency,
+          description: `Payment for order: ${order.title}`,
+          metadata: JSON.stringify({
+            paymentIntentId,
+            stripeStatus: status,
+            paymentMethod: payment.paymentMethod,
+            authorizedAt: new Date().toISOString()
+          })
+        });
+        console.log(`✅ Transaction record created for payment ${payment.id}`);
+      }
+      
+      console.log(`✅ Payment ${paymentIntentId} marked as completed in database`);
+      console.log(`✅ Order ${orderId} marked as paid`);
+      
+      res.json({
+        success: true,
+        message: "Payment confirmed successfully"
+      });
+    } catch (error) {
+      console.error('Error confirming payment:', error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to confirm payment"
       });
     }
   });

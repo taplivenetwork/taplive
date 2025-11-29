@@ -132,9 +132,6 @@ export function CreateOrderModal({ open, onOpenChange, selectedLocation }: Creat
 
   const createOrderMutation = useMutation({
     mutationFn: async (data: CreateOrderForm) => {
-      // Mock payment processing - simulate 2 second delay
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
       const orderData: InsertOrder = {
         title: data.title,
         description: data.description,
@@ -154,64 +151,26 @@ export function CreateOrderModal({ open, onOpenChange, selectedLocation }: Creat
 
       const order = await api.orders.create(orderData);
 
-      // Create payment record
-      const paymentResponse = await fetch(`/api/orders/${order.data.id}/payment`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          payerId: CURRENT_USER_ID,
-          amount: parseFloat(data.price),
-          currency: 'USD',
-          paymentMethod: 'stripe', // Mock payment method
-        }),
-      });
-
-      if (!paymentResponse.ok) {
-        throw new Error('Payment creation failed');
-      }
-
-      const payment = await paymentResponse.json();
-
-      // For Stripe payments, we don't need to manually complete - Stripe handles this
-      // The payment will be completed via webhook when the user pays
-      if (payment.data.clientSecret) {
-        // Redirect to Stripe checkout or handle client-side payment
-        // For now, we'll simulate completion for MVP
-        const completeResponse = await fetch(`/api/payments/${payment.data.payment.id}/complete`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            externalPaymentId: `mock_${Date.now()}`,
-          }),
-        });
-
-        if (!completeResponse.ok) {
-          throw new Error('Payment completion failed');
-        }
-      }
-
-      return order;
+      // Return order info (payment will be created on payment page)
+      return {
+        order: order.data,
+        amount: parseFloat(data.price)
+      };
     },
-    onSuccess: (order) => {
-      toast({
-        title: "Payment Successful!",
-        description: "Your order has been created and payment confirmed.",
-      });
-      invalidateOrders();
-      setShowPaymentModal(false);
-      onOpenChange(false);
-      form.reset();
-      // Redirect to payment success page
-      window.location.href = `/payment/${order.data.id}`;
+    onSuccess: (result) => {
+      // Store order info for payment page
+      sessionStorage.setItem('pendingOrder', JSON.stringify({
+        orderId: result.order.id,
+        amount: result.amount
+      }));
+      
+      // Redirect to payment page
+      window.location.href = `/payment/${result.order.id}`;
     },
     onError: (error: Error) => {
       toast({
-        title: "Payment Failed",
-        description: error.message || "Failed to process payment",
+        title: "Order Creation Failed",
+        description: error.message || "Failed to create order",
         variant: "destructive",
       });
       setShowPaymentModal(false);

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation, useRoute } from 'wouter';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,8 +16,10 @@ import {
 } from "lucide-react";
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { invalidateOrders, authFetch } from "@/lib/api";
+import { useAuth } from "@clerk/clerk-react";
 import { useToast } from "@/hooks/use-toast";
 import type { Order } from "@shared/schema";
+import StripePayment from '@/components/stripe-payment';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -33,9 +35,30 @@ export default function PaymentPage() {
   const [, setLocation] = useLocation();
   const [match, params] = useRoute("/payment/:orderId");
   const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [paymentInfo, setPaymentInfo] = useState<{
+    amount: number;
+  } | null>(null);
   const { toast } = useToast();
+  const { userId } = useAuth();
   
   const orderId = params?.orderId;
+
+  // Check for pending order in session storage
+  useEffect(() => {
+    const pendingOrder = sessionStorage.getItem('pendingOrder');
+    if (pendingOrder) {
+      try {
+        const order = JSON.parse(pendingOrder);
+        if (order.orderId === orderId) {
+          setPaymentInfo({
+            amount: order.amount
+          });
+        }
+      } catch (error) {
+        console.error('Error parsing pending order:', error);
+      }
+    }
+  }, [orderId]);
 
   // Fetch order details
   const { data: order, isLoading: orderLoading, error: orderError } = useQuery<Order>({
@@ -142,7 +165,51 @@ export default function PaymentPage() {
   const scheduledDate = orderData.scheduledAt ? new Date(orderData.scheduledAt) : null;
   const canEnterRoom = scheduledDate ? scheduledDate <= new Date() : true;
 
-  // This page shows payment success (since payment is mocked in the order creation modal)
+  // Show Stripe payment form if payment is not yet completed
+  if (!orderData.isPaid && paymentInfo?.amount) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-4 py-8">
+        <div className="max-w-2xl mx-auto">
+          <Button
+            onClick={() => setLocation('/orders')}
+            variant="ghost"
+            className="mb-4"
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Orders
+          </Button>
+
+          <StripePayment
+            orderId={orderId}
+            amount={paymentInfo.amount}
+            userId={userId!}
+            onSuccess={() => {
+              console.log('Payment success callback triggered');
+              sessionStorage.removeItem('pendingOrder');
+              toast({
+                title: "Payment Successful!",
+                description: "Your order has been confirmed. Redirecting...",
+              });
+              invalidateOrders();
+              // Redirect immediately without delay
+              console.log('Redirecting to:', `/payment/${orderId}?success=true`);
+              setLocation(`/payment/${orderId}?success=true`);
+            }}
+            onError={(error) => {
+              console.error('Payment error callback:', error);
+              toast({
+                title: "Payment Failed",
+                description: error,
+                variant: "destructive",
+              });
+            }}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // Payment success view
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-4 py-8">
       <div className="max-w-2xl mx-auto">

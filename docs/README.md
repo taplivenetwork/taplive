@@ -70,6 +70,11 @@ PORT=5000
 # Clerk Authentication (Backend)
 CLERK_SECRET_KEY="your_clerk_secret_key_here"
 CLERK_PUBLISHABLE_KEY="your_clerk_publishable_key_here"
+CLERK_WEBHOOK_SECRET="your_clerk_webhook_secret_here"
+
+# Stripe Payment (Backend)
+STRIPE_SECRET_KEY="your_stripe_secret_key_here"
+STRIPE_WEBHOOK_SECRET="your_stripe_webhook_secret_here"
 ```
 
 **How to get Clerk keys:**
@@ -106,11 +111,13 @@ Create `.env.local` file inside the `/client` folder:
 # Clerk Authentication (Frontend)
 VITE_CLERK_PUBLISHABLE_KEY="your_clerk_publishable_key_here"
 
-# Stripe (leave empty for now)
-VITE_STRIPE_PUBLIC_KEY=""
+# Stripe Payment (Frontend)
+VITE_STRIPE_PUBLISHABLE_KEY="your_stripe_publishable_key_here"
 ```
 
 **Note:** Use the same `CLERK_PUBLISHABLE_KEY` from your Clerk dashboard.
+
+**For Stripe Setup:** See [STRIPE_SETUP.md](./STRIPE_SETUP.md) for detailed instructions on setting up Stripe payments.
 
 Start frontend:
 ```bash
