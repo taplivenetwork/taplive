@@ -23,7 +23,7 @@ TapLive is a location-based livestream collaboration platform that allows users 
 ## 📦 Project Structure
 
 /client → React Frontend
-/server → Node.js Backend + Web3 APIs
+/server → Node.js Backend
 
 
 ## 🔧 Setup Instructions
@@ -35,21 +35,63 @@ git clone <your-repo-url>
 cd <repo-folder>
 ```
 
+### Database Setup (Neon DB)
+
+1. **Create a Neon Database Account**
+   - Go to [neon.tech](https://neon.tech) and sign up for a free account
+   - Create a new project
+
+2. **Get Your Database Connection String**
+   - In your Neon dashboard, go to the "Connection Details" section
+   - Copy the connection string (it should look like: `postgresql://username:password@hostname/database?sslmode=require`)
+   - This will be your `DATABASE_URL`
+
+3. **Run Database Migrations**
+   ```bash
+   npm run db:migrate
+   ```
+
 ### Backend Setup
 ```bash
-
 cd server
 npm install
 ```
 
-### Configure Environment Variables
-Create .env in root (see .env.example for reference)
+### Configure Backend Environment Variables
+Create `.env` file in the root directory:
 
-Run migrations (if using Prisma)
 ```bash
-npx prisma migrate deploy
+# Database
+DATABASE_URL="your_neon_database_connection_string_here"
+
+# Server
+PORT=5000
+
+# Clerk Authentication (Backend)
+CLERK_SECRET_KEY="your_clerk_secret_key_here"
+CLERK_PUBLISHABLE_KEY="your_clerk_publishable_key_here"
+CLERK_WEBHOOK_SECRET="your_clerk_webhook_secret_here"
+
+# Stripe Payment (Backend)
+STRIPE_SECRET_KEY="your_stripe_secret_key_here"
+STRIPE_WEBHOOK_SECRET="your_stripe_webhook_secret_here"
 ```
-Start server
+
+**How to get Clerk keys:**
+1. Go to [clerk.com](https://clerk.com) and create an account
+2. Create a new application
+3. In your Clerk dashboard, go to "API Keys" section
+4. Copy the "Secret key" for `CLERK_SECRET_KEY`
+5. Copy the "Publishable key" for `CLERK_PUBLISHABLE_KEY`
+
+**Setting up JWT Template in Clerk:**
+1. In your Clerk dashboard, go to "JWT Templates" section
+2. Click "Create template" 
+3. Name the template "neon" (this will be used for JWT authentication)
+4. Configure the template with your desired claims and settings
+5. Save the template
+
+Start server:
 ```bash
 npm run dev
 ```
@@ -61,10 +103,21 @@ Backend runs on:
 cd client
 npm install
 ```
-Create .env.local inside /client folder (see .env.example below)
+
+### Configure Frontend Environment Variables
+Create `.env.local` file inside the `/client` folder:
+
+```bash
+# Clerk Authentication (Frontend)
+VITE_CLERK_PUBLISHABLE_KEY="your_clerk_publishable_key_here"
+
+# Stripe Payment (Frontend)
+VITE_STRIPE_PUBLISHABLE_KEY="your_stripe_publishable_key_here"
+```
+
+**Note:** Use the same `CLERK_PUBLISHABLE_KEY` from your Clerk dashboard.
 
 Start frontend:
-
 ```bash
 npm run dev
 ```
