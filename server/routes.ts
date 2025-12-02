@@ -2705,52 +2705,159 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // WebSocket server for video streaming signaling
   const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
   
-  // Store active stream rooms
+  // Store active stream rooms and broadcaster connections
   const streamRooms = new Map<string, Set<WebSocket>>();
+  const broadcasters = new Map<string, WebSocket>(); // streamId -> broadcaster WebSocket
+  const clientIds = new Map<WebSocket, string>(); // WebSocket -> unique client ID
+  let clientIdCounter = 0;
   
   wss.on('connection', (ws: WebSocket) => {
-    console.log('WebSocket client connected');
+    const clientId = `client_${++clientIdCounter}`;
+    clientIds.set(ws, clientId);
+    console.log(`✅ WebSocket client connected: ${clientId}`);
+    let clientStreamId: string | null = null;
+    let isBroadcaster = false;
     
     ws.on('message', (data: Buffer) => {
       try {
         const message = JSON.parse(data.toString());
+        console.log(`📨 Received message type: ${message.type}`, { streamId: message.streamId });
         
         switch (message.type) {
-          case 'join-stream':
-            const { streamId } = message;
-            if (!streamRooms.has(streamId)) {
-              streamRooms.set(streamId, new Set());
-            }
-            streamRooms.get(streamId)!.add(ws);
+          case 'broadcaster-ready':
+            // Provider is ready to broadcast
+            const broadcastStreamId = message.streamId;
+            clientStreamId = broadcastStreamId;
+            isBroadcaster = true;
             
-            // Notify others in the room
-            streamRooms.get(streamId)!.forEach(client => {
+            console.log(`🎬 Broadcaster ready for stream: ${broadcastStreamId}`);
+            broadcasters.set(broadcastStreamId, ws);
+            
+            if (!streamRooms.has(broadcastStreamId)) {
+              streamRooms.set(broadcastStreamId, new Set());
+            }
+            streamRooms.get(broadcastStreamId)!.add(ws);
+            
+            // Notify all waiting viewers that broadcaster is ready
+            streamRooms.get(broadcastStreamId)!.forEach(client => {
               if (client !== ws && client.readyState === WebSocket.OPEN) {
+                console.log(`📢 Notifying viewer that broadcaster is ready`);
                 client.send(JSON.stringify({
-                  type: 'user-joined',
-                  streamId
+                  type: 'broadcaster-ready-signal',
+                  streamId: broadcastStreamId
                 }));
               }
             });
             break;
             
+          case 'join-stream':
+            // Viewer joining stream
+            const { streamId } = message;
+            clientStreamId = streamId;
+            isBroadcaster = false;
+            
+            console.log(`👥 Viewer joining stream: ${streamId}`);
+            
+            if (!streamRooms.has(streamId)) {
+              streamRooms.set(streamId, new Set());
+            }
+            streamRooms.get(streamId)!.add(ws);
+            
+            // Send viewer count to all clients
+            const viewerCount = streamRooms.get(streamId)!.size;
+            streamRooms.get(streamId)!.forEach(client => {
+              if (client.readyState === WebSocket.OPEN) {
+                client.send(JSON.stringify({
+                  type: 'viewer-count',
+                  count: viewerCount,
+                  streamId
+                }));
+              }
+            });
+            
+            // Notify broadcaster that a viewer joined
+            const broadcaster = broadcasters.get(streamId);
+            if (broadcaster && broadcaster.readyState === WebSocket.OPEN) {
+              const newViewerId = clientIds.get(ws);
+              console.log(`📢 Notifying broadcaster of viewer join: ${newViewerId}`);
+              broadcaster.send(JSON.stringify({
+                type: 'viewer-joined',
+                streamId,
+                viewerId: newViewerId
+              }));
+            }
+            break;
+            
           case 'webrtc-offer':
-          case 'webrtc-answer':
-          case 'webrtc-ice-candidate':
-            // Forward WebRTC signaling to all other clients in the stream
-            const targetStreamId = message.streamId;
-            if (streamRooms.has(targetStreamId)) {
-              streamRooms.get(targetStreamId)!.forEach(client => {
-                if (client !== ws && client.readyState === WebSocket.OPEN) {
-                  client.send(data.toString());
+            // Broadcaster sending offer to specific viewer
+            const viewerId = message.viewerId;
+            console.log(`📡 Forwarding WebRTC offer for stream: ${message.streamId}, viewerId: ${viewerId}`);
+            const offerStreamId = message.streamId;
+            if (streamRooms.has(offerStreamId)) {
+              // Find the specific viewer by their clientId
+              streamRooms.get(offerStreamId)!.forEach(client => {
+                const targetClientId = clientIds.get(client);
+                if (targetClientId === viewerId && client !== ws && client.readyState === WebSocket.OPEN) {
+                  console.log(`📡 Sending offer to viewer: ${targetClientId}`);
+                  client.send(JSON.stringify({
+                    ...message,
+                    viewerId: targetClientId // Send back the viewer's own ID
+                  }));
                 }
               });
+            }
+            break;
+            
+          case 'webrtc-answer':
+            // Viewer sending answer to broadcaster
+            const answerViewerId = clientIds.get(ws);
+            console.log(`📡 Forwarding WebRTC answer to broadcaster for stream: ${message.streamId}, from viewer: ${answerViewerId}`);
+            const answerStreamId = message.streamId;
+            const answerBroadcaster = broadcasters.get(answerStreamId);
+            if (answerBroadcaster && answerBroadcaster.readyState === WebSocket.OPEN) {
+              answerBroadcaster.send(JSON.stringify({
+                ...message,
+                viewerId: answerViewerId // Include viewer ID so broadcaster knows which peer
+              }));
+            }
+            break;
+            
+          case 'webrtc-ice-candidate':
+          case 'ice-candidate':
+            // Forward ICE candidates between broadcaster and specific viewer
+            const iceViewerId = message.viewerId || clientIds.get(ws);
+            const iceStreamId = message.streamId;
+            console.log(`🧊 Forwarding ICE candidate for stream: ${iceStreamId}, viewerId: ${iceViewerId}`);
+            
+            if (isBroadcaster) {
+              // Broadcaster sending to specific viewer
+              if (streamRooms.has(iceStreamId)) {
+                streamRooms.get(iceStreamId)!.forEach(client => {
+                  const targetClientId = clientIds.get(client);
+                  if (targetClientId === iceViewerId && client !== ws && client.readyState === WebSocket.OPEN) {
+                    client.send(JSON.stringify({
+                      ...message,
+                      viewerId: targetClientId
+                    }));
+                  }
+                });
+              }
+            } else {
+              // Viewer sending to broadcaster
+              const iceBroadcaster = broadcasters.get(iceStreamId);
+              if (iceBroadcaster && iceBroadcaster.readyState === WebSocket.OPEN) {
+                iceBroadcaster.send(JSON.stringify({
+                  ...message,
+                  viewerId: iceViewerId
+                }));
+              }
             }
             break;
             
           case 'start-streaming':
             // Streamer started broadcasting
             const { orderId } = message;
+            console.log(`🎥 Stream started: ${orderId}`);
             if (streamRooms.has(orderId)) {
               streamRooms.get(orderId)!.forEach(client => {
                 if (client !== ws && client.readyState === WebSocket.OPEN) {
@@ -2764,18 +2871,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
             break;
         }
       } catch (error) {
-        console.error('WebSocket message error:', error);
+        console.error('❌ WebSocket message error:', error);
       }
     });
     
     ws.on('close', () => {
+      console.log('❌ WebSocket client disconnected');
+      
+      // If broadcaster disconnected, notify all viewers
+      if (clientStreamId && isBroadcaster) {
+        console.log(`🎬 Broadcaster disconnected from stream: ${clientStreamId}`);
+        broadcasters.delete(clientStreamId);
+        
+        if (streamRooms.has(clientStreamId)) {
+          streamRooms.get(clientStreamId)!.forEach(client => {
+            if (client !== ws && client.readyState === WebSocket.OPEN) {
+              client.send(JSON.stringify({
+                type: 'broadcaster-disconnected',
+                streamId: clientStreamId
+              }));
+            }
+          });
+        }
+      }
+      
       // Remove client from all rooms
       streamRooms.forEach((clients, streamId) => {
         clients.delete(ws);
+        
+        // Update viewer count
+        if (clients.size > 0) {
+          clients.forEach(client => {
+            if (client.readyState === WebSocket.OPEN) {
+              client.send(JSON.stringify({
+                type: 'viewer-count',
+                count: clients.size,
+                streamId
+              }));
+            }
+          });
+        }
+        
         if (clients.size === 0) {
           streamRooms.delete(streamId);
         }
       });
+    });
+    
+    ws.on('error', (error) => {
+      console.error('❌ WebSocket error:', error);
     });
   });
 

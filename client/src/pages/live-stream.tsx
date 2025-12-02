@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useRoute } from 'wouter';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useUser } from '@clerk/clerk-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -8,7 +9,7 @@ import { StreamViewer } from '@/components/video/stream-viewer';
 import { StreamBroadcaster } from '@/components/video/stream-broadcaster';
 import { NativeWebRTCBroadcaster } from '@/components/video/native-webrtc-broadcaster';
 import { TranslatedText } from '@/components/translated-text';
-import { ArrowLeft, MapPin, Clock, DollarSign, XCircle } from 'lucide-react';
+import { ArrowLeft, MapPin, Clock, DollarSign, XCircle, Video, Users } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
 import type { Order } from '@shared/schema';
 
@@ -19,20 +20,33 @@ interface LiveStreamPageProps {
 export default function LiveStreamPage() {
   const [match, params] = useRoute('/stream/:orderId');
   const [viewerCount, setViewerCount] = useState(0);
+  const { user, isLoaded } = useUser(); // Get Clerk user
   
   // Check URL parameters
   const urlParams = new URLSearchParams(window.location.search);
-  const modeParam = urlParams.get('mode');
   const paymentStatus = urlParams.get('payment'); // 'paid' or 'pending'
-  const [userRole, setUserRole] = useState<'viewer' | 'broadcaster'>(
-    modeParam === 'viewer' ? 'viewer' : 'viewer' // Default to viewer mode
-  );
   const queryClient = useQueryClient();
 
   const orderId = params?.orderId || '';
+  const CURRENT_USER_ID = user?.id || 'guest';
 
   // Check if scheduled date has arrived
   const [canStartBroadcast, setCanStartBroadcast] = useState(false);
+  
+  // For manual mode switching (debugging only)
+  const [manualMode, setManualMode] = useState<'viewer' | 'broadcaster' | null>(null);
+
+  // Fetch current user data to get their role
+  const { data: userData } = useQuery({
+    queryKey: [`/api/users/${CURRENT_USER_ID}`],
+    queryFn: async () => {
+      if (CURRENT_USER_ID === 'guest') return null;
+      const response = await apiRequest('GET', `/api/users/${CURRENT_USER_ID}`);
+      const data = await response.json();
+      return data;
+    },
+    enabled: CURRENT_USER_ID !== 'guest' && isLoaded,
+  });
 
   // Fetch order details
   const { data: orderResponse, isLoading } = useQuery<{ data: Order | Order[] }>({
@@ -43,6 +57,27 @@ export default function LiveStreamPage() {
   const order = Array.isArray(orderResponse?.data) 
     ? orderResponse.data.find((o: Order) => o.id === orderId)
     : orderResponse?.data as Order | undefined;
+
+  // Determine actual user role from database
+  const userRole = (userData?.data?.role || userData?.role) === 'provider' ? 'provider' : 'customer';
+
+  // Calculate display mode synchronously based on order relationship
+  const displayMode: 'viewer' | 'broadcaster' | null = (() => {
+    if (manualMode) return manualMode; // Allow manual override for testing
+    if (!order || CURRENT_USER_ID === 'guest') return null;
+    
+    // Provider/broadcaster: The person assigned to provide the service
+    const isProvider = order.providerId === CURRENT_USER_ID;
+    
+    if (isProvider) {
+      console.log('[DisplayMode] User is PROVIDER - broadcaster mode');
+      return 'broadcaster';
+    }
+    
+    // Everyone else is a viewer (customer or spectator)
+    console.log('[DisplayMode] User is VIEWER - viewer mode');
+    return 'viewer';
+  })();
 
   // Update order status to live
   const updateOrderMutation = useMutation({
@@ -61,15 +96,6 @@ export default function LiveStreamPage() {
       setCanStartBroadcast(scheduledDate <= now);
     } else {
       setCanStartBroadcast(true); // If no scheduled date, allow broadcast
-    }
-
-    // Determine user role
-    if (order && ['pending', 'open', 'accepted', 'live'].includes(order.status)) {
-      console.log('🎬 Setting user role to broadcaster for status:', order.status);
-      setUserRole('broadcaster');
-    } else {
-      console.log('👥 Setting user role to viewer for status:', order?.status);
-      setUserRole('viewer');
     }
   }, [order]);
 
@@ -201,11 +227,14 @@ export default function LiveStreamPage() {
           <div className="flex items-center justify-between">
             <div className="text-sm">
               <strong><TranslatedText context="home">Current Mode</TranslatedText>：</strong>
-              <span className={`ml-2 px-2 py-1 rounded text-xs font-semibold ${
-                userRole === 'broadcaster' ? 'bg-green-500 text-white' : 'bg-purple-500 text-white'
+              <span className={`ml-2 px-2 py-1 rounded text-xs font-semibold flex items-center gap-1 ${
+                displayMode === 'broadcaster' ? 'bg-green-500 text-white' : 'bg-purple-500 text-white'
               }`}>
-                {userRole === 'broadcaster' ? '🎬 ' : '👥 '}
-                <TranslatedText context="home">{userRole === 'broadcaster' ? 'Broadcaster Mode' : 'Viewer Mode'}</TranslatedText>
+                {displayMode === 'broadcaster' ? <Video className="w-3 h-3" /> : <Users className="w-3 h-3" />}
+                <TranslatedText context="home">{displayMode === 'broadcaster' ? 'Broadcaster Mode' : 'Viewer Mode'}</TranslatedText>
+              </span>
+              <span className="ml-4 text-gray-600">
+                <TranslatedText context="home">User Role</TranslatedText>: <span className="font-mono">{userRole}</span>
               </span>
               <span className="ml-4 text-gray-600">
                 <TranslatedText context="home">Order Status</TranslatedText>: <span className="font-mono">{order?.status}</span>
@@ -214,29 +243,31 @@ export default function LiveStreamPage() {
             <div className="flex gap-2">
               <Button
                 onClick={() => {
-                  console.log('🔄 Switching to broadcaster mode');
-                  setUserRole('broadcaster');
+                  console.log('[Manual] Switching to broadcaster mode');
+                  setManualMode('broadcaster');
                 }}
-                variant={userRole === 'broadcaster' ? 'default' : 'outline'}
+                variant={displayMode === 'broadcaster' ? 'default' : 'outline'}
                 size="sm"
+                disabled={displayMode === 'broadcaster'}
                 data-testid="switch-to-broadcaster"
-                className={userRole === 'broadcaster' ? 'bg-green-500 hover:bg-green-600' : ''}
+                className={displayMode === 'broadcaster' ? 'bg-green-500 hover:bg-green-600' : ''}
               >
-                🎬 {userRole === 'broadcaster' ? '✅ ' : ''}
-                <TranslatedText context="home">{userRole === 'broadcaster' ? 'Current Broadcaster' : 'Switch to Broadcaster'}</TranslatedText>
+                <Video className="w-4 h-4 mr-2" />
+                <TranslatedText context="home">{displayMode === 'broadcaster' ? 'Broadcaster Mode (Current)' : 'Switch to Broadcaster'}</TranslatedText>
               </Button>
               <Button
                 onClick={() => {
-                  console.log('🔄 Switching to viewer mode');
-                  setUserRole('viewer');
+                  console.log('[Manual] Switching to viewer mode');
+                  setManualMode('viewer');
                 }}
-                variant={userRole === 'viewer' ? 'default' : 'outline'}
+                variant={displayMode === 'viewer' ? 'default' : 'outline'}
                 size="sm"
+                disabled={displayMode === 'viewer'}
                 data-testid="switch-to-viewer"
-                className={userRole === 'viewer' ? 'bg-purple-500 hover:bg-purple-600' : ''}
+                className={displayMode === 'viewer' ? 'bg-purple-500 hover:bg-purple-600' : ''}
               >
-                👥 {userRole === 'viewer' ? '✅ ' : ''}
-                <TranslatedText context="home">{userRole === 'viewer' ? 'Current Viewer' : 'Switch to Viewer'}</TranslatedText>
+                <Users className="w-4 h-4 mr-2" />
+                <TranslatedText context="home">{displayMode === 'viewer' ? 'Viewer Mode (Current)' : 'Switch to Viewer'}</TranslatedText>
               </Button>
             </div>
           </div>
@@ -245,35 +276,37 @@ export default function LiveStreamPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main Video Area */}
           <div className="lg:col-span-2">
-            {userRole === 'broadcaster' ? (
+            {!displayMode ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
+              </div>
+            ) : displayMode === 'broadcaster' ? (
               <div className="space-y-4">
                 {/* Broadcaster interface - Native WebRTC streaming */}
-                <div className="text-sm text-green-600 bg-green-50 p-3 rounded border font-semibold">
-                  🎬 <TranslatedText>Broadcaster Mode: You are streaming</TranslatedText>
+                <div className="text-sm text-green-600 bg-green-50 p-3 rounded border font-semibold flex items-center gap-2">
+                  <Video className="w-4 h-4" />
+                  <TranslatedText>Broadcaster Mode: You are streaming</TranslatedText>
                 </div>
                 {!canStartBroadcast && order.scheduledAt && (
-                  <div className="text-sm text-orange-600 bg-orange-50 p-3 rounded border font-semibold">
-                    ⏰ Broadcast will be available at: {new Date(order.scheduledAt).toLocaleString()}
+                  <div className="text-sm text-orange-600 bg-orange-50 p-3 rounded border font-semibold flex items-center gap-2">
+                    <Clock className="w-4 h-4" />
+                    <span>
+                      <TranslatedText>Broadcast will be available at:</TranslatedText> {new Date(order.scheduledAt).toLocaleString()}
+                    </span>
                   </div>
                 )}
-                <div className={!canStartBroadcast ? 'opacity-50 pointer-events-none' : ''}>
-                  <NativeWebRTCBroadcaster
-                    orderId={orderId}
-                    onStreamStart={handleStreamStart}
-                    onStreamEnd={handleStreamEnd}
-                  />
-                </div>
-                {!canStartBroadcast && (
-                  <div className="text-center text-sm text-muted-foreground">
-                    <TranslatedText>Broadcast controls will be enabled when the scheduled time arrives</TranslatedText>
-                  </div>
-                )}
+                <NativeWebRTCBroadcaster
+                  orderId={orderId}
+                  onStreamStart={handleStreamStart}
+                  onStreamEnd={handleStreamEnd}
+                  canStartBroadcast={canStartBroadcast}
+                />
                 
                 {/* Provider cancel order button */}
                 {(order.status === 'accepted' || order.status === 'live') && (
                   <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
                     <p className="text-sm text-yellow-800 mb-3">
-                      <TranslatedText>作为服务提供者，您可以取消订单，但这会降低您的信用评分</TranslatedText>
+                      <TranslatedText context="order_management">As a service provider, you can cancel the order, but this will decrease your credit score</TranslatedText>
                     </p>
                     <Button 
                       onClick={handleCancelOrder}
@@ -283,8 +316,8 @@ export default function LiveStreamPage() {
                       className="w-full"
                     >
                       <XCircle className="w-4 h-4 mr-2" />
-                      <TranslatedText>
-                        {cancelOrderMutation.isPending ? '取消中...' : '取消订单 (会扣分)'}
+                      <TranslatedText context="order_management">
+                        {cancelOrderMutation.isPending ? 'Canceling...' : 'Cancel Order (Will Deduct Points)'}
                       </TranslatedText>
                     </Button>
                   </div>
@@ -292,15 +325,18 @@ export default function LiveStreamPage() {
               </div>
             ) : (
               <div className="space-y-4">
-                {/* 观看者界面 */}
-                <div className="text-sm text-purple-600 bg-purple-50 p-3 rounded border font-semibold">
-                  👥 <TranslatedText>观看模式：正在观看直播</TranslatedText>
+                {/* Viewer interface */}
+                <div className="text-sm text-purple-600 bg-purple-50 p-3 rounded border font-semibold flex items-center gap-2">
+                  <Users className="w-4 h-4" />
+                  <TranslatedText>Viewer Mode: Watching stream</TranslatedText>
                 </div>
-                <StreamViewer
-                  streamId={orderId}
-                  isLive={isLive}
-                  onViewerCountChange={setViewerCount}
-                />
+                {displayMode === 'viewer' && (
+                  <StreamViewer
+                    streamId={orderId}
+                    isLive={isLive}
+                    onViewerCountChange={setViewerCount}
+                  />
+                )}
               </div>
             )}
           </div>
@@ -368,7 +404,7 @@ export default function LiveStreamPage() {
                     </Badge>
                   </div>
                   
-                  {userRole === 'broadcaster' && (
+                  {displayMode === 'broadcaster' && (
                     <>
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-muted-foreground">
@@ -382,8 +418,9 @@ export default function LiveStreamPage() {
                       
                       {!canStartBroadcast && order.scheduledAt && (
                         <div className="pt-2 border-t">
-                          <p className="text-sm text-orange-600 font-medium">
-                            ⏰ <TranslatedText>Broadcast available at:</TranslatedText>
+                          <p className="text-sm text-orange-600 font-medium flex items-center gap-1">
+                            <Clock className="w-4 h-4" />
+                            <TranslatedText>Broadcast available at:</TranslatedText>
                           </p>
                           <p className="text-xs text-muted-foreground mt-1">
                             {new Date(order.scheduledAt).toLocaleString()}
@@ -402,7 +439,7 @@ export default function LiveStreamPage() {
                     </span>
                   </div>
 
-                  {userRole === 'broadcaster' && (
+                  {displayMode === 'broadcaster' && (
                     <div className="pt-2 border-t">
                       <p className="text-sm text-muted-foreground">
                         <TranslatedText>

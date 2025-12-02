@@ -9,49 +9,95 @@ interface NativeWebRTCBroadcasterProps {
   orderId: string;
   onStreamStart: () => void;
   onStreamEnd: () => void;
+  canStartBroadcast?: boolean;
 }
 
-export function NativeWebRTCBroadcaster({ orderId, onStreamStart, onStreamEnd }: NativeWebRTCBroadcasterProps) {
+export function NativeWebRTCBroadcaster({ orderId, onStreamStart, onStreamEnd, canStartBroadcast = true }: NativeWebRTCBroadcasterProps) {
   const [isStreaming, setIsStreaming] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment');
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [ws, setWs] = useState<WebSocket | null>(null);
-  const [peerConnection, setPeerConnection] = useState<RTCPeerConnection | null>(null);
   const [needsUserClick, setNeedsUserClick] = useState(false);
+  const [viewerCount, setViewerCount] = useState(0);
   
   const videoRef = useRef<HTMLVideoElement>(null);
+  const wsRef = useRef<WebSocket | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const peerConnectionsRef = useRef<Map<string, RTCPeerConnection>>(new Map());
 
   // WebSocket connection
   useEffect(() => {
-    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    const wsUrl = `${protocol}//${window.location.host}/ws`;
+    // Connect directly to backend server on port 5000
+    const wsUrl = 'ws://localhost:5000/ws';
+    console.log('[Broadcaster] Connecting to WebSocket:', wsUrl);
+    
     const socket = new WebSocket(wsUrl);
 
     socket.onopen = () => {
-      console.log('📡 Native WebRTC WebSocket connected');
+      console.log('[Broadcaster] ✅ WebSocket connected successfully!');
       setIsConnected(true);
       setWs(socket);
+      wsRef.current = socket;
+    };
+
+    socket.onerror = (error) => {
+      console.error('[Broadcaster] ❌ WebSocket error:', error);
+      setError('WebSocket connection failed. Please refresh the page.');
     };
 
     socket.onmessage = (event) => {
       try {
         const message = JSON.parse(event.data);
-        console.log('📨 Received message:', message.type);
+        console.log('[Broadcaster] Received message:', message.type);
         
         if (message.type === 'viewer-joined') {
-          handleViewerJoined();
+          console.log('[Broadcaster] 👤 Viewer joined:', message.viewerId);
+          handleViewerJoined(message.viewerId);
+        } else if (message.type === 'viewer-count') {
+          console.log('[Broadcaster] 👥 Viewer count:', message.count);
+          setViewerCount(message.count);
+        } else if (message.type === 'webrtc-answer') {
+          console.log(`[Broadcaster] Received WebRTC answer from viewer ${message.viewerId}`);
+          const pc = peerConnectionsRef.current.get(message.viewerId);
+          if (pc && message.answer) {
+            // Check if we can accept the answer
+            if (pc.signalingState === 'have-local-offer') {
+              pc.setRemoteDescription(new RTCSessionDescription(message.answer))
+                .then(() => console.log(`[Broadcaster] Remote description set for ${message.viewerId}`))
+                .catch(err => console.error(`[Broadcaster] Failed to set remote description for ${message.viewerId}:`, err));
+            } else {
+              console.log(`[Broadcaster] Ignoring answer from ${message.viewerId} - wrong signaling state:`, pc.signalingState);
+            }
+          } else {
+            console.warn(`[Broadcaster] No peer connection found for viewer ${message.viewerId}`);
+          }
+        } else if (message.type === 'webrtc-ice-candidate' || message.type === 'ice-candidate') {
+          console.log(`[Broadcaster] Received ICE candidate from viewer ${message.viewerId}`);
+          const pc = peerConnectionsRef.current.get(message.viewerId);
+          if (pc && message.candidate && pc.signalingState !== 'closed' && pc.remoteDescription) {
+            pc.addIceCandidate(new RTCIceCandidate(message.candidate))
+              .then(() => console.log(`[Broadcaster] ICE candidate added for ${message.viewerId}`))
+              .catch(err => console.error(`[Broadcaster] Failed to add ICE candidate for ${message.viewerId}:`, err));
+          } else {
+            console.log(`[Broadcaster] Skipping ICE candidate for ${message.viewerId} - connection not ready or closed`);
+          }
         }
       } catch (error) {
-        console.error('❌ Message parsing error:', error);
+        console.error('[Broadcaster] Message parsing error:', error);
       }
     };
 
-    socket.onclose = () => {
-      console.log('❌ WebSocket disconnected');
+    socket.onclose = (event) => {
+      console.log('[Broadcaster] WebSocket disconnected', { code: event.code, reason: event.reason });
       setIsConnected(false);
       setWs(null);
+      wsRef.current = null;
+      
+      if (event.code === 1006) {
+        setError('WebSocket connection lost. Backend server may not be running.');
+      }
     };
 
     return () => {
@@ -59,13 +105,17 @@ export function NativeWebRTCBroadcaster({ orderId, onStreamStart, onStreamEnd }:
     };
   }, []);
 
-  const handleViewerJoined = async () => {
-    if (!stream || !ws) {
-      console.warn('⚠️ No stream or WebSocket available for viewer');
+  const handleViewerJoined = async (viewerId: string) => {
+    const currentStream = streamRef.current;
+    const currentWs = wsRef.current;
+    
+    if (!currentStream || !currentWs) {
+      console.warn('[Broadcaster] No stream or WebSocket available for viewer');
       return;
     }
 
-    console.log('👥 Viewer joined, creating peer connection');
+    // Create unique ID for this viewer
+    console.log(`[Broadcaster] Viewer joined: ${viewerId}, creating new peer connection`);
 
     // Create RTCPeerConnection with better configuration
     const pc = new RTCPeerConnection({
@@ -78,25 +128,26 @@ export function NativeWebRTCBroadcaster({ orderId, onStreamStart, onStreamEnd }:
     });
 
     // Add stream tracks
-    stream.getTracks().forEach(track => {
-      console.log(`📡 Adding ${track.kind} track to peer connection`);
-      pc.addTrack(track, stream);
+    currentStream.getTracks().forEach(track => {
+      console.log(`[Broadcaster] Adding ${track.kind} track to peer connection`);
+      pc.addTrack(track, currentStream);
     });
 
     // Handle ICE candidates
     pc.onicecandidate = (event) => {
-      if (event.candidate && ws.readyState === WebSocket.OPEN) {
-        console.log('🧊 Sending ICE candidate');
-        ws.send(JSON.stringify({
-          type: 'ice-candidate',
+      if (event.candidate && currentWs.readyState === WebSocket.OPEN) {
+        console.log(`[Broadcaster] Sending ICE candidate for ${viewerId}`);
+        currentWs.send(JSON.stringify({
+          type: 'webrtc-ice-candidate',
           candidate: event.candidate,
-          streamId: orderId
+          streamId: orderId,
+          viewerId
         }));
       }
     };
 
     pc.onconnectionstatechange = () => {
-      console.log('🔗 Connection state:', pc.connectionState);
+      console.log('[Broadcaster] Connection state:', pc.connectionState);
     };
 
     try {
@@ -107,18 +158,20 @@ export function NativeWebRTCBroadcaster({ orderId, onStreamStart, onStreamEnd }:
       });
       
       await pc.setLocalDescription(offer);
-      console.log('📤 Sending offer to viewer');
+      console.log(`[Broadcaster] Sending offer to ${viewerId}`);
       
       // Send offer via WebSocket
-      ws.send(JSON.stringify({
+      currentWs.send(JSON.stringify({
         type: 'webrtc-offer',
         offer: offer,
-        streamId: orderId
+        streamId: orderId,
+        viewerId
       }));
 
-      setPeerConnection(pc);
+      // Store this peer connection
+      peerConnectionsRef.current.set(viewerId, pc);
     } catch (error) {
-      console.error('❌ Failed to create offer:', error);
+      console.error('[Broadcaster] Failed to create offer:', error);
       pc.close();
     }
   };
@@ -127,7 +180,7 @@ export function NativeWebRTCBroadcaster({ orderId, onStreamStart, onStreamEnd }:
     try {
       setError(null);
       setNeedsUserClick(false);
-      console.log('🎬 Starting native WebRTC broadcast');
+      console.log('[Broadcaster] Starting native WebRTC broadcast');
 
       // Get user media with optimal settings
       const constraints = {
@@ -145,13 +198,14 @@ export function NativeWebRTCBroadcaster({ orderId, onStreamStart, onStreamEnd }:
       };
 
       const mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
-      console.log('✅ MediaStream obtained:', {
+      console.log('[Broadcaster] MediaStream obtained:', {
         id: mediaStream.id,
         videoTracks: mediaStream.getVideoTracks().length,
         audioTracks: mediaStream.getAudioTracks().length
       });
 
       setStream(mediaStream);
+      streamRef.current = mediaStream;
 
       if (videoRef.current) {
         const video = videoRef.current;
@@ -161,43 +215,43 @@ export function NativeWebRTCBroadcaster({ orderId, onStreamStart, onStreamEnd }:
         
         // Handle video events
         video.onloadedmetadata = () => {
-          console.log('📊 Video metadata loaded');
+          console.log('[Broadcaster] Video metadata loaded');
         };
 
         video.onplay = () => {
-          console.log('▶️ Video started playing');
+          console.log('[Broadcaster] Video started playing');
         };
 
         video.onpause = () => {
-          console.log('⏸️ Video paused - requiring user click');
+          console.log('[Broadcaster] Video paused - requiring user click');
           setNeedsUserClick(true);
         };
 
         // Try to play
         try {
           await video.play();
-          console.log('✅ Video playing successfully');
+          console.log('[Broadcaster] Video playing successfully');
           
           // Check if it got paused immediately
           setTimeout(() => {
             if (video.paused) {
-              console.log('⚠️ Video auto-paused - setting needsUserClick');
+              console.log('[Broadcaster] Video auto-paused - setting needsUserClick');
               setNeedsUserClick(true);
             }
           }, 1000);
           
         } catch (playError: any) {
-          console.log('🔒 Autoplay blocked, requiring user interaction');
+          console.log('[Broadcaster] Autoplay blocked, requiring user interaction');
           setNeedsUserClick(true);
         }
         
         // Additional check for paused video - ENHANCED
         const checkVideoState = () => {
           if (video.paused && video.srcObject) {
-            console.log('🚨 FORCE: Video is paused, setting needsUserClick = TRUE');
+            console.log('[Broadcaster] FORCE: Video is paused, setting needsUserClick = TRUE');
             setNeedsUserClick(true);
           } else if (video.paused && !video.srcObject) {
-            console.log('🚨 CRITICAL: Video has no source and is paused, setting needsUserClick = TRUE');
+            console.log('[Broadcaster] CRITICAL: Video has no source and is paused, setting needsUserClick = TRUE');
             setNeedsUserClick(true);
           }
         };
@@ -209,8 +263,9 @@ export function NativeWebRTCBroadcaster({ orderId, onStreamStart, onStreamEnd }:
       }
 
       // Notify WebSocket that broadcaster is ready
-      if (ws && ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify({
+      const currentWs = wsRef.current;
+      if (currentWs && currentWs.readyState === WebSocket.OPEN) {
+        currentWs.send(JSON.stringify({
           type: 'broadcaster-ready',
           streamId: orderId
         }));
@@ -218,30 +273,33 @@ export function NativeWebRTCBroadcaster({ orderId, onStreamStart, onStreamEnd }:
 
       setIsStreaming(true);
       onStreamStart();
-      console.log('🎉 Native WebRTC broadcast started!');
+      console.log('[Broadcaster] Native WebRTC broadcast started!');
 
     } catch (err: any) {
-      console.error('❌ Broadcast start failed:', err);
+      console.error('Broadcast start failed:', err);
       if (err.name === 'NotAllowedError') {
-        setError('需要摄像头权限。请允许访问并重试。');
+        setError('Camera permission required. Please allow access and try again.');
       } else {
-        setError(`启动失败: ${err.message}`);
+        setError(`Failed to start: ${err.message}`);
       }
     }
   };
 
   const stopBroadcast = () => {
-    console.log('⏹️ Stopping native WebRTC broadcast');
+    console.log('[Broadcaster] Stopping native WebRTC broadcast');
     
     if (stream) {
       stream.getTracks().forEach(track => track.stop());
       setStream(null);
+      streamRef.current = null;
     }
 
-    if (peerConnection) {
-      peerConnection.close();
-      setPeerConnection(null);
-    }
+    // Close all peer connections
+    peerConnectionsRef.current.forEach((pc, viewerId) => {
+      console.log(`[Broadcaster] Closing connection for ${viewerId}`);
+      pc.close();
+    });
+    peerConnectionsRef.current.clear();
 
     if (videoRef.current) {
       videoRef.current.srcObject = null;
@@ -251,26 +309,26 @@ export function NativeWebRTCBroadcaster({ orderId, onStreamStart, onStreamEnd }:
     setNeedsUserClick(false);
     // ONLY call onStreamEnd if user manually stopped
     // Don't auto-end when video has issues
-    console.log('⚠️ Broadcast stopped but NOT calling onStreamEnd to prevent status change');
-    console.log('✅ Native WebRTC broadcast stopped');
+    console.log('[Broadcaster] Broadcast stopped but NOT calling onStreamEnd to prevent status change');
+    console.log('[Broadcaster] Native WebRTC broadcast stopped');
   };
 
   const manualStopBroadcast = () => {
-    console.log('👤 User manually stopping broadcast');
+    console.log('[Broadcaster] User manually stopping broadcast');
     stopBroadcast();
     onStreamEnd(); // Only call when user manually ends
   };
 
   const handleUserClick = async () => {
-    console.log('👆 User clicked to start video');
+    console.log('[Broadcaster] User clicked to start video');
     if (videoRef.current) {
       try {
         await videoRef.current.play();
-        console.log('✅ Video started after user click');
+        console.log('[Broadcaster] Video started after user click');
         setNeedsUserClick(false);
       } catch (error) {
-        console.error('❌ Failed to play after user click:', error);
-        setError('播放失败，请重试');
+        console.error('Failed to play after user click:', error);
+        setError('Playback failed, please try again');
       }
     }
   };
@@ -290,6 +348,11 @@ export function NativeWebRTCBroadcaster({ orderId, onStreamStart, onStreamEnd }:
         <CardTitle className="flex items-center justify-between">
           <TranslatedText context="broadcaster">原生WebRTC直播</TranslatedText>
           <div className="flex items-center gap-2">
+            {isStreaming && viewerCount > 0 && (
+              <Badge variant="outline" className="gap-1">
+                👥 {viewerCount} <TranslatedText context="broadcaster">viewers</TranslatedText>
+              </Badge>
+            )}
             <Badge variant={isConnected ? "default" : "secondary"}>
               {isConnected ? <Wifi className="w-3 h-3 mr-1" /> : <WifiOff className="w-3 h-3 mr-1" />}
               <TranslatedText context="broadcaster">{isConnected ? '已连接' : '连接中'}</TranslatedText>
@@ -329,12 +392,12 @@ export function NativeWebRTCBroadcaster({ orderId, onStreamStart, onStreamEnd }:
           {needsUserClick && (
             <div className="absolute inset-0 flex items-center justify-center bg-red-600/90 z-50">
               <div className="text-center text-white space-y-4 p-6 bg-black/80 rounded-lg border-2 border-white">
-                <div className="text-5xl animate-bounce">🎬</div>
+                <Play className="w-16 h-16 mx-auto animate-bounce" />
                 <h3 className="text-xl font-bold">
-                  <TranslatedText context="broadcaster">点击开始播放</TranslatedText>
+                  <TranslatedText context="broadcaster">Click to Start Playback</TranslatedText>
                 </h3>
                 <p className="text-sm opacity-90">
-                  <TranslatedText context="broadcaster">浏览器需要用户交互才能播放视频</TranslatedText>
+                  <TranslatedText context="broadcaster">Browser requires user interaction to play video</TranslatedText>
                 </p>
                 <Button 
                   onClick={handleUserClick}
@@ -342,7 +405,7 @@ export function NativeWebRTCBroadcaster({ orderId, onStreamStart, onStreamEnd }:
                   data-testid="native-user-click-button"
                 >
                   <Play className="w-4 h-4 mr-2" />
-                  <TranslatedText context="broadcaster">立即播放</TranslatedText>
+                  <TranslatedText context="broadcaster">Play Now</TranslatedText>
                 </Button>
               </div>
             </div>
@@ -359,15 +422,27 @@ export function NativeWebRTCBroadcaster({ orderId, onStreamStart, onStreamEnd }:
         {/* Controls */}
         <div className="flex gap-2">
           {!isStreaming ? (
-            <Button 
-              onClick={startBroadcast}
-              disabled={!isConnected}
-              className="flex-1"
-              data-testid="native-start-broadcast-button"
-            >
-              <Play className="w-4 h-4 mr-2" />
-              <TranslatedText context="broadcaster">开始原生直播</TranslatedText>
-            </Button>
+            <div className="flex-1">
+              <Button 
+                onClick={startBroadcast}
+                disabled={!isConnected || !canStartBroadcast}
+                className="w-full"
+                data-testid="native-start-broadcast-button"
+              >
+                <Play className="w-4 h-4 mr-2" />
+                <TranslatedText context="broadcaster">开始原生直播</TranslatedText>
+              </Button>
+              {!isConnected && (
+                <p className="text-xs text-orange-600 mt-1 text-center">
+                  <TranslatedText context="broadcaster">Connecting to WebSocket server...</TranslatedText>
+                </p>
+              )}
+              {isConnected && !canStartBroadcast && (
+                <p className="text-xs text-orange-600 mt-1 text-center">
+                  <TranslatedText context="broadcaster">⏰ Waiting for scheduled time...</TranslatedText>
+                </p>
+              )}
+            </div>
           ) : (
             <Button 
               onClick={manualStopBroadcast}
@@ -398,30 +473,30 @@ export function NativeWebRTCBroadcaster({ orderId, onStreamStart, onStreamEnd }:
           
           {/* Debug Status */}
           <div className="text-xs space-y-1 mt-2 p-2 bg-blue-50 rounded border">
-            <p className="font-semibold">原生WebRTC状态:</p>
+            <p className="font-semibold">Native WebRTC Status:</p>
             <p className={needsUserClick ? 'text-red-600 font-bold' : ''}>
-              needsUserClick: {needsUserClick ? '🔴 TRUE' : '🟢 FALSE'}
-              {videoRef.current?.paused && !needsUserClick && ' ⚠️ 状态错误!'}
+              needsUserClick: {needsUserClick ? 'TRUE' : 'FALSE'}
+              {videoRef.current?.paused && !needsUserClick && ' (State Error!)'}
             </p>
-            <p>isStreaming: {isStreaming ? '✅ TRUE' : '❌ FALSE'}</p>
-            <p>isConnected: {isConnected ? '✅ TRUE' : '❌ FALSE'}</p>
-            <p>videoPaused: {videoRef.current?.paused ? '⏸️ TRUE' : '▶️ FALSE'}</p>
+            <p>isStreaming: {isStreaming ? 'TRUE' : 'FALSE'}</p>
+            <p>isConnected: {isConnected ? 'TRUE' : 'FALSE'}</p>
+            <p>videoPaused: {videoRef.current?.paused ? 'TRUE' : 'FALSE'}</p>
             <p>streamTracks: {stream?.getTracks().length || 0}</p>
-            <p>hasVideo: {videoRef.current ? '✅ YES' : '❌ NO'}</p>
-            <p>videoSrc: {videoRef.current?.srcObject ? '✅ YES' : '❌ NO'}</p>
+            <p>hasVideo: {videoRef.current ? 'YES' : 'NO'}</p>
+            <p>videoSrc: {videoRef.current?.srcObject ? 'YES' : 'NO'}</p>
             
-            {/* 强制修复按钮 */}
+            {/* Force Fix Button */}
             {videoRef.current?.paused && !needsUserClick && (
               <Button 
                 onClick={() => {
-                  console.log('🔧 Manual fix: Setting needsUserClick = TRUE');
+                  console.log('[Broadcaster] Manual fix: Setting needsUserClick = TRUE');
                   setNeedsUserClick(true);
                 }}
                 size="sm"
                 variant="destructive"
                 className="mt-2"
               >
-                🔧 强制修复状态
+                Force Fix State
               </Button>
             )}
           </div>

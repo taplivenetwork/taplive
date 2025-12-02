@@ -1789,6 +1789,33 @@
         "Go Back": "Retour",
         "Back": "Retour"
       }
+    },
+    "order_management": {
+      "zh": {
+        "As a service provider, you can cancel the order, but this will decrease your credit score": "作为服务提供者，您可以取消订单，但这会降低您的信用评分",
+        "Cancel Order (Will Deduct Points)": "取消订单 (会扣分)",
+        "Canceling...": "取消中..."
+      },
+      "en": {
+        "As a service provider, you can cancel the order, but this will decrease your credit score": "As a service provider, you can cancel the order, but this will decrease your credit score",
+        "Cancel Order (Will Deduct Points)": "Cancel Order (Will Deduct Points)",
+        "Canceling...": "Canceling..."
+      },
+      "ja": {
+        "As a service provider, you can cancel the order, but this will decrease your credit score": "サービスプロバイダーとして、注文をキャンセルできますが、信用スコアが低下します",
+        "Cancel Order (Will Deduct Points)": "注文をキャンセル (ポイント減点)",
+        "Canceling...": "キャンセル中..."
+      },
+      "es": {
+        "As a service provider, you can cancel the order, but this will decrease your credit score": "Como proveedor de servicios, puede cancelar el pedido, pero esto disminuirá su puntuación de crédito",
+        "Cancel Order (Will Deduct Points)": "Cancelar Pedido (Se Deducirán Puntos)",
+        "Canceling...": "Cancelando..."
+      },
+      "fr": {
+        "As a service provider, you can cancel the order, but this will decrease your credit score": "En tant que fournisseur de services, vous pouvez annuler la commande, mais cela diminuera votre score de crédit",
+        "Cancel Order (Will Deduct Points)": "Annuler la Commande (Déduction de Points)",
+        "Canceling...": "Annulation..."
+      }
     }
   }
 }
