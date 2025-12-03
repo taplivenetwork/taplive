@@ -304,54 +304,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Handle order completion (status change to 'done')
-      if (updates.status === 'done' && (order.status === 'live' || order.status === 'accepted')) {
-        const price = typeof order.price === 'number' ? order.price : parseFloat(order.price);
-        const commission = calculateCommission(price);
-        
-        // Authorize and capture payment when order is completed
-        if (order.isPaid) {
-          const payments = await storage.getPaymentsByOrder(id);
-          const completedPayment = payments.find(p => p.status === 'completed');
-          
-          if (completedPayment && completedPayment.externalPaymentId && completedPayment.paymentMethod === 'stripe') {
-            try {
-              // Capture the authorized payment
-              const capturedPayment = await stripe.paymentIntents.capture(completedPayment.externalPaymentId, {
-                metadata: {
-                  capturedAt: new Date().toISOString(),
-                  providerId: order.providerId || '',
-                  commissionAmount: commission.providerEarnings.toString()
-                }
-              });
-              
-              console.log(`✅ Payment captured for order ${id}: $${commission.providerEarnings.toFixed(2)} to provider`);
-              
-              // Update payment metadata with capture info
-              await storage.updatePayment(completedPayment.id, {
-                paymentGatewayResponse: JSON.stringify({
-                  ...JSON.parse(completedPayment.paymentGatewayResponse || '{}'),
-                  captured: true,
-                  capturedAt: new Date().toISOString(),
-                  captureAmount: commission.providerEarnings
-                })
-              });
-            } catch (error) {
-              console.error('Error capturing payment:', error);
-            }
-          }
-        }
-        
-        // Process payout to provider
-        if (order.isPaid && order.providerId) {
-          const payments = await storage.getPaymentsByOrder(id);
-          const completedPayment = payments.find(p => p.status === 'completed');
-          
-          if (completedPayment) {
-            await storage.processOrderPayment(id, completedPayment.id);
-            console.log(`✅ Payout processed: $${commission.providerEarnings.toFixed(2)} to provider ${order.providerId}`);
-          }
-        }
-      }
+      // NOTE: Payment capture & release now handled automatically via WebSocket 'end-stream' event
+      // This endpoint is for manual status updates only (admin, testing, or edge cases)
 
       const updatedOrder = await storage.updateOrder(id, updates);
       
@@ -380,11 +334,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Custom success messages based on status change
       let message = "Order updated successfully";
       if (updates.status === 'accepted') {
-        message = "Order accepted! Payment has been frozen until stream completion.";
+        message = "Order accepted! Payment will be released when broadcast ends.";
       } else if (updates.status === 'done') {
-        const price = typeof order.price === 'number' ? order.price : parseFloat(order.price);
-        const providerEarnings = price * 0.9;
-        message = `Payment released! You earned $${providerEarnings.toFixed(2)}`;
+        message = "Order completed! Payment release handled via broadcast end.";
       }
 
       res.json({
@@ -694,117 +646,250 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Customer approves order and triggers commission payout
-  app.post("/api/orders/:id/approve", async (req, res) => {
-    try {
-      const { id: orderId } = req.params;
-      const { customerId, customerRating, customerFeedback } = req.body;
+  // // Customer approves order and triggers commission payout
+  // app.post("/api/orders/:id/approve", async (req, res) => {
+  //   try {
+  //     const { id: orderId } = req.params;
+  //     const { customerId, customerRating, customerFeedback } = req.body;
       
-      // Get current order
-      const order = await storage.getOrderById(orderId);
-      if (!order) {
-        return res.status(404).json({
-          success: false,
-          message: "Order not found"
-        });
-      }
+  //     // Get current order
+  //     const order = await storage.getOrderById(orderId);
+  //     if (!order) {
+  //       return res.status(404).json({
+  //         success: false,
+  //         message: "Order not found"
+  //       });
+  //     }
 
-      // Verify order status
-      if (order.status !== 'awaiting_approval') {
-        return res.status(400).json({
-          success: false,
-          message: "Order is not awaiting approval"
-        });
-      }
+  //     // Verify order status
+  //     if (order.status !== 'awaiting_approval') {
+  //       return res.status(400).json({
+  //         success: false,
+  //         message: "Order is not awaiting approval"
+  //       });
+  //     }
 
-      // Get approval request
-      const approval = await storage.getOrderApprovalByOrder(orderId);
-      if (!approval) {
-        return res.status(404).json({
-          success: false,
-          message: "Approval request not found"
-        });
-      }
+  //     // Get approval request
+  //     const approval = await storage.getOrderApprovalByOrder(orderId);
+  //     if (!approval) {
+  //       return res.status(404).json({
+  //         success: false,
+  //         message: "Approval request not found"
+  //       });
+  //     }
 
-      // Update approval status
-      await storage.updateOrderApproval(approval.id, {
-        status: 'approved',
-        customerRating,
-        customerFeedback,
-        approvedAt: new Date(),
-      });
+  //     // Update approval status
+  //     await storage.updateOrderApproval(approval.id, {
+  //       status: 'approved',
+  //       customerRating,
+  //       customerFeedback,
+  //       approvedAt: new Date(),
+  //     });
 
-      // Update order status to done
-      const approvedOrder = await storage.updateOrder(orderId, {
-        status: 'done',
-        updatedAt: new Date(),
-      });
+  //     // Update order status to done
+  //     const approvedOrder = await storage.updateOrder(orderId, {
+  //       status: 'done',
+  //       updatedAt: new Date(),
+  //     });
 
-      // Process real-time commission payout
-      const payments = await storage.getPaymentsByOrder(orderId);
-      const completedPayment = payments.find(p => p.status === 'completed');
+  //     // Process real-time commission payout via Stripe Connect
+  //     const payments = await storage.getPaymentsByOrder(orderId);
+  //     const completedPayment = payments.find(p => p.status === 'completed');
 
-      let payout = null;
-      let commission = null;
+  //     let payout = null;
+  //     let commission = null;
+  //     let stripeTransfer = null;
 
-      if (completedPayment && approvedOrder!.providerId) {
-        // Calculate and create real-time payout
-        payout = await storage.calculateAndCreatePayout(orderId, completedPayment.id);
+  //     if (completedPayment && approvedOrder!.providerId) {
+  //       commission = calculateCommission(parseFloat(completedPayment.amount.toString()));
         
-        if (payout) {
-          // Auto-approve and process payout immediately
-          const processedPayout = await storage.updatePayout(payout.id, {
-            status: 'completed',
-            processedAt: new Date(),
-            externalPayoutId: `approved_payout_${Date.now()}`,
-          });
+  //       // Get provider's Stripe Connect account
+  //       const provider = await storage.getUser(approvedOrder!.providerId);
+  //       const providerStripeAccountId = (provider as any)?.stripeConnectedAccountId;
+        
+  //       if (providerStripeAccountId && completedPayment.paymentMethod === 'stripe') {
+  //         try {
+  //           // Create Stripe transfer to provider's connected account
+  //           stripeTransfer = await stripe.transfers.create({
+  //             amount: Math.round(commission.providerEarnings * 100), // Convert to cents
+  //             currency: completedPayment.currency.toLowerCase(),
+  //             destination: providerStripeAccountId,
+  //             transfer_group: `order_${orderId}`,
+  //             metadata: {
+  //               orderId: orderId,
+  //               providerId: approvedOrder!.providerId,
+  //               paymentId: completedPayment.id,
+  //               platformFee: commission.platformFee.toString(),
+  //               providerEarnings: commission.providerEarnings.toString(),
+  //               approvedAt: new Date().toISOString(),
+  //               customerRating: customerRating?.toString() || ''
+  //             }
+  //           });
+            
+  //           console.log(`✅ Stripe Transfer created on approval: ${stripeTransfer.id} - $${commission.providerEarnings.toFixed(2)} to provider`);
+            
+  //           // Create payout record with Stripe transfer ID
+  //           payout = await storage.createPayout({
+  //             orderId: orderId,
+  //             paymentId: completedPayment.id,
+  //             recipientId: approvedOrder!.providerId,
+  //             amount: commission.providerEarnings.toString(),
+  //             platformFee: commission.platformFee.toString(),
+  //             currency: completedPayment.currency,
+  //             payoutMethod: 'stripe',
+  //             externalPayoutId: stripeTransfer.id,
+  //             status: 'completed',
+  //             processedAt: new Date(),
+  //             payoutMetadata: JSON.stringify({
+  //               transferId: stripeTransfer.id,
+  //               destination: providerStripeAccountId,
+  //               customerRating,
+  //               approvalMethod: 'customer-approved'
+  //             })
+  //           });
+            
+  //           // Create commission transaction
+  //           await storage.createTransaction({
+  //             userId: approvedOrder!.providerId,
+  //             orderId: orderId,
+  //             paymentId: completedPayment.id,
+  //             payoutId: payout.id,
+  //             type: 'commission',
+  //             amount: commission.providerEarnings.toString(),
+  //             currency: completedPayment.currency,
+  //             description: `Commission for approved order: ${approvedOrder!.title}`,
+  //             metadata: JSON.stringify({ 
+  //               commission, 
+  //               payoutId: payout.id,
+  //               transferId: stripeTransfer.id,
+  //               approvedAt: new Date(),
+  //               customerRating,
+  //               payoutMethod: 'stripe-connect'
+  //             }),
+  //           });
+
+  //           // Notify provider of earnings
+  //           await storage.createNotification({
+  //             userId: approvedOrder!.providerId,
+  //             type: 'payment_received',
+  //             title: 'Payment Received! 💰',
+  //             message: `You earned $${commission.providerEarnings.toFixed(2)} for "${approvedOrder!.title}"${customerRating ? ` (${customerRating}⭐ rating)` : ''}`,
+  //             orderId: orderId,
+  //             metadata: JSON.stringify({
+  //               amount: commission.providerEarnings,
+  //               currency: completedPayment.currency,
+  //               transferId: stripeTransfer.id,
+  //               customerRating
+  //             })
+  //           });
+
+  //         } catch (transferError: any) {
+  //           console.error('Error creating Stripe transfer on approval:', transferError);
+            
+  //           // Create pending payout record
+  //           payout = await storage.calculateAndCreatePayout(orderId, completedPayment.id);
+  //           if (payout) {
+  //             await storage.updatePayout(payout.id, {
+  //               status: 'pending',
+  //               payoutMetadata: JSON.stringify({
+  //                 error: transferError.message,
+  //                 attemptedAt: new Date().toISOString()
+  //               })
+  //             });
+  //           }
+            
+  //           // Notify provider about pending payout
+  //           await storage.createNotification({
+  //             userId: approvedOrder!.providerId,
+  //             type: 'system_alert',
+  //             title: 'Payout Pending',
+  //             message: `Your earnings of $${commission.providerEarnings.toFixed(2)} are being processed. Please ensure your Stripe account is fully set up.`,
+  //             orderId: orderId,
+  //             metadata: JSON.stringify({
+  //               amount: commission.providerEarnings,
+  //               error: transferError.message
+  //             })
+  //           });
+  //         }
+  //       } else {
+  //         // No Stripe Connect - create pending payout
+  //         payout = await storage.calculateAndCreatePayout(orderId, completedPayment.id);
           
-          commission = calculateCommission(parseFloat(completedPayment.amount.toString()));
+  //         if (payout) {
+  //           await storage.updatePayout(payout.id, {
+  //             status: 'pending',
+  //             payoutMetadata: JSON.stringify({
+  //               reason: providerStripeAccountId ? 'non-stripe-payment' : 'no-stripe-connect',
+  //               awaitingStripeConnect: !providerStripeAccountId
+  //             })
+  //           });
+            
+  //           // Create transaction record
+  //           await storage.createTransaction({
+  //             userId: approvedOrder!.providerId,
+  //             orderId: orderId,
+  //             paymentId: completedPayment.id,
+  //             payoutId: payout.id,
+  //             type: 'commission',
+  //             amount: commission.providerEarnings.toString(),
+  //             currency: completedPayment.currency,
+  //             description: `Commission for approved order: ${approvedOrder!.title} (payout pending)`,
+  //             metadata: JSON.stringify({ 
+  //               commission, 
+  //               payoutId: payout.id,
+  //               approvedAt: new Date(),
+  //               customerRating,
+  //               payoutMethod: 'pending'
+  //             }),
+  //           });
+  //         }
           
-          // Create commission transaction
-          await storage.createTransaction({
-            userId: approvedOrder!.providerId,
-            orderId: orderId,
-            paymentId: completedPayment.id,
-            payoutId: payout.id,
-            type: 'commission',
-            amount: commission.providerEarnings.toString(),
-            currency: completedPayment.currency,
-            description: `Commission for approved order: ${approvedOrder!.title}`,
-            metadata: JSON.stringify({ 
-              commission, 
-              payoutId: payout.id,
-              approvedAt: new Date(),
-              customerRating,
-              payoutMethod: 'customer-approved'
-            }),
-          });
+  //         // Notify provider to connect Stripe
+  //         if (!providerStripeAccountId) {
+  //           await storage.createNotification({
+  //             userId: approvedOrder!.providerId,
+  //             type: 'system_alert',
+  //             title: 'Connect Stripe to Receive Payment',
+  //             message: `You earned $${commission.providerEarnings.toFixed(2)} for "${approvedOrder!.title}"! Connect your Stripe account in Settings to receive your payout.`,
+  //             orderId: orderId,
+  //             metadata: JSON.stringify({
+  //               amount: commission.providerEarnings,
+  //               customerRating
+  //             })
+  //           });
+  //         }
+  //       }
+  //     }
 
-          payout = processedPayout;
-        }
-      }
+  //     res.json({
+  //       success: true,
+  //       data: {
+  //         order: approvedOrder,
+  //         payout: payout,
+  //         commission: commission,
+  //         realTimePayoutProcessed: !!payout,
+  //         stripeTransfer: stripeTransfer ? {
+  //           id: stripeTransfer.id,
+  //           amount: stripeTransfer.amount / 100,
+  //           currency: stripeTransfer.currency,
+  //           status: stripeTransfer.reversed ? 'reversed' : 'completed'
+  //         } : null
+  //       },
+  //       message: stripeTransfer 
+  //         ? `Order approved! Provider earned $${commission?.providerEarnings.toFixed(2)} (instant payout via Stripe)`
+  //         : payout 
+  //           ? `Order approved! Provider earned $${commission?.providerEarnings.toFixed(2)} commission (payout pending)`
+  //           : "Order approved successfully"
+  //     });
 
-      res.json({
-        success: true,
-        data: {
-          order: approvedOrder,
-          payout: payout,
-          commission: commission,
-          realTimePayoutProcessed: !!payout
-        },
-        message: payout 
-          ? `Order approved! Provider earned $${commission?.providerEarnings.toFixed(2)} commission (paid instantly)`
-          : "Order approved successfully"
-      });
-
-    } catch (error) {
-      console.error('Error approving order:', error);
-      res.status(500).json({
-        success: false,
-        message: "Failed to approve order"
-      });
-    }
-  });
+  //   } catch (error) {
+  //     console.error('Error approving order:', error);
+  //     res.status(500).json({
+  //       success: false,
+  //       message: "Failed to approve order"
+  //     });
+  //   }
+  // });
 
   // Customer disputes order
   app.post("/api/orders/:id/dispute", async (req, res) => {
@@ -1422,6 +1507,330 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({
         success: false,
         message: "Failed to get payment methods"
+      });
+    }
+  });
+
+  // ========== STRIPE CONNECT ENDPOINTS ==========
+  
+  // Get Stripe Connect status for provider
+  app.get("/api/stripe/connect/status/:userId", async (req, res) => {
+    try {
+      const { userId } = req.params;
+      
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          message: "User not found"
+        });
+      }
+
+      const stripeConnectedAccountId = (user as any).stripeConnectedAccountId;
+      
+      if (!stripeConnectedAccountId) {
+        return res.json({
+          success: true,
+          data: {
+            isConnected: false,
+            accountId: null,
+            chargesEnabled: false,
+            payoutsEnabled: false,
+            detailsSubmitted: false
+          },
+          message: "Stripe account not connected"
+        });
+      }
+
+      try {
+        // Retrieve account details from Stripe
+        const account = await stripe.accounts.retrieve(stripeConnectedAccountId);
+        
+        return res.json({
+          success: true,
+          data: {
+            isConnected: true,
+            accountId: stripeConnectedAccountId,
+            chargesEnabled: account.charges_enabled,
+            payoutsEnabled: account.payouts_enabled,
+            detailsSubmitted: account.details_submitted,
+            requirements: account.requirements
+          },
+          message: "Stripe account connected"
+        });
+      } catch (stripeError: any) {
+        console.error('Stripe account retrieval error:', stripeError);
+        
+        // If account doesn't exist on Stripe, clear it from our database
+        if (stripeError.code === 'account_invalid') {
+          await storage.updateUser(userId, { stripeConnectedAccountId: null } as any);
+          return res.json({
+            success: true,
+            data: {
+              isConnected: false,
+              accountId: null,
+              chargesEnabled: false,
+              payoutsEnabled: false,
+              detailsSubmitted: false
+            },
+            message: "Stripe account not connected"
+          });
+        }
+        throw stripeError;
+      }
+    } catch (error) {
+      console.error('Error getting Stripe Connect status:', error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to get Stripe Connect status"
+      });
+    }
+  });
+
+  // Create Stripe Connect account link (for onboarding)
+  app.post("/api/stripe/connect/create-account-link", async (req, res) => {
+    try {
+      const { userId, returnUrl, refreshUrl } = req.body;
+      
+      if (!userId) {
+        return res.status(400).json({
+          success: false,
+          message: "userId is required"
+        });
+      }
+
+      // Check if Stripe Connect is enabled
+      if (!process.env.STRIPE_SECRET_KEY || process.env.STRIPE_SECRET_KEY === 'empty') {
+        return res.status(503).json({
+          success: false,
+          message: "Stripe is not configured. Please contact support.",
+          error: "STRIPE_NOT_CONFIGURED"
+        });
+      }
+
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          message: "User not found"
+        });
+      }
+
+      let accountId = (user as any).stripeConnectedAccountId;
+      
+      // Create a new Connect account if one doesn't exist
+      if (!accountId) {
+        try {
+          const account = await stripe.accounts.create({
+            type: 'express', // Express accounts are easiest for marketplaces
+            country: 'US', // Default to US, can be customized
+            email: user.email,
+            capabilities: {
+              card_payments: { requested: true },
+              transfers: { requested: true },
+            },
+            business_type: 'individual',
+            metadata: {
+              userId: userId,
+              platform: 'taplive'
+            }
+          });
+          
+          accountId = account.id;
+          
+          // Save the account ID to the user
+          await storage.updateUser(userId, { stripeConnectedAccountId: accountId } as any);
+          console.log(`✅ Created Stripe Connect account: ${accountId} for user ${userId}`);
+        } catch (stripeError: any) {
+          // Handle specific Stripe Connect not enabled error
+          if (stripeError.message?.includes("signed up for Connect")) {
+            console.error('Stripe Connect not enabled for this account');
+            return res.status(503).json({
+              success: false,
+              message: "Payment onboarding is currently being set up. Please try again later or contact support.",
+              error: "STRIPE_CONNECT_NOT_ENABLED",
+              details: "The platform needs to enable Stripe Connect. Visit https://dashboard.stripe.com/connect/overview to set it up."
+            });
+          }
+          throw stripeError;
+        }
+      }
+
+      // Generate onboarding link
+      const baseUrl = process.env.CLIENT_URL || process.env.VITE_APP_URL || 'http://localhost:5174';
+      const accountLink = await stripe.accountLinks.create({
+        account: accountId,
+        refresh_url: refreshUrl || `${baseUrl}/settings?stripe_refresh=true`,
+        return_url: returnUrl || `${baseUrl}/settings?stripe_connected=true`,
+        type: 'account_onboarding',
+      });
+
+      res.json({
+        success: true,
+        data: {
+          url: accountLink.url,
+          accountId: accountId,
+          expiresAt: accountLink.expires_at
+        },
+        message: "Stripe Connect onboarding link created"
+      });
+    } catch (error) {
+      console.error('Error creating Stripe Connect account link:', error);
+      res.status(500).json({
+        success: false,
+        message: error instanceof Error ? error.message : "Failed to create Stripe Connect link"
+      });
+    }
+  });
+
+  // Create Stripe Connect dashboard link (for existing connected accounts)
+  app.post("/api/stripe/connect/dashboard-link", async (req, res) => {
+    try {
+      const { userId } = req.body;
+      
+      if (!userId) {
+        return res.status(400).json({
+          success: false,
+          message: "userId is required"
+        });
+      }
+
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          message: "User not found"
+        });
+      }
+
+      const accountId = (user as any).stripeConnectedAccountId;
+      if (!accountId) {
+        return res.status(400).json({
+          success: false,
+          message: "No Stripe Connect account found. Please complete onboarding first."
+        });
+      }
+
+      // Create a login link for the Express dashboard
+      const loginLink = await stripe.accounts.createLoginLink(accountId);
+
+      res.json({
+        success: true,
+        data: {
+          url: loginLink.url
+        },
+        message: "Stripe dashboard link created"
+      });
+    } catch (error) {
+      console.error('Error creating Stripe dashboard link:', error);
+      res.status(500).json({
+        success: false,
+        message: error instanceof Error ? error.message : "Failed to create dashboard link"
+      });
+    }
+  });
+
+  // Disconnect Stripe Connect account
+  app.post("/api/stripe/connect/disconnect", async (req, res) => {
+    try {
+      const { userId } = req.body;
+      
+      if (!userId) {
+        return res.status(400).json({
+          success: false,
+          message: "userId is required"
+        });
+      }
+
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          message: "User not found"
+        });
+      }
+
+      const accountId = (user as any).stripeConnectedAccountId;
+      if (!accountId) {
+        return res.status(400).json({
+          success: false,
+          message: "No Stripe Connect account to disconnect"
+        });
+      }
+
+      // Remove the account ID from our database (we don't delete the Stripe account)
+      await storage.updateUser(userId, { stripeConnectedAccountId: null } as any);
+
+      res.json({
+        success: true,
+        message: "Stripe account disconnected successfully"
+      });
+    } catch (error) {
+      console.error('Error disconnecting Stripe account:', error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to disconnect Stripe account"
+      });
+    }
+  });
+
+  // [DEV ONLY] Force verify test mode Stripe account
+  app.post("/api/stripe/connect/test-verify/:userId", async (req, res) => {
+    try {
+      // Only allow in development mode
+      if (process.env.NODE_ENV === 'production') {
+        return res.status(403).json({
+          success: false,
+          message: "This endpoint is only available in development mode"
+        });
+      }
+
+      const { userId } = req.params;
+      
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          message: "User not found"
+        });
+      }
+
+      const accountId = (user as any).stripeConnectedAccountId;
+      if (!accountId) {
+        return res.status(400).json({
+          success: false,
+          message: "No Stripe Connect account found"
+        });
+      }
+
+      // Update the Stripe test account to mark it as verified
+      // This simulates completing the onboarding process
+      const account = await stripe.accounts.update(accountId, {
+        business_profile: {
+          mcc: '5734', // Computer Software Stores
+          url: 'https://taplive.example.com'
+        },
+        metadata: {
+          test_verified: 'true',
+          verified_at: new Date().toISOString()
+        }
+      });
+
+      res.json({
+        success: true,
+        data: {
+          accountId: accountId,
+          chargesEnabled: account.charges_enabled,
+          payoutsEnabled: account.payouts_enabled,
+          detailsSubmitted: account.details_submitted
+        },
+        message: "Test account verification status updated (Test mode only)"
+      });
+    } catch (error) {
+      console.error('Error verifying test account:', error);
+      res.status(500).json({
+        success: false,
+        message: error instanceof Error ? error.message : "Failed to verify test account"
       });
     }
   });
@@ -2718,7 +3127,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     let clientStreamId: string | null = null;
     let isBroadcaster = false;
     
-    ws.on('message', (data: Buffer) => {
+    ws.on('message', async (data: Buffer) => {
       try {
         const message = JSON.parse(data.toString());
         console.log(`📨 Received message type: ${message.type}`, { streamId: message.streamId });
@@ -2867,6 +3276,154 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   }));
                 }
               });
+            }
+            break;
+            
+          case 'end-stream':
+            // Provider ends the broadcast - trigger payment release
+            const endStreamId = message.streamId;
+            console.log(`🛑 Stream ending: ${endStreamId}`);
+            
+            // Notify all viewers that stream ended
+            if (streamRooms.has(endStreamId)) {
+              streamRooms.get(endStreamId)!.forEach(client => {
+                if (client !== ws && client.readyState === WebSocket.OPEN) {
+                  client.send(JSON.stringify({
+                    type: 'stream-ended',
+                    streamId: endStreamId
+                  }));
+                }
+              });
+            }
+            
+            // Automatically complete the order and release payment
+            try {
+              const order = await storage.getOrderById(endStreamId);
+              if (!order) {
+                console.error(`Order not found for stream: ${endStreamId}`);
+                break;
+              }
+              
+              if (order.status === 'live' || order.status === 'accepted') {
+                console.log(`💰 Auto-completing order and releasing payment for: ${endStreamId}`);
+                
+                const price = typeof order.price === 'number' ? order.price : parseFloat(order.price);
+                const commission = calculateCommission(price);
+                
+                // Update order status to done
+                await storage.updateOrder(endStreamId, { status: 'done' });
+                
+                // Process payment release if order is paid
+                if (order.isPaid) {
+                  const payments = await storage.getPaymentsByOrder(endStreamId);
+                  const completedPayment = payments.find(p => p.status === 'completed');
+                  
+                  if (completedPayment && completedPayment.externalPaymentId && completedPayment.paymentMethod === 'stripe') {
+                    try {
+                      // Capture the authorized payment
+                      const capturedPayment = await stripe.paymentIntents.capture(completedPayment.externalPaymentId, {
+                        metadata: {
+                          capturedAt: new Date().toISOString(),
+                          providerId: order.providerId || '',
+                          commissionAmount: commission.providerEarnings.toString(),
+                          capturedVia: 'broadcast-end'
+                        }
+                      });
+                      
+                      console.log(`✅ Payment captured on broadcast end: $${commission.providerEarnings.toFixed(2)}`);
+                      
+                      // Transfer funds to provider's Stripe Connect account
+                      if (order.providerId) {
+                        const provider = await storage.getUser(order.providerId);
+                        const providerStripeAccountId = (provider as any)?.stripeConnectedAccountId;
+                        
+                        if (providerStripeAccountId) {
+                          const transfer = await stripe.transfers.create({
+                            amount: Math.round(commission.providerEarnings * 100),
+                            currency: completedPayment.currency.toLowerCase(),
+                            destination: providerStripeAccountId,
+                            transfer_group: `order_${endStreamId}`,
+                            metadata: {
+                              orderId: endStreamId,
+                              providerId: order.providerId,
+                              paymentId: completedPayment.id,
+                              platformFee: commission.platformFee.toString(),
+                              providerEarnings: commission.providerEarnings.toString(),
+                              releasedVia: 'broadcast-end'
+                            }
+                          });
+                          
+                          console.log(`✅ Stripe Transfer on broadcast end: ${transfer.id} - $${commission.providerEarnings.toFixed(2)}`);
+                          
+                          // Create payout record
+                          const payout = await storage.createPayout({
+                            orderId: endStreamId,
+                            paymentId: completedPayment.id,
+                            recipientId: order.providerId,
+                            amount: commission.providerEarnings.toString(),
+                            platformFee: commission.platformFee.toString(),
+                            currency: completedPayment.currency,
+                            payoutMethod: 'stripe',
+                            externalPayoutId: transfer.id,
+                            status: 'completed',
+                            processedAt: new Date()
+                          });
+                          
+                          // Update provider's total earnings
+                          const provider = await storage.getUser(order.providerId);
+                          const currentEarnings = parseFloat(provider?.totalEarnings || '0');
+                          const newTotalEarnings = currentEarnings + commission.providerEarnings;
+                          await storage.updateUser(order.providerId, {
+                            totalEarnings: newTotalEarnings.toFixed(2)
+                          });
+                          console.log(`✅ Provider total earnings updated: $${currentEarnings.toFixed(2)} → $${newTotalEarnings.toFixed(2)}`);
+                          
+                          // Notify provider of earnings
+                          await storage.createNotification({
+                            userId: order.providerId,
+                            type: 'payment_received',
+                            title: 'Payment Received! 💰',
+                            message: `You earned $${commission.providerEarnings.toFixed(2)} for completing "${order.title}"`,
+                            orderId: endStreamId,
+                            metadata: JSON.stringify({
+                              amount: commission.providerEarnings,
+                              currency: completedPayment.currency,
+                              transferId: transfer.id,
+                              payoutId: payout.id
+                            })
+                          });
+                          
+                          console.log(`✅ Provider notified of earnings`);
+                        } else {
+                          // No Stripe Connect - notify provider
+                          await storage.createNotification({
+                            userId: order.providerId,
+                            type: 'system_alert',
+                            title: 'Connect Stripe to Receive Payment',
+                            message: `You earned $${commission.providerEarnings.toFixed(2)} for "${order.title}"! Connect your Stripe account in Settings to receive your payout.`,
+                            orderId: endStreamId,
+                            metadata: JSON.stringify({
+                              amount: commission.providerEarnings,
+                              status: 'awaiting_stripe_connect'
+                            })
+                          });
+                        }
+                      }
+                    } catch (paymentError) {
+                      console.error('Error processing payment on broadcast end:', paymentError);
+                    }
+                  }
+                }
+                
+                // Send success confirmation to broadcaster
+                ws.send(JSON.stringify({
+                  type: 'stream-end-confirmed',
+                  streamId: endStreamId,
+                  paymentReleased: order.isPaid
+                }));
+              }
+            } catch (error) {
+              console.error('Error completing order on stream end:', error);
             }
             break;
         }

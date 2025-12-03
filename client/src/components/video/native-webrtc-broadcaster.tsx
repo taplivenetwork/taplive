@@ -315,6 +315,17 @@ export function NativeWebRTCBroadcaster({ orderId, onStreamStart, onStreamEnd, c
 
   const manualStopBroadcast = () => {
     console.log('[Broadcaster] User manually stopping broadcast');
+    
+    // Send end-stream message to trigger payment release on backend
+    const currentWs = wsRef.current;
+    if (currentWs && currentWs.readyState === WebSocket.OPEN) {
+      currentWs.send(JSON.stringify({
+        type: 'end-stream',
+        streamId: orderId
+      }));
+      console.log('[Broadcaster] Sent end-stream message to backend for payment release');
+    }
+    
     stopBroadcast();
     onStreamEnd(); // Only call when user manually ends
   };

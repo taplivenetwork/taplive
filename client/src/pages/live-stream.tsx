@@ -6,7 +6,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { StreamViewer } from '@/components/video/stream-viewer';
-import { StreamBroadcaster } from '@/components/video/stream-broadcaster';
 import { NativeWebRTCBroadcaster } from '@/components/video/native-webrtc-broadcaster';
 import { TranslatedText } from '@/components/translated-text';
 import { ArrowLeft, MapPin, Clock, DollarSign, XCircle, Video, Users } from 'lucide-react';

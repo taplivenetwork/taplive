@@ -47,6 +47,7 @@ export const users = pgTable("users", {
   totalEarnings: decimal("total_earnings", { precision: 12, scale: 2 }).default('0.00'), // Total lifetime earnings
   walletAddress: text("wallet_address"), // Crypto wallet address for payouts
   preferredPaymentMethod: paymentMethodEnum("preferred_payment_method"), // Preferred payout method
+  stripeConnectedAccountId: text("stripe_connected_account_id"), // Stripe Connect account ID for provider payouts
   
   // Preferences
   timezone: text("timezone").default('America/New_York'), // User timezone

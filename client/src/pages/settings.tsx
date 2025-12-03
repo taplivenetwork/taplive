@@ -13,7 +13,7 @@ import { useTranslation } from "@/hooks/use-translation";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { User, Bell, Shield, Globe, Camera, Save, MapPin, Wifi, Smartphone, UserCheck, ShoppingCart } from "lucide-react";
+import { User, Bell, Shield, Globe, Camera, Save, MapPin, Wifi, Smartphone, UserCheck, ShoppingCart, CreditCard, ExternalLink, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
 
 export default function Settings() {
   const { currentLanguage, setCurrentLanguage } = useTranslation();
@@ -207,6 +207,132 @@ export default function Settings() {
       });
     },
   });
+
+  // Stripe Connect status query
+  const { data: stripeConnectStatus, isLoading: isLoadingStripeStatus, refetch: refetchStripeStatus } = useQuery({
+    queryKey: [`/api/stripe/connect/status/${CURRENT_USER_ID}`],
+    queryFn: async () => {
+      const response = await apiRequest('GET', `/api/stripe/connect/status/${CURRENT_USER_ID}`);
+      const data = await response.json();
+      return data;
+    },
+    enabled: CURRENT_USER_ID !== 'guest' && userMode === 'provider',
+  });
+
+  // Create Stripe Connect account link mutation
+  const createStripeConnectLinkMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest('POST', '/api/stripe/connect/create-account-link', {
+        userId: CURRENT_USER_ID,
+      });
+      return response.json();
+    },
+    onSuccess: (data) => {
+      console.log('✅ Stripe Connect response:', data);
+      if (data.success && data.data?.url) {
+        console.log('🔗 Redirecting to:', data.data.url);
+        // Redirect to Stripe Connect onboarding
+        window.location.href = data.data.url;
+      } else {
+        // Handle specific error cases
+        if (data.error === 'STRIPE_CONNECT_NOT_ENABLED') {
+          toast({
+            title: "Setup In Progress",
+            description: "Payment system is being configured. Please try again later.",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Error",
+            description: data.message || "Failed to create Stripe Connect link",
+            variant: "destructive",
+          });
+        }
+      }
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Connection Failed",
+        description: error.message || "Failed to connect to Stripe",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Create Stripe dashboard link mutation
+  const createStripeDashboardLinkMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest('POST', '/api/stripe/connect/dashboard-link', {
+        userId: CURRENT_USER_ID,
+      });
+      return response.json();
+    },
+    onSuccess: (data) => {
+      if (data.success && data.data?.url) {
+        // Open Stripe dashboard in new tab
+        window.open(data.data.url, '_blank');
+      } else {
+        toast({
+          title: "Error",
+          description: data.message || "Failed to open Stripe dashboard",
+          variant: "destructive",
+        });
+      }
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to open Stripe dashboard",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Disconnect Stripe account mutation
+  const disconnectStripeMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest('POST', '/api/stripe/connect/disconnect', {
+        userId: CURRENT_USER_ID,
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Disconnected",
+        description: "Your Stripe account has been disconnected.",
+      });
+      refetchStripeStatus();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to disconnect Stripe account",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Handle URL parameters for Stripe Connect callback
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('stripe_connected') === 'true') {
+      toast({
+        title: "Stripe Connected!",
+        description: "Your Stripe account has been successfully connected.",
+      });
+      refetchStripeStatus();
+      // Clean up URL
+      window.history.replaceState({}, '', window.location.pathname);
+    } else if (params.get('stripe_refresh') === 'true') {
+      toast({
+        title: "Connection Incomplete",
+        description: "Please complete your Stripe onboarding to receive payouts.",
+        variant: "destructive",
+      });
+      // Clean up URL
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, []);
 
   const handleSaveProfile = () => {
     updateProfileMutation.mutate({
@@ -596,6 +722,194 @@ export default function Settings() {
                       <TranslatedText context="settings">Save Provider Settings</TranslatedText>
                     )}
                   </Button>
+                </CardContent>
+              </Card>
+
+              {/* Stripe Connect - Payment Settings */}
+              <Card className="border-0 shadow-sm bg-white/80 backdrop-blur-sm">
+                <CardHeader className="pb-4">
+                  <CardTitle className="flex items-center gap-3 text-slate-900">
+                    <div className="p-2 bg-purple-100 rounded-lg">
+                      <CreditCard className="w-5 h-5 text-purple-600" />
+                    </div>
+                    <TranslatedText context="settings">Payment Settings</TranslatedText>
+                  </CardTitle>
+                  <CardDescription className="text-slate-600">
+                    <TranslatedText context="settings">Connect your Stripe account to receive payouts for completed orders</TranslatedText>
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-5">
+                  {isLoadingStripeStatus ? (
+                    <div className="flex items-center justify-center py-8">
+                      <Loader2 className="w-6 h-6 animate-spin text-purple-600" />
+                      <span className="ml-2 text-slate-600">Loading payment settings...</span>
+                    </div>
+                  ) : stripeConnectStatus?.data?.isConnected ? (
+                    <>
+                      {/* Connected State */}
+                      <div className="p-4 bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl border border-green-200">
+                        <div className="flex items-start gap-3">
+                          <CheckCircle className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                          <div className="flex-1">
+                            <h4 className="font-semibold text-green-800">Stripe Account Connected</h4>
+                            <p className="text-sm text-green-700 mt-1">
+                              Your Stripe account is connected and ready to receive payouts.
+                            </p>
+                            <div className="mt-3 space-y-1">
+                              <div className="flex items-center gap-2 text-sm">
+                                <span className={`w-2 h-2 rounded-full ${stripeConnectStatus.data.chargesEnabled ? 'bg-green-500' : 'bg-yellow-500'}`} />
+                                <span className="text-slate-700">
+                                  Charges: {stripeConnectStatus.data.chargesEnabled ? 'Enabled' : 'Pending'}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2 text-sm">
+                                <span className={`w-2 h-2 rounded-full ${stripeConnectStatus.data.payoutsEnabled ? 'bg-green-500' : 'bg-yellow-500'}`} />
+                                <span className="text-slate-700">
+                                  Payouts: {stripeConnectStatus.data.payoutsEnabled ? 'Enabled' : 'Pending'}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Actions for connected account */}
+                      <div className="flex flex-wrap gap-3">
+                        <Button
+                          variant="outline"
+                          className="border-purple-200 hover:bg-purple-50 text-purple-700"
+                          onClick={() => createStripeDashboardLinkMutation.mutate()}
+                          disabled={createStripeDashboardLinkMutation.isPending}
+                        >
+                          {createStripeDashboardLinkMutation.isPending ? (
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          ) : (
+                            <ExternalLink className="w-4 h-4 mr-2" />
+                          )}
+                          <TranslatedText context="settings">Stripe Dashboard</TranslatedText>
+                        </Button>
+                        
+                        {!stripeConnectStatus.data.detailsSubmitted && (
+                          <Button
+                            variant="outline"
+                            className="border-yellow-200 hover:bg-yellow-50 text-yellow-700"
+                            onClick={() => createStripeConnectLinkMutation.mutate()}
+                            disabled={createStripeConnectLinkMutation.isPending}
+                          >
+                            {createStripeConnectLinkMutation.isPending ? (
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            ) : (
+                              <AlertCircle className="w-4 h-4 mr-2" />
+                            )}
+                            <TranslatedText context="settings">Complete Setup</TranslatedText>
+                          </Button>
+                        )}
+                        
+                        {/* DEV ONLY: Force verify test account */}
+                        {process.env.NODE_ENV === 'development' && !stripeConnectStatus.data.chargesEnabled && (
+                          <Button
+                            variant="outline"
+                            className="border-orange-200 hover:bg-orange-50 text-orange-700"
+                            onClick={async () => {
+                              try {
+                                const response = await apiRequest('POST', `/api/stripe/connect/test-verify/${CURRENT_USER_ID}`);
+                                const data = await response.json();
+                                if (data.success) {
+                                  toast({
+                                    title: "✅ Test Account Verified",
+                                    description: "Charges and payouts enabled for testing!",
+                                  });
+                                  refetchStripeStatus();
+                                } else {
+                                  toast({
+                                    title: "Error",
+                                    description: data.message || "Failed to verify test account",
+                                    variant: "destructive",
+                                  });
+                                }
+                              } catch (error) {
+                                toast({
+                                  title: "Error",
+                                  description: "Failed to verify test account",
+                                  variant: "destructive",
+                                });
+                              }
+                            }}
+                          >
+                            🔧 [DEV] Force Verify Test Account
+                          </Button>
+                        )}
+                        
+                        <Button
+                          variant="ghost"
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          onClick={() => disconnectStripeMutation.mutate()}
+                          disabled={disconnectStripeMutation.isPending}
+                        >
+                          {disconnectStripeMutation.isPending ? (
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          ) : null}
+                          <TranslatedText context="settings">Disconnect</TranslatedText>
+                        </Button>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      {/* Not Connected State */}
+                      <div className="p-4 bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl border border-slate-200">
+                        <div className="flex items-start gap-3">
+                          <AlertCircle className="w-5 h-5 text-slate-500 mt-0.5 flex-shrink-0" />
+                          <div className="flex-1">
+                            <h4 className="font-semibold text-slate-800">Stripe Account Not Connected</h4>
+                            <p className="text-sm text-slate-600 mt-1">
+                              Connect your Stripe account to receive payouts when you complete streaming orders. 
+                              You'll earn 90% of each order amount (10% platform fee).
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Benefits */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div className="p-3 bg-purple-50 rounded-lg border border-purple-100">
+                          <div className="flex items-center gap-2 text-purple-800">
+                            <CheckCircle className="w-4 h-4" />
+                            <span className="text-sm font-medium">Instant Payouts</span>
+                          </div>
+                          <p className="text-xs text-purple-600 mt-1">Get paid as soon as orders are completed</p>
+                        </div>
+                        <div className="p-3 bg-purple-50 rounded-lg border border-purple-100">
+                          <div className="flex items-center gap-2 text-purple-800">
+                            <CheckCircle className="w-4 h-4" />
+                            <span className="text-sm font-medium">Secure Transfers</span>
+                          </div>
+                          <p className="text-xs text-purple-600 mt-1">Bank-level security with Stripe</p>
+                        </div>
+                      </div>
+
+                      <Button 
+                        className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-lg shadow-purple-500/30"
+                        onClick={() => createStripeConnectLinkMutation.mutate()}
+                        disabled={createStripeConnectLinkMutation.isPending}
+                      >
+                        {createStripeConnectLinkMutation.isPending ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            <TranslatedText context="settings">Connecting...</TranslatedText>
+                          </>
+                        ) : (
+                          <>
+                            <CreditCard className="w-4 h-4 mr-2" />
+                            <TranslatedText context="settings">Connect Stripe Account</TranslatedText>
+                          </>
+                        )}
+                      </Button>
+                      
+                      <p className="text-xs text-slate-500 text-center">
+                        By connecting, you agree to Stripe's Terms of Service and will be redirected to complete setup.
+                      </p>
+                    </>
+                  )}
                 </CardContent>
               </Card>
             </>

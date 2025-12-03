@@ -8,6 +8,13 @@
       "when": 1764057435007,
       "tag": "0000_goofy_morbius",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1764743891929,
+      "tag": "0001_glossy_spectrum",
+      "breakpoints": true
     }
   ]
 }
