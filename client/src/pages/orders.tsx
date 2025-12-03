@@ -219,14 +219,14 @@ export default function Orders() {
       // Provider view
       if (order.status === 'live') {
         return (
-          <Card key={order.id} className="p-4 border-green-500 border-2">
+          <Card key={order.id} className="p-4 border-green-500 border-2 w-full max-w-full overflow-hidden">
             <div className="space-y-3">
-              <div className="flex justify-between items-start">
-                <div>
-                  <h3 className="font-bold text-lg">{order.title}</h3>
+              <div className="flex justify-between items-start gap-2">
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-bold text-lg break-words">{order.title}</h3>
                   <Badge className="bg-green-500 mt-1">🔴 Live Now</Badge>
                 </div>
-                <span className="text-xl font-bold text-green-600">${order.price}</span>
+                <span className="text-xl font-bold text-green-600 flex-shrink-0">${order.price}</span>
               </div>
               <p className="text-sm text-muted-foreground line-clamp-2">{order.description}</p>
               <div className="text-xs font-medium">
@@ -248,16 +248,16 @@ export default function Orders() {
       
       if (order.status === 'accepted') {
         return (
-          <Card key={order.id} className="p-4 border-blue-500 border-2">
+          <Card key={order.id} className="p-4 border-blue-500 border-2 w-full max-w-full overflow-hidden">
             <div className="space-y-3">
-              <div className="flex justify-between items-start">
-                <div>
-                  <h3 className="font-bold text-lg">{order.title}</h3>
+              <div className="flex justify-between items-start gap-2">
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-bold text-lg break-words">{order.title}</h3>
                   <Badge className={dateArrived ? "bg-orange-500" : "bg-blue-500"}>
                     {dateArrived ? "⏰ Ready to Go Live" : "📅 Scheduled"}
                   </Badge>
                 </div>
-                <span className="text-xl font-bold">${order.price}</span>
+                <span className="text-xl font-bold flex-shrink-0">${order.price}</span>
               </div>
               <p className="text-sm text-muted-foreground line-clamp-2">{order.description}</p>
               <div className="text-xs text-muted-foreground">
@@ -294,14 +294,14 @@ export default function Orders() {
       
       if (order.status === 'done') {
         return (
-          <Card key={order.id} className="p-4">
+          <Card key={order.id} className="p-4 w-full max-w-full overflow-hidden">
             <div className="space-y-3">
-              <div className="flex justify-between items-start">
-                <div>
-                  <h3 className="font-bold text-lg">{order.title}</h3>
+              <div className="flex justify-between items-start gap-2">
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-bold text-lg break-words">{order.title}</h3>
                   <Badge className="bg-gray-500">✅ Completed</Badge>
                 </div>
-                <span className="text-xl font-bold text-green-600">${order.price}</span>
+                <span className="text-xl font-bold text-green-600 flex-shrink-0">${order.price}</span>
               </div>
               <p className="text-sm text-muted-foreground line-clamp-2">{order.description}</p>
               <Button 
@@ -320,14 +320,14 @@ export default function Orders() {
       // Customer view
       if (order.status === 'pending') {
         return (
-          <Card key={order.id} className="p-4 border-orange-500 border-2">
+          <Card key={order.id} className="p-4 border-orange-500 border-2 w-full max-w-full overflow-hidden">
             <div className="space-y-3">
-              <div className="flex justify-between items-start">
-                <div>
-                  <h3 className="font-bold text-lg">{order.title}</h3>
+              <div className="flex justify-between items-start gap-2">
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-bold text-lg break-words">{order.title}</h3>
                   <Badge className="bg-orange-500">⏳ Awaiting Provider</Badge>
                 </div>
-                <span className="text-xl font-bold">${order.price}</span>
+                <span className="text-xl font-bold flex-shrink-0">${order.price}</span>
               </div>
               <p className="text-sm text-muted-foreground line-clamp-2">{order.description}</p>
               <div className="text-xs text-muted-foreground">
@@ -342,14 +342,14 @@ export default function Orders() {
       
       if (order.status === 'accepted') {
         return (
-          <Card key={order.id} className="p-4 border-blue-500 border-2">
+          <Card key={order.id} className="p-4 border-blue-500 border-2 w-full max-w-full overflow-hidden">
             <div className="space-y-3">
-              <div className="flex justify-between items-start">
-                <div>
-                  <h3 className="font-bold text-lg">{order.title}</h3>
+              <div className="flex justify-between items-start gap-2">
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-bold text-lg break-words">{order.title}</h3>
                   <Badge className="bg-blue-500">✓ Accepted</Badge>
                 </div>
-                <span className="text-xl font-bold">${order.price}</span>
+                <span className="text-xl font-bold flex-shrink-0">${order.price}</span>
               </div>
               <p className="text-sm text-muted-foreground line-clamp-2">{order.description}</p>
               <div className="text-xs text-muted-foreground">
@@ -370,14 +370,14 @@ export default function Orders() {
       
       if (order.status === 'live') {
         return (
-          <Card key={order.id} className="p-4 border-green-500 border-2">
+          <Card key={order.id} className="p-4 border-green-500 border-2 w-full max-w-full overflow-hidden">
             <div className="space-y-3">
-              <div className="flex justify-between items-start">
-                <div>
-                  <h3 className="font-bold text-lg">{order.title}</h3>
+              <div className="flex justify-between items-start gap-2">
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-bold text-lg break-words">{order.title}</h3>
                   <Badge className="bg-green-500 animate-pulse">🔴 Live Now</Badge>
                 </div>
-                <span className="text-xl font-bold">${order.price}</span>
+                <span className="text-xl font-bold flex-shrink-0">${order.price}</span>
               </div>
               <p className="text-sm text-muted-foreground line-clamp-2">{order.description}</p>
               <Button 
@@ -394,14 +394,14 @@ export default function Orders() {
       
       if (order.status === 'done') {
         return (
-          <Card key={order.id} className="p-4">
+          <Card key={order.id} className="p-4 w-full max-w-full overflow-hidden">
             <div className="space-y-3">
-              <div className="flex justify-between items-start">
-                <div>
-                  <h3 className="font-bold text-lg">{order.title}</h3>
+              <div className="flex justify-between items-start gap-2">
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-bold text-lg break-words">{order.title}</h3>
                   <Badge className="bg-gray-500">✅ Completed</Badge>
                 </div>
-                <span className="text-xl font-bold">${order.price}</span>
+                <span className="text-xl font-bold flex-shrink-0">${order.price}</span>
               </div>
               <p className="text-sm text-muted-foreground line-clamp-2">{order.description}</p>
               <Button 
@@ -420,14 +420,14 @@ export default function Orders() {
     // Cancelled orders (same for both roles)
     if (order.status === 'cancelled') {
       return (
-        <Card key={order.id} className="p-4 bg-gray-50 border-gray-300">
+        <Card key={order.id} className="p-4 bg-gray-50 border-gray-300 w-full max-w-full overflow-hidden">
           <div className="space-y-3">
-            <div className="flex justify-between items-start">
-              <div>
-                <h3 className="font-bold text-lg text-gray-700">{order.title}</h3>
+            <div className="flex justify-between items-start gap-2">
+              <div className="flex-1 min-w-0">
+                <h3 className="font-bold text-lg text-gray-700 break-words">{order.title}</h3>
                 <Badge className="bg-gray-400 text-white">✕ Cancelled</Badge>
               </div>
-              <span className="text-xl font-bold text-gray-500">${order.price}</span>
+              <span className="text-xl font-bold text-gray-500 flex-shrink-0">${order.price}</span>
             </div>
             <p className="text-sm text-gray-600 line-clamp-2">{order.description}</p>
             {order.scheduledAt && (
@@ -453,9 +453,9 @@ export default function Orders() {
   const renderOrderList = (orderList: Order[], emptyMessage: string) => {
     if (isLoading) {
       return (
-        <div className="grid gap-4 md:gap-6 grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
-            <Card key={i} className="overflow-hidden animate-pulse">
+        <div className="grid gap-4 md:gap-6 grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 w-full max-w-full">
+          {[1, 2, 3].map((i) => (
+            <Card key={i} className="overflow-hidden animate-pulse w-full max-w-full">
               <div className="aspect-video bg-muted"></div>
               <CardContent className="p-4">
                 <div className="h-4 bg-muted rounded w-3/4 mb-2"></div>
@@ -470,17 +470,17 @@ export default function Orders() {
 
     if (orderList.length === 0) {
       return (
-        <div className="text-center py-12">
-          <div className="w-16 h-16 mx-auto mb-4 bg-muted rounded-full flex items-center justify-center">
-            <Calendar className="w-8 h-8 text-muted-foreground" />
+        <div className="text-center py-8 sm:py-12 px-4 w-full max-w-full overflow-hidden">
+          <div className="w-14 h-14 sm:w-16 sm:h-16 mx-auto mb-4 bg-muted rounded-full flex items-center justify-center">
+            <Calendar className="w-7 h-7 sm:w-8 sm:h-8 text-muted-foreground" />
           </div>
-          <h3 className="text-lg font-medium text-foreground mb-2">
+          <h3 className="text-base sm:text-lg font-medium text-foreground mb-2 break-words">
             <TranslatedText context="orders">{emptyMessage}</TranslatedText>
           </h3>
-          <p className="text-muted-foreground mb-4">
+          <p className="text-sm sm:text-base text-muted-foreground mb-4 break-words">
             <TranslatedText context="orders">Create your first streaming order to get started</TranslatedText>
           </p>
-          <Button>
+          <Button className="w-full sm:w-auto">
             <Plus className="w-4 h-4 mr-2" />
             <TranslatedText context="orders">Create Order</TranslatedText>
           </Button>
@@ -490,24 +490,24 @@ export default function Orders() {
 
     // Use role-based card renderer
     return (
-      <div className="grid gap-4 md:gap-6 grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
+      <div className="grid gap-4 md:gap-6 grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 w-full max-w-full">
         {orderList.map((order) => renderRoleBasedOrderCard(order))}
       </div>
     );
   };
 
   return (
-    <div className="flex-1 flex flex-col">
+    <div className="flex-1 flex flex-col pb-24 lg:pb-0 overflow-x-hidden">
       {/* Enhanced Header with Stats */}
-      <header className="p-4 lg:p-6 border-b border-border bg-background/95 backdrop-blur">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div>
-            <h2 className="text-2xl lg:text-3xl font-bold text-foreground mb-2">
+      <header className="p-4 lg:p-6 border-b border-border bg-background/95 backdrop-blur w-full max-w-full overflow-hidden">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between w-full max-w-full">
+          <div className="flex-1 min-w-0">
+            <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground mb-2 break-words">
               <TranslatedText context="orders">
                 {userRole === 'provider' ? 'Provider Dashboard' : 'My Orders Dashboard'}
               </TranslatedText>
             </h2>
-            <p className="text-muted-foreground">
+            <p className="text-sm sm:text-base text-muted-foreground break-words">
               <TranslatedText context="orders">
                 {userRole === 'provider' 
                   ? 'Manage your accepted orders and streaming schedule' 
@@ -517,20 +517,20 @@ export default function Orders() {
           </div>
           
           {/* Quick Stats */}
-          <div className="flex gap-4">
-            <Card className="p-3">
+          <div className="flex gap-2 sm:gap-4 overflow-x-auto pb-2 lg:pb-0">
+            <Card className="p-2 sm:p-3 flex-shrink-0">
               <div className="text-center">
                 <div className="text-2xl font-bold text-primary">{relevantOrders.length}</div>
                 <div className="text-xs text-muted-foreground"><TranslatedText context="orders">Total</TranslatedText></div>
               </div>
             </Card>
-            <Card className="p-3">
+            <Card className="p-2 sm:p-3 flex-shrink-0">
               <div className="text-center">
                 <div className="text-2xl font-bold text-green-600">{liveOrders.length}</div>
                 <div className="text-xs text-muted-foreground"><TranslatedText context="orders">Live</TranslatedText></div>
               </div>
             </Card>
-            <Card className="p-3">
+            <Card className="p-2 sm:p-3 flex-shrink-0">
               <div className="text-center">
                 <div className="text-2xl font-bold text-orange-600">{pendingOrders.length}</div>
                 <div className="text-xs text-muted-foreground">
@@ -539,14 +539,14 @@ export default function Orders() {
               </div>
             </Card>
             {userRole === 'provider' && (
-              <Card className="p-3">
+              <Card className="p-2 sm:p-3 flex-shrink-0">
                 <div className="text-center">
                   <div className="text-2xl font-bold text-blue-600">{goLiveOrders.length}</div>
                   <div className="text-xs text-muted-foreground">Ready</div>
                 </div>
               </Card>
             )}
-            <Card className="p-3">
+            <Card className="p-2 sm:p-3 flex-shrink-0">
               <div className="text-center">
                 <div className="text-2xl font-bold text-gray-500">{cancelledOrders.length}</div>
                 <div className="text-xs text-muted-foreground">Cancelled</div>
@@ -557,10 +557,10 @@ export default function Orders() {
       </header>
 
       {/* Filters and Search */}
-      <div className="p-4 lg:p-6 border-b border-border bg-card/50">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex-1 flex gap-3">
-            <div className="relative flex-1">
+      <div className="p-4 lg:p-6 border-b border-border bg-card/50 w-full max-w-full overflow-hidden">
+        <div className="flex flex-col gap-3 w-full max-w-full">
+          <div className="flex gap-2 sm:gap-3 w-full max-w-full">
+            <div className="relative flex-1 min-w-0">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
               <Input
                 placeholder={getTranslation("Search orders...")}
@@ -571,9 +571,9 @@ export default function Orders() {
               />
             </div>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-40">
-                <Filter className="w-4 h-4 mr-2" />
-                <SelectValue placeholder="Status" />
+              <SelectTrigger className="w-auto sm:w-40 px-3 sm:px-4">
+                <Filter className="w-4 h-4 sm:mr-2" />
+                <SelectValue placeholder="Status" className="hidden sm:inline" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all"><TranslatedText context="orders">All Status</TranslatedText></SelectItem>
@@ -583,9 +583,9 @@ export default function Orders() {
               </SelectContent>
             </Select>
             <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="w-40">
-                <TrendingUp className="w-4 h-4 mr-2" />
-                <SelectValue placeholder="Sort" />
+              <SelectTrigger className="w-auto sm:w-40 px-3 sm:px-4">
+                <TrendingUp className="w-4 h-4 sm:mr-2" />
+                <SelectValue placeholder="Sort" className="hidden sm:inline" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="recent"><TranslatedText context="orders">Most Recent</TranslatedText></SelectItem>
@@ -598,37 +598,37 @@ export default function Orders() {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 p-4 lg:p-6">
-        <Tabs defaultValue="all" className="w-full">
+      <div className="flex-1 p-4 lg:p-6 w-full max-w-full overflow-x-hidden">
+        <Tabs defaultValue="all" className="w-full max-w-full">
           {userRole === 'provider' ? (
             // Provider Tabs
             <>
-              <TabsList className="grid w-full grid-cols-6 bg-secondary mb-6">
-                <TabsTrigger value="all" data-testid="tab-all">
+              <TabsList className="flex lg:grid w-full lg:grid-cols-6 bg-secondary mb-6 overflow-x-auto">
+                <TabsTrigger value="all" data-testid="tab-all" className="flex-shrink-0 min-w-[80px] lg:min-w-0">
                   <TranslatedText context="orders">All</TranslatedText>
                   <Badge variant="secondary" className="ml-2">{relevantOrders.length}</Badge>
                 </TabsTrigger>
-                <TabsTrigger value="pending" data-testid="tab-pending">
+                <TabsTrigger value="pending" data-testid="tab-pending" className="flex-shrink-0 min-w-[120px] lg:min-w-0">
                   <Clock className="w-4 h-4 mr-1" />
                   <TranslatedText context="orders">Scheduled</TranslatedText>
                   <Badge variant="secondary" className="ml-2">{pendingOrders.length}</Badge>
                 </TabsTrigger>
-                <TabsTrigger value="golive" data-testid="tab-golive">
+                <TabsTrigger value="golive" data-testid="tab-golive" className="flex-shrink-0 min-w-[110px] lg:min-w-0">
                   <Play className="w-4 h-4 mr-1" />
                   <TranslatedText context="orders">Go Live</TranslatedText>
                   <Badge variant="secondary" className="ml-2">{goLiveOrders.length}</Badge>
                 </TabsTrigger>
-                <TabsTrigger value="live" data-testid="tab-live">
+                <TabsTrigger value="live" data-testid="tab-live" className="flex-shrink-0 min-w-[90px] lg:min-w-0">
                   <Video className="w-4 h-4 mr-1" />
                   <TranslatedText context="orders">Live</TranslatedText>
                   <Badge variant="secondary" className="ml-2">{liveOrders.length}</Badge>
                 </TabsTrigger>
-                <TabsTrigger value="completed" data-testid="tab-completed">
+                <TabsTrigger value="completed" data-testid="tab-completed" className="flex-shrink-0 min-w-[130px] lg:min-w-0">
                   <CheckCircle className="w-4 h-4 mr-1" />
                   <TranslatedText context="orders">Completed</TranslatedText>
                   <Badge variant="secondary" className="ml-2">{completedOrders.length}</Badge>
                 </TabsTrigger>
-                <TabsTrigger value="cancelled" data-testid="tab-cancelled">
+                <TabsTrigger value="cancelled" data-testid="tab-cancelled" className="flex-shrink-0 min-w-[120px] lg:min-w-0">
                   <XCircle className="w-4 h-4 mr-1" />
                   <TranslatedText context="orders">Cancelled</TranslatedText>
                   <Badge variant="secondary" className="ml-2">{cancelledOrders.length}</Badge>
@@ -662,32 +662,32 @@ export default function Orders() {
           ) : (
             // Customer Tabs
             <>
-              <TabsList className="grid w-full grid-cols-6 bg-secondary mb-6">
-                <TabsTrigger value="all" data-testid="tab-all">
+              <TabsList className="flex lg:grid w-full lg:grid-cols-6 bg-secondary mb-6 overflow-x-auto">
+                <TabsTrigger value="all" data-testid="tab-all" className="flex-shrink-0 min-w-[80px] lg:min-w-0">
                   <TranslatedText context="orders">All</TranslatedText>
                   <Badge variant="secondary" className="ml-2">{relevantOrders.length}</Badge>
                 </TabsTrigger>
-                <TabsTrigger value="pending" data-testid="tab-pending">
+                <TabsTrigger value="pending" data-testid="tab-pending" className="flex-shrink-0 min-w-[120px] lg:min-w-0">
                   <Clock className="w-4 h-4 mr-1" />
                   <TranslatedText context="orders">Pending</TranslatedText>
                   <Badge variant="secondary" className="ml-2">{pendingOrders.length}</Badge>
                 </TabsTrigger>
-                <TabsTrigger value="accepted" data-testid="tab-accepted">
+                <TabsTrigger value="accepted" data-testid="tab-accepted" className="flex-shrink-0 min-w-[120px] lg:min-w-0">
                   <CreditCard className="w-4 h-4 mr-1" />
                   <TranslatedText context="orders">Accepted</TranslatedText>
                   <Badge variant="secondary" className="ml-2">{acceptedOrders.length}</Badge>
                 </TabsTrigger>
-                <TabsTrigger value="live" data-testid="tab-live">
+                <TabsTrigger value="live" data-testid="tab-live" className="flex-shrink-0 min-w-[90px] lg:min-w-0">
                   <Video className="w-4 h-4 mr-1" />
                   <TranslatedText context="orders">Live</TranslatedText>
                   <Badge variant="secondary" className="ml-2">{liveOrders.length}</Badge>
                 </TabsTrigger>
-                <TabsTrigger value="completed" data-testid="tab-completed">
+                <TabsTrigger value="completed" data-testid="tab-completed" className="flex-shrink-0 min-w-[130px] lg:min-w-0">
                   <Star className="w-4 h-4 mr-1" />
                   <TranslatedText context="orders">Completed</TranslatedText>
                   <Badge variant="secondary" className="ml-2">{completedOrders.length}</Badge>
                 </TabsTrigger>
-                <TabsTrigger value="cancelled" data-testid="tab-cancelled">
+                <TabsTrigger value="cancelled" data-testid="tab-cancelled" className="flex-shrink-0 min-w-[120px] lg:min-w-0">
                   <XCircle className="w-4 h-4 mr-1" />
                   <TranslatedText context="orders">Cancelled</TranslatedText>
                   <Badge variant="secondary" className="ml-2">{cancelledOrders.length}</Badge>

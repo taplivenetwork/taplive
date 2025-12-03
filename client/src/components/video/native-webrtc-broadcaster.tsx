@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { TranslatedText } from '@/components/translated-text';
-import { Play, Square, Camera, Wifi, WifiOff, RefreshCw } from 'lucide-react';
+import { Play, Square, Camera, Wifi, WifiOff, RefreshCw, Users } from 'lucide-react';
 
 interface NativeWebRTCBroadcasterProps {
   orderId: string;
@@ -349,8 +349,9 @@ export function NativeWebRTCBroadcaster({ orderId, onStreamStart, onStreamEnd, c
           <TranslatedText context="broadcaster">原生WebRTC直播</TranslatedText>
           <div className="flex items-center gap-2">
             {isStreaming && viewerCount > 0 && (
-              <Badge variant="outline" className="gap-1">
-                👥 {viewerCount} <TranslatedText context="broadcaster">viewers</TranslatedText>
+              <Badge variant="outline" className="gap-1 flex items-center">
+                <Users className="w-3 h-3" />
+                {viewerCount} <TranslatedText context="broadcaster">viewers</TranslatedText>
               </Badge>
             )}
             <Badge variant={isConnected ? "default" : "secondary"}>
@@ -466,39 +467,119 @@ export function NativeWebRTCBroadcaster({ orderId, onStreamStart, onStreamEnd, c
         </div>
 
         {/* Status */}
-        <div className="text-center space-y-1">
-          <p className="text-xs text-muted-foreground">
-            <TranslatedText context="broadcaster">{`摄像头: ${facingMode === 'user' ? '前置' : '后置'}`}</TranslatedText>
-          </p>
-          
-          {/* Debug Status */}
-          <div className="text-xs space-y-1 mt-2 p-2 bg-blue-50 rounded border">
-            <p className="font-semibold">Native WebRTC Status:</p>
-            <p className={needsUserClick ? 'text-red-600 font-bold' : ''}>
-              needsUserClick: {needsUserClick ? 'TRUE' : 'FALSE'}
-              {videoRef.current?.paused && !needsUserClick && ' (State Error!)'}
+        <div className="space-y-3">
+          <div className="text-center">
+            <p className="text-xs text-muted-foreground">
+              <TranslatedText context="broadcaster">{`摄像头: ${facingMode === 'user' ? '前置' : '后置'}`}</TranslatedText>
             </p>
-            <p>isStreaming: {isStreaming ? 'TRUE' : 'FALSE'}</p>
-            <p>isConnected: {isConnected ? 'TRUE' : 'FALSE'}</p>
-            <p>videoPaused: {videoRef.current?.paused ? 'TRUE' : 'FALSE'}</p>
-            <p>streamTracks: {stream?.getTracks().length || 0}</p>
-            <p>hasVideo: {videoRef.current ? 'YES' : 'NO'}</p>
-            <p>videoSrc: {videoRef.current?.srcObject ? 'YES' : 'NO'}</p>
+          </div>
+          
+          {/* Debug Status - Futuristic Design */}
+          <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-4 border border-slate-700/50 shadow-xl">
+            {/* Animated background gradient */}
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-pink-500/5 animate-pulse"></div>
             
-            {/* Force Fix Button */}
-            {videoRef.current?.paused && !needsUserClick && (
-              <Button 
-                onClick={() => {
-                  console.log('[Broadcaster] Manual fix: Setting needsUserClick = TRUE');
-                  setNeedsUserClick(true);
-                }}
-                size="sm"
-                variant="destructive"
-                className="mt-2"
-              >
-                Force Fix State
-              </Button>
-            )}
+            {/* Content */}
+            <div className="relative space-y-3">
+              {/* Header */}
+              <div className="flex items-center justify-between border-b border-slate-700/50 pb-2">
+                <h4 className="text-sm font-semibold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">
+                  System Status
+                </h4>
+                <div className="flex items-center gap-1">
+                  <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></div>
+                  <span className="text-xs text-green-400 font-mono">ACTIVE</span>
+                </div>
+              </div>
+
+              {/* Status Grid */}
+              <div className="grid grid-cols-2 gap-2">
+                {/* Streaming Status */}
+                <div className="bg-slate-800/50 rounded-md p-2 border border-slate-700/30">
+                  <div className="text-xs text-slate-400 mb-1 font-mono">Streaming</div>
+                  <div className={`text-sm font-bold font-mono ${isStreaming ? 'text-green-400' : 'text-slate-500'}`}>
+                    {isStreaming ? '● LIVE' : '○ OFF'}
+                  </div>
+                </div>
+
+                {/* Connection Status */}
+                <div className="bg-slate-800/50 rounded-md p-2 border border-slate-700/30">
+                  <div className="text-xs text-slate-400 mb-1 font-mono">Connection</div>
+                  <div className={`text-sm font-bold font-mono ${isConnected ? 'text-green-400' : 'text-yellow-400'}`}>
+                    {isConnected ? '● READY' : '○ WAIT'}
+                  </div>
+                </div>
+
+                {/* Video Status */}
+                <div className="bg-slate-800/50 rounded-md p-2 border border-slate-700/30">
+                  <div className="text-xs text-slate-400 mb-1 font-mono">Video</div>
+                  <div className={`text-sm font-bold font-mono ${!videoRef.current?.paused ? 'text-green-400' : 'text-red-400'}`}>
+                    {!videoRef.current?.paused ? '▶ PLAY' : '⏸ PAUSE'}
+                  </div>
+                </div>
+
+                {/* Tracks Status */}
+                <div className="bg-slate-800/50 rounded-md p-2 border border-slate-700/30">
+                  <div className="text-xs text-slate-400 mb-1 font-mono">Tracks</div>
+                  <div className="text-sm font-bold text-blue-400 font-mono">
+                    {stream?.getTracks().length || 0} / 2
+                  </div>
+                </div>
+              </div>
+
+              {/* User Click Warning */}
+              {needsUserClick && (
+                <div className="bg-red-500/10 border border-red-500/30 rounded-md p-2">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
+                    <span className="text-xs text-red-400 font-mono uppercase">User Action Required</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Technical Details */}
+              <details className="group">
+                <summary className="text-xs text-slate-400 cursor-pointer hover:text-slate-300 transition-colors font-mono flex items-center gap-2">
+                  <span className="group-open:rotate-90 transition-transform">▶</span>
+                  Technical Details
+                </summary>
+                <div className="mt-2 space-y-1 pl-4 border-l-2 border-slate-700/50">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-slate-500 font-mono">Video Element</span>
+                    <span className={`font-mono ${videoRef.current ? 'text-green-400' : 'text-red-400'}`}>
+                      {videoRef.current ? 'PRESENT' : 'MISSING'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-slate-500 font-mono">Source Object</span>
+                    <span className={`font-mono ${videoRef.current?.srcObject ? 'text-green-400' : 'text-red-400'}`}>
+                      {videoRef.current?.srcObject ? 'SET' : 'NULL'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-slate-500 font-mono">User Click State</span>
+                    <span className={`font-mono ${needsUserClick ? 'text-red-400' : 'text-green-400'}`}>
+                      {needsUserClick ? 'REQUIRED' : 'NOT NEEDED'}
+                    </span>
+                  </div>
+                </div>
+              </details>
+
+              {/* Force Fix Button - Only show if needed */}
+              {videoRef.current?.paused && !needsUserClick && (
+                <Button 
+                  onClick={() => {
+                    console.log('[Broadcaster] Manual fix: Setting needsUserClick = TRUE');
+                    setNeedsUserClick(true);
+                  }}
+                  size="sm"
+                  className="w-full bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white border-0 shadow-lg shadow-red-500/20 font-mono text-xs"
+                >
+                  <span className="mr-2">⚠</span>
+                  FORCE STATE CORRECTION
+                </Button>
+              )}
+            </div>
           </div>
         </div>
       </CardContent>

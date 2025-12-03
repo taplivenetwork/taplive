@@ -64,18 +64,18 @@ export function OrderCard({ order, onAccept, onJoin, showActions = true }: Order
   };
 
   return (
-    <div className="solid-card rounded-xl p-4 space-y-3 order-card" data-testid={`order-card-${order.id}`}>
-      <div className="flex items-start justify-between">
-        <div className="flex-1">
-          <h4 className="font-semibold text-foreground mb-1" data-testid="order-title">
+    <div className="solid-card rounded-xl p-4 space-y-3 order-card w-full max-w-full overflow-hidden" data-testid={`order-card-${order.id}`}>
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex-1 min-w-0">
+          <h4 className="font-semibold text-foreground mb-1 break-words" data-testid="order-title">
             <TranslatedText>{order.title}</TranslatedText>
           </h4>
-          <p className="text-sm text-muted-foreground" data-testid="order-description">
+          <p className="text-sm text-muted-foreground break-words line-clamp-2" data-testid="order-description">
             <TranslatedText>{order.description}</TranslatedText>
           </p>
         </div>
         <Badge 
-          className={getStatusColor(order.status)} 
+          className={`${getStatusColor(order.status)} flex-shrink-0`} 
           data-testid="order-status"
         >
           {isLive && <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse mr-1" />}
@@ -83,32 +83,32 @@ export function OrderCard({ order, onAccept, onJoin, showActions = true }: Order
         </Badge>
       </div>
       
-      <div className="space-y-2 text-sm">
+      <div className="space-y-2 text-sm overflow-hidden">
         <div className="flex items-center gap-2 text-muted-foreground" data-testid="order-location">
-          <MapPin className="w-4 h-4" />
-          <span><TranslatedText>{order.address || `${order.latitude}, ${order.longitude}`}</TranslatedText></span>
+          <MapPin className="w-4 h-4 flex-shrink-0" />
+          <span className="truncate"><TranslatedText>{order.address || `${order.latitude}, ${order.longitude}`}</TranslatedText></span>
         </div>
         <div className="flex items-center gap-2 text-muted-foreground" data-testid="order-schedule">
-          <Clock className="w-4 h-4" />
-          <span><TranslatedText>{formatScheduledTime(scheduledDate)}</TranslatedText> • {order.duration}<TranslatedText>min</TranslatedText></span>
+          <Clock className="w-4 h-4 flex-shrink-0" />
+          <span className="truncate"><TranslatedText>{formatScheduledTime(scheduledDate)}</TranslatedText> • {order.duration}<TranslatedText>min</TranslatedText></span>
         </div>
         {order.type === 'group' && (
           <div className="flex items-center gap-2 text-muted-foreground" data-testid="order-participants">
-            <Users className="w-4 h-4" />
+            <Users className="w-4 h-4 flex-shrink-0" />
             <span>{order.currentParticipants}/{order.maxParticipants} <TranslatedText>participants</TranslatedText></span>
           </div>
         )}
       </div>
 
-      <div className="flex items-center justify-between pt-3 border-t border-border">
-        <div className="flex items-center gap-2">
+      <div className="flex items-center justify-between pt-3 border-t border-border gap-2">
+        <div className="flex items-center gap-2 flex-1 min-w-0">
           {creator && (
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 bg-primary/20 rounded-full flex items-center justify-center text-primary text-xs font-bold">
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="w-6 h-6 bg-primary/20 rounded-full flex items-center justify-center text-primary text-xs font-bold flex-shrink-0">
                 {creator.name.charAt(0).toUpperCase()}
               </div>
-              <div className="flex flex-col">
-                <span className="text-xs font-medium text-foreground">
+              <div className="flex flex-col min-w-0">
+                <span className="text-xs font-medium text-foreground truncate">
                   {creator.name}
                 </span>
                 {creator.rating > 0 && (
@@ -122,8 +122,8 @@ export function OrderCard({ order, onAccept, onJoin, showActions = true }: Order
             </div>
           )}
         </div>
-        <div className="text-right">
-          <div className="flex items-center gap-1 text-lg font-bold text-primary" data-testid="order-price">
+        <div className="text-right flex-shrink-0">
+          <div className="flex items-center gap-1 text-base sm:text-lg font-bold text-primary" data-testid="order-price">
             <DollarSign className="w-4 h-4" />
             {order.price} {order.currency}
           </div>
@@ -139,10 +139,10 @@ export function OrderCard({ order, onAccept, onJoin, showActions = true }: Order
       </div>
 
       {showActions && (
-        <div className="flex gap-2 pt-2">
+        <div className="flex flex-wrap gap-2 pt-2">
           {order.status === 'live' ? (
             <Button 
-              className="flex-1 bg-accent text-accent-foreground hover:bg-accent/90" 
+              className="flex-1 min-w-0 bg-accent text-accent-foreground hover:bg-accent/90" 
               onClick={() => onJoin?.(order.id)}
               data-testid="button-join-stream"
             >
@@ -151,7 +151,7 @@ export function OrderCard({ order, onAccept, onJoin, showActions = true }: Order
           ) : order.status === 'open' || order.status === 'pending' ? (
             <>
               <Button 
-                className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90" 
+                className="flex-1 min-w-0 bg-primary text-primary-foreground hover:bg-primary/90" 
                 onClick={() => onAccept?.(order.id)}
                 data-testid="button-accept-order"
               >
@@ -159,7 +159,7 @@ export function OrderCard({ order, onAccept, onJoin, showActions = true }: Order
               </Button>
               {!order.isPaid && (
                 <Button
-                  className="bg-green-600 hover:bg-green-700 text-white"
+                  className="bg-green-600 hover:bg-green-700 text-white flex-shrink-0"
                   onClick={() => setPaymentModalOpen(true)}
                   data-testid="button-pay-order"
                 >
@@ -170,7 +170,7 @@ export function OrderCard({ order, onAccept, onJoin, showActions = true }: Order
             </>
           ) : (order.status === 'accepted') && order.isPaid && !completing ? (
             <Button
-              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+              className="flex-1 min-w-0 bg-blue-600 hover:bg-blue-700 text-white"
               onClick={() => handleSubmitForApproval()}
               data-testid="button-submit-for-approval"
             >
@@ -178,9 +178,9 @@ export function OrderCard({ order, onAccept, onJoin, showActions = true }: Order
               <TranslatedText>Submit for Approval</TranslatedText>
             </Button>
           ) : order.status === 'awaiting_approval' && order.creatorId === 'demo-customer-id' ? (
-            <div className="flex gap-2 flex-1">
+            <div className="flex gap-2 flex-1 min-w-0 flex-wrap">
               <Button
-                className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                className="flex-1 min-w-0 bg-green-600 hover:bg-green-700 text-white"
                 onClick={() => handleApproveOrder()}
                 data-testid="button-approve-order"
               >
@@ -189,7 +189,7 @@ export function OrderCard({ order, onAccept, onJoin, showActions = true }: Order
               </Button>
               <Button
                 variant="destructive"
-                className="flex-1"
+                className="flex-1 min-w-0"
                 onClick={() => handleDispute()}
                 data-testid="button-dispute-order"
               >
@@ -199,17 +199,17 @@ export function OrderCard({ order, onAccept, onJoin, showActions = true }: Order
           ) : order.status === 'disputed' ? (
             <Button 
               variant="outline" 
-              className="flex-1" 
+              className="flex-1 min-w-0" 
               disabled
               data-testid="button-order-disputed"
             >
               <TranslatedText>Under Review</TranslatedText>
             </Button>
           ) : order.status === 'done' ? (
-            <div className="flex gap-2 flex-1">
+            <div className="flex gap-2 flex-1 min-w-0 flex-wrap">
               <Button 
                 variant="outline" 
-                className="flex-1" 
+                className="flex-1 min-w-0" 
                 disabled
                 data-testid="button-order-completed"
               >
@@ -218,6 +218,7 @@ export function OrderCard({ order, onAccept, onJoin, showActions = true }: Order
               <Button 
                 variant="default" 
                 size="sm"
+                className="flex-shrink-0"
                 onClick={() => setRatingModalOpen(true)}
                 data-testid="button-rate-order"
               >
@@ -228,7 +229,7 @@ export function OrderCard({ order, onAccept, onJoin, showActions = true }: Order
           ) : (
             <Button 
               variant="outline" 
-              className="flex-1" 
+              className="flex-1 min-w-0" 
               disabled
               data-testid="button-order-unavailable"
             >

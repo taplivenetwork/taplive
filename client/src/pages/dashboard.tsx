@@ -99,7 +99,7 @@ export function Dashboard() {
 
   if (userLoading || ordersLoading) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-6 pb-24 lg:pb-8">
         <div className="animate-pulse space-y-6">
           <div className="h-8 bg-gray-200 rounded w-1/3"></div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -114,18 +114,18 @@ export function Dashboard() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 space-y-6" data-testid="dashboard-page">
+    <div className="container mx-auto px-4 py-6 pb-24 lg:pb-8 space-y-6" data-testid="dashboard-page">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold">
+          <h1 className="text-2xl sm:text-3xl font-bold">
             <TranslatedText context="dashboard">Dashboard</TranslatedText>
           </h1>
           <p className="text-muted-foreground mt-1">
             <TranslatedText context="dashboard">Welcome back</TranslatedText>, {user?.name || 'User'}
           </p>
           {userRole === 'provider' && (
-            <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
+            <div className="flex flex-wrap items-center gap-4 mt-2 text-xs sm:text-sm text-muted-foreground">
               <div className="flex items-center gap-1">
                 <MapPin className="w-4 h-4" />
                 <span>Service Area: {user?.availableRadius || 10}km</span>
@@ -137,12 +137,12 @@ export function Dashboard() {
             </div>
           )}
         </div>
-        <div className="flex items-center gap-3">
-          <Badge variant="secondary" className="text-sm">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+          <Badge variant="secondary" className="text-xs sm:text-sm">
             <TranslatedText context="dashboard">{userRole === 'provider' ? 'Service Provider' : 'Customer'}</TranslatedText>
           </Badge>
           {userRole === 'provider' && (
-            <Badge variant={availability ? 'default' : 'secondary'} className="text-sm">
+            <Badge variant={availability ? 'default' : 'secondary'} className="text-xs sm:text-sm">
               {availability ? '🟢 Available' : '⚪ Unavailable'}
             </Badge>
           )}

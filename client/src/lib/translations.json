@@ -1748,6 +1748,68 @@
         "Providers need to be online and have location data": "Les fournisseurs doivent être en ligne et avoir des données de localisation"
       }
     },
+    "stream_viewer": {
+      "zh": {
+        "Stream has not started yet": "直播尚未开始",
+        "Waiting": "等待中",
+        "The service provider has not started the stream yet. Please wait.": "服务提供者还没有开始直播，请耐心等待",
+        "LIVE": "直播中",
+        "Click to watch stream": "点击观看直播",
+        "Play Now": "立即播放",
+        "Retry Connection": "重试连接",
+        "Connecting to stream...": "正在连接直播...",
+        "Retrying...": "重试中...",
+        "Connected to live stream": "已连接到直播流"
+      },
+      "en": {
+        "Stream has not started yet": "Stream has not started yet",
+        "Waiting": "Waiting",
+        "The service provider has not started the stream yet. Please wait.": "The service provider has not started the stream yet. Please wait.",
+        "LIVE": "LIVE",
+        "Click to watch stream": "Click to watch stream",
+        "Play Now": "Play Now",
+        "Retry Connection": "Retry Connection",
+        "Connecting to stream...": "Connecting to stream...",
+        "Retrying...": "Retrying...",
+        "Connected to live stream": "Connected to live stream"
+      },
+      "ja": {
+        "Stream has not started yet": "配信はまだ開始されていません",
+        "Waiting": "待機中",
+        "The service provider has not started the stream yet. Please wait.": "サービス提供者がまだ配信を開始していません。お待ちください。",
+        "LIVE": "ライブ",
+        "Click to watch stream": "クリックして配信を視聴",
+        "Play Now": "今すぐ再生",
+        "Retry Connection": "再接続",
+        "Connecting to stream...": "配信に接続中...",
+        "Retrying...": "再試行中...",
+        "Connected to live stream": "ライブ配信に接続しました"
+      },
+      "es": {
+        "Stream has not started yet": "La transmisión aún no ha comenzado",
+        "Waiting": "Esperando",
+        "The service provider has not started the stream yet. Please wait.": "El proveedor de servicios aún no ha iniciado la transmisión. Por favor espere.",
+        "LIVE": "EN VIVO",
+        "Click to watch stream": "Haga clic para ver la transmisión",
+        "Play Now": "Reproducir ahora",
+        "Retry Connection": "Reintentar conexión",
+        "Connecting to stream...": "Conectando a la transmisión...",
+        "Retrying...": "Reintentando...",
+        "Connected to live stream": "Conectado a la transmisión en vivo"
+      },
+      "fr": {
+        "Stream has not started yet": "Le flux n'a pas encore commencé",
+        "Waiting": "En attente",
+        "The service provider has not started the stream yet. Please wait.": "Le fournisseur de services n'a pas encore commencé la diffusion. Veuillez patienter.",
+        "LIVE": "EN DIRECT",
+        "Click to watch stream": "Cliquez pour regarder le flux",
+        "Play Now": "Lire maintenant",
+        "Retry Connection": "Réessayer la connexion",
+        "Connecting to stream...": "Connexion au flux...",
+        "Retrying...": "Nouvelle tentative...",
+        "Connected to live stream": "Connecté au flux en direct"
+      }
+    },
     "error": {
       "zh": {
         "404 Page Not Found": "404 页面未找到",

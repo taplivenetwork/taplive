@@ -172,34 +172,35 @@ export default function LiveStreamPage() {
   const isLive = order.status === 'live';
 
   return (
-    <div className="flex-1 p-6">
-      <div className="max-w-7xl mx-auto">
+    <div className="flex-1 p-4 sm:p-6 pb-24 lg:pb-6">
+      <div className="max-w-7xl mx-auto w-full">
         {/* Header */}
-        <div className="mb-6">
+        <div className="mb-4 sm:mb-6">
           <Button 
             variant="ghost" 
             onClick={handleGoBack}
-            className="mb-4"
+            className="mb-3 sm:mb-4 -ml-2"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             <TranslatedText context="error">Back</TranslatedText>
           </Button>
           
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold mb-2">{order.title}</h1>
-              <div className="flex items-center gap-4 text-muted-foreground">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div className="flex-1">
+              <h1 className="text-2xl sm:text-3xl font-bold mb-2">{order.title}</h1>
+              <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-sm sm:text-base text-muted-foreground">
                 <div className="flex items-center gap-2">
-                  <MapPin className="w-4 h-4" />
-                  <span>{order.address}</span>
+                  <MapPin className="w-4 h-4 flex-shrink-0" />
+                  <span className="truncate">{order.address}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <DollarSign className="w-4 h-4" />
+                  <DollarSign className="w-4 h-4 flex-shrink-0" />
                   <span>${order.price}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Clock className="w-4 h-4" />
-                  <span>{order.createdAt ? new Date(order.createdAt as Date).toLocaleDateString() : 'N/A'}</span>
+                  <Clock className="w-4 h-4 flex-shrink-0" />
+                  <span className="hidden sm:inline">{order.createdAt ? new Date(order.createdAt as Date).toLocaleDateString() : 'N/A'}</span>
+                  <span className="sm:hidden">{order.createdAt ? new Date(order.createdAt as Date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'N/A'}</span>
                 </div>
               </div>
             </div>
@@ -223,24 +224,26 @@ export default function LiveStreamPage() {
         </div>
 
         {/* 模式切换控制 */}
-        <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-          <div className="flex items-center justify-between">
-            <div className="text-sm">
+        <div className="mb-4 p-3 sm:p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-3">
+            <div className="text-sm w-full lg:w-auto">
               <strong><TranslatedText context="home">Current Mode</TranslatedText>：</strong>
-              <span className={`ml-2 px-2 py-1 rounded text-xs font-semibold flex items-center gap-1 ${
+              <span className={`ml-2 inline-flex items-center px-2 py-1 rounded text-xs font-semibold gap-1 ${
                 displayMode === 'broadcaster' ? 'bg-green-500 text-white' : 'bg-purple-500 text-white'
               }`}>
                 {displayMode === 'broadcaster' ? <Video className="w-3 h-3" /> : <Users className="w-3 h-3" />}
                 <TranslatedText context="home">{displayMode === 'broadcaster' ? 'Broadcaster Mode' : 'Viewer Mode'}</TranslatedText>
               </span>
-              <span className="ml-4 text-gray-600">
-                <TranslatedText context="home">User Role</TranslatedText>: <span className="font-mono">{userRole}</span>
-              </span>
-              <span className="ml-4 text-gray-600">
-                <TranslatedText context="home">Order Status</TranslatedText>: <span className="font-mono">{order?.status}</span>
-              </span>
+              <div className="mt-2 lg:mt-0 lg:inline-block">
+                <span className="block lg:inline lg:ml-4 text-gray-600">
+                  <TranslatedText context="home">User Role</TranslatedText>: <span className="font-mono">{userRole}</span>
+                </span>
+                <span className="block lg:inline lg:ml-4 text-gray-600">
+                  <TranslatedText context="home">Order Status</TranslatedText>: <span className="font-mono">{order?.status}</span>
+                </span>
+              </div>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 w-full lg:w-auto flex-wrap">
               <Button
                 onClick={() => {
                   console.log('[Manual] Switching to broadcaster mode');
@@ -250,10 +253,11 @@ export default function LiveStreamPage() {
                 size="sm"
                 disabled={displayMode === 'broadcaster'}
                 data-testid="switch-to-broadcaster"
-                className={displayMode === 'broadcaster' ? 'bg-green-500 hover:bg-green-600' : ''}
+                className={`flex-1 lg:flex-initial ${displayMode === 'broadcaster' ? 'bg-green-500 hover:bg-green-600' : ''}`}
               >
                 <Video className="w-4 h-4 mr-2" />
-                <TranslatedText context="home">{displayMode === 'broadcaster' ? 'Broadcaster Mode (Current)' : 'Switch to Broadcaster'}</TranslatedText>
+                <span className="hidden sm:inline"><TranslatedText context="home">{displayMode === 'broadcaster' ? 'Broadcaster Mode (Current)' : 'Switch to Broadcaster'}</TranslatedText></span>
+                <span className="sm:hidden"><TranslatedText context="home">{displayMode === 'broadcaster' ? 'Broadcaster' : 'Broadcast'}</TranslatedText></span>
               </Button>
               <Button
                 onClick={() => {
@@ -264,10 +268,11 @@ export default function LiveStreamPage() {
                 size="sm"
                 disabled={displayMode === 'viewer'}
                 data-testid="switch-to-viewer"
-                className={displayMode === 'viewer' ? 'bg-purple-500 hover:bg-purple-600' : ''}
+                className={`flex-1 lg:flex-initial ${displayMode === 'viewer' ? 'bg-purple-500 hover:bg-purple-600' : ''}`}
               >
                 <Users className="w-4 h-4 mr-2" />
-                <TranslatedText context="home">{displayMode === 'viewer' ? 'Viewer Mode (Current)' : 'Switch to Viewer'}</TranslatedText>
+                <span className="hidden sm:inline"><TranslatedText context="home">{displayMode === 'viewer' ? 'Viewer Mode (Current)' : 'Switch to Viewer'}</TranslatedText></span>
+                <span className="sm:hidden"><TranslatedText context="home">{displayMode === 'viewer' ? 'Viewer' : 'View'}</TranslatedText></span>
               </Button>
             </div>
           </div>
@@ -411,8 +416,20 @@ export default function LiveStreamPage() {
                           <TranslatedText>Payment</TranslatedText>
                         </span>
                         <Badge variant={paymentStatus === 'paid' ? 'default' : 'secondary'} 
-                               className={paymentStatus === 'paid' ? 'bg-green-600' : 'bg-orange-500'}>
-                          {paymentStatus === 'paid' ? '✅ Paid' : '⏳ Pending'}
+                               className={paymentStatus === 'paid' ? 'bg-green-600 flex items-center gap-1' : 'bg-orange-500 flex items-center gap-1'}>
+                          {paymentStatus === 'paid' ? (
+                            <>
+                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                              </svg>
+                              Paid
+                            </>
+                          ) : (
+                            <>
+                              <Clock className="w-3 h-3" />
+                              Pending
+                            </>
+                          )}
                         </Badge>
                       </div>
                       

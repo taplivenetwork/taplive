@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { TranslatedText } from '@/components/translated-text';
-import { Users, Volume2, VolumeX, Maximize, Minimize, RefreshCw, Play } from 'lucide-react';
+import { Users, Volume2, VolumeX, Maximize, Minimize, RefreshCw, Play, AlertTriangle, CheckCircle } from 'lucide-react';
 
 // Handle global for simple-peer
 if (typeof global === 'undefined') {
@@ -350,13 +350,13 @@ export function StreamViewer({ streamId, isLive, onViewerCountChange }: StreamVi
       <Card className="w-full aspect-video bg-muted flex items-center justify-center">
         <div className="text-center space-y-4">
           <div className="text-muted-foreground text-lg">
-            <TranslatedText>直播尚未开始</TranslatedText>
+            <TranslatedText context="stream_viewer">Stream has not started yet</TranslatedText>
           </div>
           <Badge variant="secondary">
-            <TranslatedText>等待中</TranslatedText>
+            <TranslatedText context="stream_viewer">Waiting</TranslatedText>
           </Badge>
           <p className="text-sm text-muted-foreground max-w-xs">
-            <TranslatedText>服务提供者还没有开始直播，请耐心等待</TranslatedText>
+            <TranslatedText context="stream_viewer">The service provider has not started the stream yet. Please wait.</TranslatedText>
           </p>
         </div>
       </Card>
@@ -385,7 +385,7 @@ export function StreamViewer({ streamId, isLive, onViewerCountChange }: StreamVi
           <div className="absolute top-4 left-4 flex items-center gap-2">
             <Badge className="bg-red-500 text-white">
               <div className="w-2 h-2 bg-white rounded-full mr-2 animate-pulse" />
-              <TranslatedText>直播中</TranslatedText>
+              <TranslatedText context="stream_viewer">LIVE</TranslatedText>
             </Badge>
             <Badge className="bg-black/70 text-white">
               <Users className="w-3 h-3 mr-1" />
@@ -399,7 +399,7 @@ export function StreamViewer({ streamId, isLive, onViewerCountChange }: StreamVi
             <div className="text-white text-center space-y-4">
               <Play className="w-16 h-16 mx-auto" />
               <div className="text-xl font-semibold">
-                <TranslatedText>点击观看直播</TranslatedText>
+                <TranslatedText context="stream_viewer">Click to watch stream</TranslatedText>
               </div>
               <Button
                 onClick={handleUserClickToPlay}
@@ -407,7 +407,7 @@ export function StreamViewer({ streamId, isLive, onViewerCountChange }: StreamVi
                 className="bg-white text-blue-600 hover:bg-gray-100"
               >
                 <Play className="w-5 h-5 mr-2" />
-                <TranslatedText>立即播放</TranslatedText>
+                <TranslatedText context="stream_viewer">Play Now</TranslatedText>
               </Button>
             </div>
           </div>
@@ -419,7 +419,7 @@ export function StreamViewer({ streamId, isLive, onViewerCountChange }: StreamVi
             <div className="text-white text-center space-y-4">
               {connectionError ? (
                 <>
-                  <div className="text-lg">⚠️</div>
+                  <AlertTriangle className="w-8 h-8 mx-auto text-yellow-400" />
                   <div>{connectionError}</div>
                   <Button 
                     onClick={retryConnection}
@@ -428,18 +428,18 @@ export function StreamViewer({ streamId, isLive, onViewerCountChange }: StreamVi
                     className="text-white border-white hover:bg-white/10"
                   >
                     <RefreshCw className="w-4 h-4 mr-2" />
-                    <TranslatedText>重试连接</TranslatedText>
+                    <TranslatedText context="stream_viewer">Retry Connection</TranslatedText>
                   </Button>
                 </>
               ) : (
                 <>
                   <div className="animate-spin w-8 h-8 border-2 border-white border-t-transparent rounded-full mx-auto" />
                   <div>
-                    <TranslatedText>正在连接直播...</TranslatedText>
+                    <TranslatedText context="stream_viewer">Connecting to stream...</TranslatedText>
                   </div>
                   {retryCount > 0 && (
                     <div className="text-sm opacity-75">
-                      <TranslatedText>{`重试中... (${retryCount}/3)`}</TranslatedText>
+                      <TranslatedText context="stream_viewer">Retrying...</TranslatedText> ({retryCount}/3)
                     </div>
                   )}
                 </>
@@ -448,13 +448,64 @@ export function StreamViewer({ streamId, isLive, onViewerCountChange }: StreamVi
           </div>
         )}
 
-        {/* Debug Info */}
-        <div className="absolute top-16 left-4 bg-black/80 text-white text-xs p-2 rounded space-y-1">
-          <div>WebSocket: {ws ? '✅ Connected' : '❌ Disconnected'}</div>
-          <div>Peer: {peer ? '✅ Created' : '❌ None'}</div>
-          <div>Video srcObject: {videoRef.current?.srcObject ? '✅ Set' : '❌ None'}</div>
-          <div>Video paused: {videoRef.current?.paused ? '⏸️ Yes' : '▶️ No'}</div>
-          <div>Connection: {isConnected ? '✅ Connected' : '⏳ Waiting'}</div>
+        {/* Debug Info - Futuristic Compact Design */}
+        <div className="absolute top-16 left-4 w-48 bg-gradient-to-br from-slate-900/95 via-slate-800/95 to-slate-900/95 backdrop-blur-md rounded-lg border border-slate-700/50 shadow-2xl overflow-hidden">
+          {/* Animated gradient overlay */}
+          <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/5 via-blue-500/5 to-purple-500/5 animate-pulse"></div>
+          
+          {/* Content */}
+          <div className="relative p-3 space-y-2">
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-slate-700/50 pb-1.5 mb-2">
+              <span className="text-xs font-mono text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400 font-semibold">
+                VIEWER STATUS
+              </span>
+              <div className="w-1 h-1 rounded-full bg-cyan-400 animate-pulse"></div>
+            </div>
+
+            {/* Status Items */}
+            <div className="space-y-1.5">
+              {/* WebSocket */}
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-slate-400 font-mono">WebSocket</span>
+                <span className={`font-mono font-bold ${ws ? 'text-green-400' : 'text-red-400'}`}>
+                  {ws ? '● ON' : '○ OFF'}
+                </span>
+              </div>
+
+              {/* Peer Connection */}
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-slate-400 font-mono">Peer</span>
+                <span className={`font-mono font-bold ${peer ? 'text-green-400' : 'text-slate-500'}`}>
+                  {peer ? '● READY' : '○ NULL'}
+                </span>
+              </div>
+
+              {/* Video Source */}
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-slate-400 font-mono">Video Src</span>
+                <span className={`font-mono font-bold ${videoRef.current?.srcObject ? 'text-green-400' : 'text-red-400'}`}>
+                  {videoRef.current?.srcObject ? '● SET' : '○ NONE'}
+                </span>
+              </div>
+
+              {/* Video State */}
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-slate-400 font-mono">Playing</span>
+                <span className={`font-mono font-bold ${!videoRef.current?.paused ? 'text-green-400' : 'text-yellow-400'}`}>
+                  {!videoRef.current?.paused ? '▶ YES' : '⏸ NO'}
+                </span>
+              </div>
+
+              {/* Connection State */}
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-slate-400 font-mono">Stream</span>
+                <span className={`font-mono font-bold ${isConnected ? 'text-green-400' : 'text-yellow-400'}`}>
+                  {isConnected ? '● LIVE' : '○ WAIT'}
+                </span>
+              </div>
+            </div>
+          </div>
         </div>          {/* Controls */}
           <div className="absolute bottom-4 right-4 flex gap-2">
             <Button
@@ -481,8 +532,9 @@ export function StreamViewer({ streamId, isLive, onViewerCountChange }: StreamVi
         {/* Status info */}
         {isConnected && !connectionError && (
           <div className="p-3 bg-green-50 border-t">
-            <p className="text-sm text-green-700 text-center">
-              <TranslatedText>✅ 已连接到直播流</TranslatedText>
+            <p className="text-sm text-green-700 text-center flex items-center justify-center gap-2">
+              <CheckCircle className="w-4 h-4" />
+              <TranslatedText context="stream_viewer">Connected to live stream</TranslatedText>
             </p>
           </div>
         )}
