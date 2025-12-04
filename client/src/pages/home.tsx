@@ -13,8 +13,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { OrderCard } from "@/components/order-card";
 import { LiveStreamCard } from "@/components/live-stream-card";
-import { MultiStreamGrid } from "@/components/multi-stream-grid";
+// import { MultiStreamGrid } from "@/components/multi-stream-grid"; // Disabled for now - future update
 import { CreateOrderModal } from "@/components/create-order-modal";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { DemoControls } from "@/components/demo-controls";
 import { NotificationCard } from "@/components/notification-card";
 import { TranslatedText } from "@/components/translated-text";
@@ -499,18 +500,25 @@ export default function Home() {
                 >
                   🎬 <TranslatedText context="home">Single Stream</TranslatedText> {viewMode === 'cards' && '✓'}
                 </Button>
-                <Button
-                  size="sm"
-                  variant={viewMode === 'grid' ? 'default' : 'outline'}
-                  onClick={() => {
-                    console.log('切换到多屏模式，当前模式:', viewMode);
-                    setViewMode('grid');
-                  }}
-                  className={viewMode === 'grid' ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700' : ''}
-                  data-testid="button-grid-view"
-                >
-                  📺 <TranslatedText context="home">Multi-Grid</TranslatedText> {viewMode === 'grid' && '✓'}
-                </Button>
+                
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled
+                        className="opacity-50 cursor-not-allowed"
+                        data-testid="button-grid-view"
+                      >
+                        📺 <TranslatedText context="home">Multi-Grid</TranslatedText> 🔒
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="text-sm">🚀 Coming Soon! Multi-grid view will be enabled in a future update.</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </div>
             </div>
 
@@ -528,15 +536,15 @@ export default function Home() {
                     </Card>
                   ))}
                 </div>
-              ) : viewMode === 'grid' ? (
-                /* 震撼多屏网格模式 */
-                <MultiStreamGrid 
-                  streams={orders} 
-                  onStreamClick={handleJoinStream} 
-                />
               ) : activeStreams.length > 0 ? (
-                /* 传统卡片模式 */
-                <div className="grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
+                /* Responsive card grid based on number of streams */
+                <div className={`grid gap-4 md:gap-6 ${
+                  activeStreams.length === 1 
+                    ? 'grid-cols-1 max-w-2xl mx-auto' 
+                    : activeStreams.length === 2 
+                    ? 'grid-cols-1 md:grid-cols-2 max-w-5xl mx-auto' 
+                    : 'grid-cols-1 md:grid-cols-2 xl:grid-cols-3'
+                }`}>
                   {activeStreams.map((stream) => (
                     <LiveStreamCard
                       key={stream.id}
@@ -568,28 +576,45 @@ export default function Home() {
             </TabsContent>
 
             <TabsContent value="trending" className="mt-6">
-              <div className="grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
-                {/* Show trending streams */}
-                {filteredOrders.slice(0, 6).map((order) => (
-                  <LiveStreamCard
-                    key={order.id}
-                    stream={order}
-                    onJoin={handleJoinStream}
-                    onCancel={handleCancelOrder}
-                    onDelete={handleDeleteStream}
-                    isMyOrder={false}
-                  />
-                ))}
-              </div>
+              {(() => {
+                const trendingStreams = filteredOrders.slice(0, 6);
+                return (
+                  <div className={`grid gap-4 md:gap-6 ${
+                    trendingStreams.length === 1 
+                      ? 'grid-cols-1 max-w-2xl mx-auto' 
+                      : trendingStreams.length === 2 
+                      ? 'grid-cols-1 md:grid-cols-2 max-w-5xl mx-auto' 
+                      : 'grid-cols-1 md:grid-cols-2 xl:grid-cols-3'
+                  }`}>
+                    {trendingStreams.map((order) => (
+                      <LiveStreamCard
+                        key={order.id}
+                        stream={order}
+                        onJoin={handleJoinStream}
+                        onCancel={handleCancelOrder}
+                        onDelete={handleDeleteStream}
+                        isMyOrder={false}
+                      />
+                    ))}
+                  </div>
+                );
+              })()}
             </TabsContent>
 
             <TabsContent value="nearby" className="mt-6">
               {(() => {
                 const availableOrders = orders.filter(order => order.status === 'open' || order.status === 'pending');
+                const nearbyStreams = availableOrders.slice(0, 6);
                 
-                return availableOrders.length > 0 ? (
-                  <div className="grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
-                    {availableOrders.slice(0, 6).map((order) => (
+                return nearbyStreams.length > 0 ? (
+                  <div className={`grid gap-4 md:gap-6 ${
+                    nearbyStreams.length === 1 
+                      ? 'grid-cols-1 max-w-2xl mx-auto' 
+                      : nearbyStreams.length === 2 
+                      ? 'grid-cols-1 md:grid-cols-2 max-w-5xl mx-auto' 
+                      : 'grid-cols-1 md:grid-cols-2 xl:grid-cols-3'
+                  }`}>
+                    {nearbyStreams.map((order) => (
                       <LiveStreamCard
                         key={order.id}
                         stream={order}

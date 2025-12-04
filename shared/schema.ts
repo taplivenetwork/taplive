@@ -238,12 +238,9 @@ export const insertPaymentSchema = createInsertSchema(payments).omit({
 
 export const insertPayoutSchema = createInsertSchema(payouts).omit({
   id: true,
-  status: true,
-  externalPayoutId: true,
   externalTransactionHash: true,
   payoutGatewayResponse: true,
   failureReason: true,
-  processedAt: true,
   createdAt: true,
   updatedAt: true,
 });

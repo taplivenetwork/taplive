@@ -526,6 +526,10 @@ export class MemStorage implements IStorage {
       totalEarnings: "0.00",
       walletAddress: null,
       preferredPaymentMethod: null,
+      stripeConnectedAccountId: null,
+      stripeAccountStatus: null,
+      stripeChargesEnabled: false,
+      stripeDetailsSubmitted: false,
       // Preferences
       timezone: 'America/New_York',
       notifyNewOrders: true,
