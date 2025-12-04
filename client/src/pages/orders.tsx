@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Search, Filter, Calendar, TrendingUp, Plus, Play, CreditCard, Star, CheckCircle, Clock, Video, XCircle } from "lucide-react";
+import { Search, Filter, Calendar, TrendingUp, Plus, Play, CreditCard, Star, CheckCircle, Clock, Video, XCircle, Radio, Timer, CheckCheck, Eye } from "lucide-react";
 import type { Order } from "@shared/schema";
 
 export default function Orders() {
@@ -224,15 +224,27 @@ export default function Orders() {
               <div className="flex justify-between items-start gap-2">
                 <div className="flex-1 min-w-0">
                   <h3 className="font-bold text-lg break-words">{order.title}</h3>
-                  <Badge className="bg-green-500 mt-1">🔴 Live Now</Badge>
+                  <Badge className="bg-green-500 mt-1">
+                    <Radio className="w-3 h-3 mr-1 animate-pulse" />
+                    Live Now
+                  </Badge>
                 </div>
                 <span className="text-xl font-bold text-green-600 flex-shrink-0">${order.price}</span>
               </div>
               <p className="text-sm text-muted-foreground line-clamp-2">{order.description}</p>
-              <div className="text-xs font-medium">
-                Payment: <span className={order.isPaid ? "text-green-600" : "text-orange-600"}>
-                  {order.isPaid ? "✅ Confirmed" : "⏳ Pending"}
-                </span>
+              <div className="text-xs font-medium flex items-center gap-1">
+                Payment:
+                {order.isPaid ? (
+                  <span className="text-green-600 flex items-center gap-1">
+                    <CheckCircle className="w-3 h-3" />
+                    Confirmed
+                  </span>
+                ) : (
+                  <span className="text-orange-600 flex items-center gap-1">
+                    <Clock className="w-3 h-3" />
+                    Pending
+                  </span>
+                )}
               </div>
               <Button 
                 onClick={() => window.location.href = `/stream/${order.id}?mode=broadcaster&payment=${order.isPaid ? 'paid' : 'pending'}`}
@@ -254,7 +266,17 @@ export default function Orders() {
                 <div className="flex-1 min-w-0">
                   <h3 className="font-bold text-lg break-words">{order.title}</h3>
                   <Badge className={dateArrived ? "bg-orange-500" : "bg-blue-500"}>
-                    {dateArrived ? "⏰ Ready to Go Live" : "📅 Scheduled"}
+                    {dateArrived ? (
+                      <>
+                        <Timer className="w-3 h-3 mr-1" />
+                        Ready to Go Live
+                      </>
+                    ) : (
+                      <>
+                        <Calendar className="w-3 h-3 mr-1" />
+                        Scheduled
+                      </>
+                    )}
                   </Badge>
                 </div>
                 <span className="text-xl font-bold flex-shrink-0">${order.price}</span>
@@ -264,10 +286,19 @@ export default function Orders() {
                 <Clock className="w-3 h-3 inline mr-1" />
                 {order.scheduledAt ? new Date(order.scheduledAt).toLocaleString() : 'Not scheduled'}
               </div>
-              <div className="text-xs font-medium">
-                Payment: <span className={order.isPaid ? "text-green-600" : "text-orange-600"}>
-                  {order.isPaid ? "✅ Confirmed" : "⏳ Pending"}
-                </span>
+              <div className="text-xs font-medium flex items-center gap-1">
+                Payment:
+                {order.isPaid ? (
+                  <span className="text-green-600 flex items-center gap-1">
+                    <CheckCircle className="w-3 h-3" />
+                    Confirmed
+                  </span>
+                ) : (
+                  <span className="text-orange-600 flex items-center gap-1">
+                    <Clock className="w-3 h-3" />
+                    Pending
+                  </span>
+                )}
               </div>
               {dateArrived ? (
                 <Button 
@@ -299,7 +330,10 @@ export default function Orders() {
               <div className="flex justify-between items-start gap-2">
                 <div className="flex-1 min-w-0">
                   <h3 className="font-bold text-lg break-words">{order.title}</h3>
-                  <Badge className="bg-gray-500">✅ Completed</Badge>
+                  <Badge className="bg-gray-500">
+                    <CheckCheck className="w-3 h-3 mr-1" />
+                    Completed
+                  </Badge>
                 </div>
                 <span className="text-xl font-bold text-green-600 flex-shrink-0">${order.price}</span>
               </div>
@@ -325,7 +359,10 @@ export default function Orders() {
               <div className="flex justify-between items-start gap-2">
                 <div className="flex-1 min-w-0">
                   <h3 className="font-bold text-lg break-words">{order.title}</h3>
-                  <Badge className="bg-orange-500">⏳ Awaiting Provider</Badge>
+                  <Badge className="bg-orange-500">
+                    <Clock className="w-3 h-3 mr-1" />
+                    Awaiting Provider
+                  </Badge>
                 </div>
                 <span className="text-xl font-bold flex-shrink-0">${order.price}</span>
               </div>
@@ -347,7 +384,10 @@ export default function Orders() {
               <div className="flex justify-between items-start gap-2">
                 <div className="flex-1 min-w-0">
                   <h3 className="font-bold text-lg break-words">{order.title}</h3>
-                  <Badge className="bg-blue-500">✓ Accepted</Badge>
+                  <Badge className="bg-blue-500">
+                    <CheckCircle className="w-3 h-3 mr-1" />
+                    Accepted
+                  </Badge>
                 </div>
                 <span className="text-xl font-bold flex-shrink-0">${order.price}</span>
               </div>
@@ -375,7 +415,10 @@ export default function Orders() {
               <div className="flex justify-between items-start gap-2">
                 <div className="flex-1 min-w-0">
                   <h3 className="font-bold text-lg break-words">{order.title}</h3>
-                  <Badge className="bg-green-500 animate-pulse">🔴 Live Now</Badge>
+                  <Badge className="bg-green-500 animate-pulse">
+                    <Radio className="w-3 h-3 mr-1" />
+                    Live Now
+                  </Badge>
                 </div>
                 <span className="text-xl font-bold flex-shrink-0">${order.price}</span>
               </div>
@@ -399,7 +442,10 @@ export default function Orders() {
               <div className="flex justify-between items-start gap-2">
                 <div className="flex-1 min-w-0">
                   <h3 className="font-bold text-lg break-words">{order.title}</h3>
-                  <Badge className="bg-gray-500">✅ Completed</Badge>
+                  <Badge className="bg-gray-500">
+                    <CheckCheck className="w-3 h-3 mr-1" />
+                    Completed
+                  </Badge>
                 </div>
                 <span className="text-xl font-bold flex-shrink-0">${order.price}</span>
               </div>
@@ -424,9 +470,12 @@ export default function Orders() {
           <div className="space-y-3">
             <div className="flex justify-between items-start gap-2">
               <div className="flex-1 min-w-0">
-                <h3 className="font-bold text-lg text-gray-700 break-words">{order.title}</h3>
-                <Badge className="bg-gray-400 text-white">✕ Cancelled</Badge>
-              </div>
+                  <h3 className="font-bold text-lg text-gray-700 break-words">{order.title}</h3>
+                  <Badge className="bg-gray-400 text-white">
+                    <XCircle className="w-3 h-3 mr-1" />
+                    Cancelled
+                  </Badge>
+                </div>
               <span className="text-xl font-bold text-gray-500 flex-shrink-0">${order.price}</span>
             </div>
             <p className="text-sm text-gray-600 line-clamp-2">{order.description}</p>
