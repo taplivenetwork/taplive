@@ -8,7 +8,7 @@ TapLive aims to connect people to real-world actions through on-demand, real-tim
 - **Open-source** and **compliant** with no token or assetization
 
 
-# 🛣 TapLive Roadmap — Phase 1–2 (Public)
+# TapLive Roadmap — Phase 1–2 (Public)
 
 **Last updated:** 2025-10-26
 
