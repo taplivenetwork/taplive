@@ -1147,7 +1147,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ========== RATING ROUTES ==========
 
   // Create a rating
-  app.post("/api/ratings", async (req, res) => {
+  app.post("/api/ratings", authenticateUser, async (req, res) => {
     try {
       const validation = ratingValidationSchema.safeParse(req.body);
       
@@ -1160,6 +1160,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const ratingData = validation.data;
+      const reviewerId = req.auth?.userId;
+
+      if (!reviewerId) {
+        return res.status(401).json({
+          success: false,
+          message: "Authentication required"
+        });
+      }
       
       // Check if order exists and is completed
       const order = await storage.getOrderById(ratingData.orderId);
@@ -1180,7 +1188,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Check if user already rated this order
       const existingRatings = await storage.getRatingsByOrder(ratingData.orderId);
       const alreadyRated = existingRatings.some(rating => 
-        rating.reviewerId === req.body.reviewerId && 
+        rating.reviewerId === reviewerId && 
         rating.reviewType === ratingData.reviewType
       );
 
@@ -1193,8 +1201,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const rating = await storage.createRating({
         ...ratingData,
-        reviewerId: req.body.reviewerId, // This would come from auth in real app
+        reviewerId: reviewerId,
       });
+
+      // Update provider's rating statistics
+      await storage.calculateUserStats(ratingData.revieweeId);
 
       res.status(201).json({
         success: true,
@@ -1971,80 +1982,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Process crypto payment
-  app.post("/api/payments/:id/crypto", async (req, res) => {
-    try {
-      const { id: paymentId } = req.params;
-      const validation = cryptoPaymentSchema.safeParse(req.body);
 
-      if (!validation.success) {
-        return res.status(400).json({
-          success: false,
-          message: "Invalid crypto payment data",
-          errors: validation.error.errors
-        });
-      }
-
-      const cryptoData = validation.data;
-      
-      // Get payment record
-      const payment = await storage.getPaymentById(paymentId);
-      if (!payment) {
-        return res.status(404).json({
-          success: false,
-          message: "Payment not found"
-        });
-      }
-
-      // Update payment with crypto transaction details
-      const updatedPayment = await storage.updatePayment(paymentId, {
-        status: 'processing',
-        externalTransactionHash: cryptoData.transactionHash,
-        paymentGatewayResponse: JSON.stringify({
-          senderWallet: cryptoData.senderWallet,
-          transactionHash: cryptoData.transactionHash,
-          submittedAt: new Date()
-        }),
-      });
-
-      // In a real app, here we would verify the transaction on blockchain
-      // For MVP, we'll simulate verification after a short delay
-      setTimeout(async () => {
-        try {
-          // Simulate blockchain verification success
-          await storage.updatePayment(paymentId, {
-            status: 'completed',
-          });
-          
-          // Process order payment and create payout
-          await storage.processOrderPayment(payment.orderId, paymentId);
-          const order = await storage.getOrderById(payment.orderId);
-          
-          if (order && order.providerId) {
-            await storage.calculateAndCreatePayout(payment.orderId, paymentId);
-          }
-        } catch (error) {
-          console.error('Error processing crypto payment:', error);
-          await storage.updatePayment(paymentId, {
-            status: 'failed',
-            failureReason: 'Blockchain verification failed',
-          });
-        }
-      }, 2000); // 2 second delay to simulate verification
-
-      res.json({
-        success: true,
-        data: updatedPayment,
-        message: "Crypto payment submitted for verification"
-      });
-    } catch (error) {
-      console.error('Error processing crypto payment:', error);
-      res.status(500).json({
-        success: false,
-        message: "Failed to process crypto payment"
-      });
-    }
-  });
 
   // Complete fiat payment (webhook simulation)
   app.post("/api/payments/:id/complete", async (req, res) => {
@@ -3329,7 +3267,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                           capturedVia: 'broadcast-end'
                         }
                       });
-                      
+                      console.log("this is captured payment response:", capturedPayment);
                       console.log(`✅ Payment captured on broadcast end: $${commission.providerEarnings.toFixed(2)}`);
                       
                       // Transfer funds to provider's Stripe Connect account
@@ -3370,8 +3308,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
                           });
                           
                           // Update provider's total earnings
-                          const provider = await storage.getUser(order.providerId);
-                          const currentEarnings = parseFloat(provider?.totalEarnings || '0');
+                          const providerUser = await storage.getUser(order.providerId);
+                          const currentEarnings = parseFloat(providerUser?.totalEarnings || '0');
                           const newTotalEarnings = currentEarnings + commission.providerEarnings;
                           await storage.updateUser(order.providerId, {
                             totalEarnings: newTotalEarnings.toFixed(2)

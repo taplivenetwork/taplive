@@ -8,13 +8,16 @@ import { LiveStreamCard } from "@/components/live-stream-card";
 import { TranslatedText } from "@/components/translated-text";
 import { useTranslation } from "@/hooks/use-translation";
 import translationsData from "@/lib/translations.json";
-import { api } from "@/lib/api";
+import { api, authFetch } from "@/lib/api";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { Search, Filter, Calendar, TrendingUp, Plus, Play, CreditCard, Star, CheckCircle, Clock, Video, XCircle, Radio, Timer, CheckCheck, Eye } from "lucide-react";
 import type { Order } from "@shared/schema";
 
@@ -25,6 +28,14 @@ export default function Orders() {
   const [searchFilter, setSearchFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [sortBy, setSortBy] = useState("recent");
+  
+  // Rating modal states
+  const [ratingModalOpen, setRatingModalOpen] = useState(false);
+  const [viewRatingsModalOpen, setViewRatingsModalOpen] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [rating, setRating] = useState(0);
+  const [comment, setComment] = useState("");
+  const [hoveredStar, setHoveredStar] = useState(0);
   
   const CURRENT_USER_ID = user?.id || "guest";
   
@@ -158,12 +169,87 @@ export default function Orders() {
     window.location.href = `/payment/${orderId}`;
   };
 
+  // Fetch ratings for an order
+  const { data: orderRatings, refetch: refetchRatings } = useQuery({
+    queryKey: [`/api/orders/${selectedOrder?.id}/ratings`],
+    queryFn: async () => {
+      if (!selectedOrder?.id) return null;
+      const response = await apiRequest('GET', `/api/orders/${selectedOrder.id}/ratings`);
+      return response.json();
+    },
+    enabled: !!selectedOrder?.id && viewRatingsModalOpen,
+  });
+
+  // Submit rating mutation
+  const submitRatingMutation = useMutation({
+    mutationFn: async (ratingData: any) => {
+      const response = await authFetch('/api/ratings', {
+        method: 'POST',
+        body: JSON.stringify(ratingData),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to submit rating');
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Rating Submitted",
+        description: "Thank you for your feedback!",
+      });
+      setRatingModalOpen(false);
+      setRating(0);
+      setComment("");
+      setSelectedOrder(null);
+      queryClient.invalidateQueries({ queryKey: ['/api/orders'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Rating Failed",
+        description: error.message || "Failed to submit rating. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Handle rating provider for customers
-  const handleRateProvider = (_orderId: string, _providerId: string) => {
-    // TODO: Open rating modal
-    toast({
-      title: "Rate Provider",
-      description: "Rating feature coming soon...",
+  const handleRateProvider = (orderId: string, providerId: string) => {
+    const order = orders.find((o: Order) => o.id === orderId);
+    if (order) {
+      setSelectedOrder(order);
+      setRatingModalOpen(true);
+    }
+  };
+
+  // Handle view ratings for providers
+  const handleViewRatings = (orderId: string) => {
+    const order = orders.find((o: Order) => o.id === orderId);
+    if (order) {
+      setSelectedOrder(order);
+      setViewRatingsModalOpen(true);
+    }
+  };
+
+  // Submit rating
+  const handleSubmitRating = () => {
+    if (!selectedOrder || rating === 0) {
+      toast({
+        title: "Rating Required",
+        description: "Please select a star rating before submitting.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    submitRatingMutation.mutate({
+      orderId: selectedOrder.id,
+      revieweeId: selectedOrder.providerId,
+      reviewType: 'creator_to_provider',
+      rating: rating,
+      comment: comment || undefined,
     });
   };
 
@@ -341,9 +427,9 @@ export default function Orders() {
               <Button 
                 variant="outline"
                 className="w-full"
-                onClick={() => toast({ title: "Reviews", description: "View reviews feature coming soon..." })}
+                onClick={() => handleViewRatings(order.id)}
               >
-                <Star className="w-4 h-4 mr-2" />
+                <Eye className="w-4 h-4 mr-2" />
                 View Reviews
               </Button>
             </div>
@@ -770,6 +856,201 @@ export default function Orders() {
           )}
         </Tabs>
       </div>
+
+      {/* Customer Rating Modal */}
+      <Dialog open={ratingModalOpen} onOpenChange={setRatingModalOpen}>
+        <DialogContent className="sm:max-w-[500px] bg-white text-slate-900">
+          <DialogHeader className="bg-white">
+            <DialogTitle className="text-slate-900">Rate Your Experience</DialogTitle>
+            <DialogDescription className="text-slate-600">
+              How was your live stream experience with this provider?
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedOrder && (
+            <div className="space-y-6 py-4 bg-white">
+              {/* Order Info */}
+              <div className="p-4 bg-slate-100 rounded-lg border border-slate-200">
+                <h4 className="font-semibold text-sm mb-1 text-slate-900">{selectedOrder.title}</h4>
+                <p className="text-xs text-slate-600">${selectedOrder.price} • {selectedOrder.duration} minutes</p>
+              </div>
+
+              {/* Star Rating */}
+              <div className="space-y-2 bg-white">
+                <Label className="text-slate-900">Your Rating</Label>
+                <div className="flex gap-2 justify-center py-2 bg-white">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      type="button"
+                      className="focus:outline-none transition-transform hover:scale-110"
+                      onMouseEnter={() => setHoveredStar(star)}
+                      onMouseLeave={() => setHoveredStar(0)}
+                      onClick={() => setRating(star)}
+                    >
+                      <Star
+                        className={`w-10 h-10 ${
+                          star <= (hoveredStar || rating)
+                            ? 'fill-yellow-400 text-yellow-400'
+                            : 'text-gray-300'
+                        }`}
+                      />
+                    </button>
+                  ))}
+                </div>
+                {rating > 0 && (
+                  <p className="text-center text-sm text-slate-600">
+                    {rating === 1 && "Poor"}
+                    {rating === 2 && "Fair"}
+                    {rating === 3 && "Good"}
+                    {rating === 4 && "Very Good"}
+                    {rating === 5 && "Excellent"}
+                  </p>
+                )}
+              </div>
+
+              {/* Comment */}
+              <div className="space-y-2 bg-white">
+                <Label htmlFor="comment" className="text-slate-900">Additional Comments (Optional)</Label>
+                <Textarea
+                  id="comment"
+                  placeholder="Share your thoughts about the stream quality, professionalism, etc..."
+                  value={comment}
+                  onChange={(e) => setComment(e.target.value)}
+                  rows={4}
+                  className="resize-none bg-white text-slate-900 border-slate-300"
+                />
+              </div>
+            </div>
+          )}
+
+          <DialogFooter className="bg-white">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setRatingModalOpen(false);
+                setRating(0);
+                setComment("");
+                setSelectedOrder(null);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSubmitRating}
+              disabled={rating === 0 || submitRatingMutation.isPending}
+            >
+              {submitRatingMutation.isPending ? "Submitting..." : "Submit Rating"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Provider View Ratings Modal */}
+      <Dialog open={viewRatingsModalOpen} onOpenChange={setViewRatingsModalOpen}>
+        <DialogContent className="sm:max-w-[600px] bg-white">
+          <DialogHeader>
+            <DialogTitle className="text-slate-900">Customer Reviews</DialogTitle>
+            <DialogDescription className="text-slate-600">
+              See what customers are saying about this stream
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedOrder && (
+            <div className="space-y-4 py-4">
+              {/* Order Info */}
+              <div className="p-4 bg-slate-100 rounded-lg border border-slate-200">
+                <h4 className="font-semibold text-sm mb-1 text-slate-900">{selectedOrder.title}</h4>
+                <p className="text-xs text-slate-600">
+                  ${selectedOrder.price} • {new Date(selectedOrder.scheduledAt).toLocaleDateString()}
+                </p>
+              </div>
+
+              {/* Ratings List */}
+              <div className="space-y-3 max-h-[400px] overflow-y-auto">
+                {orderRatings?.data?.length > 0 ? (
+                  orderRatings.data.map((rating: any) => (
+                    <Card key={rating.id} className="p-4 bg-white border-2 border-slate-300 shadow-md">
+                      <div className="space-y-2">
+                        {/* Customer Info & Rating */}
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <p className="font-semibold text-sm text-slate-900">
+                              {rating.reviewerName || 'Customer'}
+                            </p>
+                            <p className="text-xs text-slate-600">
+                              {new Date(rating.createdAt).toLocaleDateString()}
+                            </p>
+                          </div>
+                          <div className="flex gap-0.5">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <Star
+                                key={star}
+                                className={`w-4 h-4 ${
+                                  star <= rating.rating
+                                    ? 'fill-yellow-400 text-yellow-400'
+                                    : 'text-gray-300'
+                                }`}
+                              />
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Comment */}
+                        {rating.comment && (
+                          <p className="text-sm text-slate-800 mt-2 p-3 bg-slate-100 rounded border border-slate-200">
+                            "{rating.comment}"
+                          </p>
+                        )}
+
+                        {/* Additional Ratings */}
+                        {(rating.qualityRating || rating.punctualityRating || rating.communicationRating) && (
+                          <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-slate-200">
+                            {rating.qualityRating && (
+                              <div className="text-center">
+                                <p className="text-xs text-slate-600">Quality</p>
+                                <p className="text-sm font-semibold text-slate-900">{rating.qualityRating}/5</p>
+                              </div>
+                            )}
+                            {rating.punctualityRating && (
+                              <div className="text-center">
+                                <p className="text-xs text-slate-600">Punctuality</p>
+                                <p className="text-sm font-semibold text-slate-900">{rating.punctualityRating}/5</p>
+                              </div>
+                            )}
+                            {rating.communicationRating && (
+                              <div className="text-center">
+                                <p className="text-xs text-slate-600">Communication</p>
+                                <p className="text-sm font-semibold text-slate-900">{rating.communicationRating}/5</p>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </Card>
+                  ))
+                ) : (
+                  <div className="text-center py-8 bg-white">
+                    <Star className="w-12 h-12 mx-auto text-slate-400 mb-2" />
+                    <p className="text-sm text-slate-600">No reviews yet</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          <DialogFooter className="bg-white">
+            <Button
+              onClick={() => {
+                setViewRatingsModalOpen(false);
+                setSelectedOrder(null);
+              }}
+            >
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

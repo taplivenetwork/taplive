@@ -1218,7 +1218,7 @@ export class DatabaseStorage implements IStorage {
     
     // Simple trust score calculation (can be enhanced with more factors)
     const trustScore = Math.min(5.0, avgRating * (1 + Math.log10(userRatings.length + 1) / 10));
-    
+    console.log("updating user stastus for user", userId, { avgRating, completedOrders, trustScore });
     // Update user stats
     await this.updateUser(userId, {
       rating: avgRating.toFixed(2),

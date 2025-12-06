@@ -103,7 +103,7 @@ export function StreamViewer({ streamId, isLive, onViewerCountChange }: StreamVi
             setIsConnected(true);
             break;
           case 'broadcaster-ready-signal':
-            console.log('✅ Broadcaster is ready');
+            console.log('✅ Broadcaster is ready');//change this later to some interesting UI Update
             break;
           case 'user-joined':
             setViewerCount(prev => Math.max(1, prev + 1));
