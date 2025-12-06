@@ -1,6 +1,9 @@
 import { queryClient } from "./queryClient";
 import type { Order, InsertOrder } from "@shared/schema";
 
+// API base URL - uses environment variable in production, empty string in development (uses proxy)
+const API_BASE_URL = import.meta.env.VITE_API_URL || '';
+
 export interface ApiResponse<T> {
   success: boolean;
   data: T;
@@ -28,6 +31,9 @@ export const setAuthTokenGetter = (getter: () => Promise<string | null>) => {
 export const authFetch = async (url: string, options: RequestInit = {}): Promise<Response> => {
   const token = getAuthToken ? await getAuthToken() : null;
   
+  // Prepend API base URL if url starts with /api
+  const fullUrl = url.startsWith('/api') ? `${API_BASE_URL}${url}` : url;
+  
   const headers = new Headers(options.headers);
   if (token) {
     headers.set('Authorization', `Bearer ${token}`);
@@ -36,7 +42,7 @@ export const authFetch = async (url: string, options: RequestInit = {}): Promise
     headers.set('Content-Type', 'application/json');
   }
   
-  return fetch(url, {
+  return fetch(fullUrl, {
     ...options,
     headers,
     credentials: 'include',
@@ -114,7 +120,7 @@ export const api = {
 
   health: {
     check: async () => {
-      const response = await fetch('/healthz');
+      const response = await fetch(`${API_BASE_URL}/healthz`);
       if (!response.ok) {
         throw new Error('Health check failed');
       }
