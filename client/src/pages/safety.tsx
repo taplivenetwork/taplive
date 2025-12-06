@@ -8,31 +8,32 @@ import { Shield, Users, AlertTriangle, MapPin, Eye, MessageCircle } from "lucide
 
 export function SafetyPage() {
   return (
-    <div className="flex-1 p-6 space-y-6">
+    <div className="flex-1 p-4 sm:p-6">
+      <div className="max-w-7xl mx-auto">
       {/* Header */}
-      <div className="space-y-2">
+      <div className="space-y-2 mb-6">
         <div className="flex items-center gap-2">
-          <Shield className="w-6 h-6 text-blue-600" />
-          <h1 className="text-3xl font-bold">
+          <Shield className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
+          <h1 className="text-2xl sm:text-3xl font-bold break-words">
             <TranslatedText context="safety">安全与风控系统</TranslatedText>
           </h1>
         </div>
-        <p className="text-muted-foreground">
+        <p className="text-sm sm:text-base text-muted-foreground break-words">
           <TranslatedText context="safety">全面的地理安全、天气监控、内容审核和AA拼团功能</TranslatedText>
         </p>
       </div>
 
       {/* Safety Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <Card className="bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-700">
-          <CardContent className="p-4">
+          <CardContent className="p-3 sm:p-4">
             <div className="flex items-center gap-2">
-              <MapPin className="w-5 h-5 text-green-600" />
-              <div>
-                <div className="font-medium text-green-700 dark:text-green-400">
+              <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 flex-shrink-0" />
+              <div className="min-w-0">
+                <div className="font-medium text-sm sm:text-base text-green-700 dark:text-green-400 truncate">
                   <TranslatedText context="safety">地理风控</TranslatedText>
                 </div>
-                <div className="text-sm text-green-600 dark:text-green-300">
+                <div className="text-xs sm:text-sm text-green-600 dark:text-green-300 truncate">
                   <TranslatedText context="safety">军事基地检测</TranslatedText>
                 </div>
               </div>
@@ -41,14 +42,14 @@ export function SafetyPage() {
         </Card>
 
         <Card className="bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-700">
-          <CardContent className="p-4">
+          <CardContent className="p-3 sm:p-4">
             <div className="flex items-center gap-2">
-              <AlertTriangle className="w-5 h-5 text-blue-600" />
-              <div>
-                <div className="font-medium text-blue-700 dark:text-blue-400">
+              <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 flex-shrink-0" />
+              <div className="min-w-0">
+                <div className="font-medium text-sm sm:text-base text-blue-700 dark:text-blue-400 truncate">
                   <TranslatedText context="safety">天气预警</TranslatedText>
                 </div>
-                <div className="text-sm text-blue-600 dark:text-blue-300">
+                <div className="text-xs sm:text-sm text-blue-600 dark:text-blue-300 truncate">
                   <TranslatedText context="safety">自然灾害预防</TranslatedText>
                 </div>
               </div>
@@ -57,14 +58,14 @@ export function SafetyPage() {
         </Card>
 
         <Card className="bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-700">
-          <CardContent className="p-4">
+          <CardContent className="p-3 sm:p-4">
             <div className="flex items-center gap-2">
-              <Eye className="w-5 h-5 text-orange-600" />
-              <div>
-                <div className="font-medium text-orange-700 dark:text-orange-400">
+              <Eye className="w-4 h-4 sm:w-5 sm:h-5 text-orange-600 flex-shrink-0" />
+              <div className="min-w-0">
+                <div className="font-medium text-sm sm:text-base text-orange-700 dark:text-orange-400 truncate">
                   <TranslatedText context="safety">内容审核</TranslatedText>
                 </div>
-                <div className="text-sm text-orange-600 dark:text-orange-300">
+                <div className="text-xs sm:text-sm text-orange-600 dark:text-orange-300 truncate">
                   <TranslatedText context="safety">关键词检测</TranslatedText>
                 </div>
               </div>
@@ -73,14 +74,14 @@ export function SafetyPage() {
         </Card>
 
         <Card className="bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-700">
-          <CardContent className="p-4">
+          <CardContent className="p-3 sm:p-4">
             <div className="flex items-center gap-2">
-              <MessageCircle className="w-5 h-5 text-purple-600" />
-              <div>
-                <div className="font-medium text-purple-700 dark:text-purple-400">
+              <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600 flex-shrink-0" />
+              <div className="min-w-0">
+                <div className="font-medium text-sm sm:text-base text-purple-700 dark:text-purple-400 truncate">
                   <TranslatedText context="safety">语音监控</TranslatedText>
                 </div>
-                <div className="text-sm text-purple-600 dark:text-purple-300">
+                <div className="text-xs sm:text-sm text-purple-600 dark:text-purple-300 truncate">
                   <TranslatedText context="safety">实时语音检测</TranslatedText>
                 </div>
               </div>
@@ -90,15 +91,15 @@ export function SafetyPage() {
       </div>
 
       {/* Main Content Tabs */}
-      <Tabs defaultValue="geo-safety" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="geo-safety" className="flex items-center gap-2">
-            <Shield className="w-4 h-4" />
-            <TranslatedText context="safety">地理安全</TranslatedText>
+      <Tabs defaultValue="geo-safety" className="mt-6">
+        <TabsList className="grid w-full grid-cols-2 h-auto">
+          <TabsTrigger value="geo-safety" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-4">
+            <Shield className="w-3 h-3 sm:w-4 sm:h-4" />
+            <span className="truncate"><TranslatedText context="safety">地理安全</TranslatedText></span>
           </TabsTrigger>
-          <TabsTrigger value="aa-group" className="flex items-center gap-2">
-            <Users className="w-4 h-4" />
-            <TranslatedText context="safety">AA拼团</TranslatedText>
+          <TabsTrigger value="aa-group" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-4">
+            <Users className="w-3 h-3 sm:w-4 sm:h-4" />
+            <span className="truncate"><TranslatedText context="safety">AA拼团</TranslatedText></span>
           </TabsTrigger>
         </TabsList>
 
@@ -341,6 +342,7 @@ export function SafetyPage() {
           </div>
         </TabsContent>
       </Tabs>
+      </div>
     </div>
   );
 }

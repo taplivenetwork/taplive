@@ -305,7 +305,7 @@ export default function Orders() {
       // Provider view
       if (order.status === 'live') {
         return (
-          <Card key={order.id} className="p-4 border-green-500 border-2 w-full max-w-full overflow-hidden">
+          <Card key={order.id} className="p-4 border-green-500 border-2 ">
             <div className="space-y-3">
               <div className="flex justify-between items-start gap-2">
                 <div className="flex-1 min-w-0">
@@ -346,7 +346,7 @@ export default function Orders() {
       
       if (order.status === 'accepted') {
         return (
-          <Card key={order.id} className="p-4 border-blue-500 border-2 w-full max-w-full overflow-hidden">
+          <Card key={order.id} className="p-4 border-blue-500 border-2 ">
             <div className="space-y-3">
               <div className="flex justify-between items-start gap-2">
                 <div className="flex-1 min-w-0">
@@ -411,7 +411,7 @@ export default function Orders() {
       
       if (order.status === 'done') {
         return (
-          <Card key={order.id} className="p-4 w-full max-w-full overflow-hidden">
+          <Card key={order.id} className="p-4 ">
             <div className="space-y-3">
               <div className="flex justify-between items-start gap-2">
                 <div className="flex-1 min-w-0">
@@ -440,7 +440,7 @@ export default function Orders() {
       // Customer view
       if (order.status === 'pending') {
         return (
-          <Card key={order.id} className="p-4 border-orange-500 border-2 w-full max-w-full overflow-hidden">
+          <Card key={order.id} className="p-4 border-orange-500 border-2 ">
             <div className="space-y-3">
               <div className="flex justify-between items-start gap-2">
                 <div className="flex-1 min-w-0">
@@ -465,7 +465,7 @@ export default function Orders() {
       
       if (order.status === 'accepted') {
         return (
-          <Card key={order.id} className="p-4 border-blue-500 border-2 w-full max-w-full overflow-hidden">
+          <Card key={order.id} className="p-4 border-blue-500 border-2 ">
             <div className="space-y-3">
               <div className="flex justify-between items-start gap-2">
                 <div className="flex-1 min-w-0">
@@ -496,7 +496,7 @@ export default function Orders() {
       
       if (order.status === 'live') {
         return (
-          <Card key={order.id} className="p-4 border-green-500 border-2 w-full max-w-full overflow-hidden">
+          <Card key={order.id} className="p-4 border-green-500 border-2 ">
             <div className="space-y-3">
               <div className="flex justify-between items-start gap-2">
                 <div className="flex-1 min-w-0">
@@ -523,7 +523,7 @@ export default function Orders() {
       
       if (order.status === 'done') {
         return (
-          <Card key={order.id} className="p-4 w-full max-w-full overflow-hidden">
+          <Card key={order.id} className="p-4 ">
             <div className="space-y-3">
               <div className="flex justify-between items-start gap-2">
                 <div className="flex-1 min-w-0">
@@ -552,7 +552,7 @@ export default function Orders() {
     // Cancelled orders (same for both roles)
     if (order.status === 'cancelled') {
       return (
-        <Card key={order.id} className="p-4 bg-gray-50 border-gray-300 w-full max-w-full overflow-hidden">
+        <Card key={order.id} className="p-4 bg-gray-50 border-gray-300 ">
           <div className="space-y-3">
             <div className="flex justify-between items-start gap-2">
               <div className="flex-1 min-w-0">
@@ -605,7 +605,7 @@ export default function Orders() {
 
     if (orderList.length === 0) {
       return (
-        <div className="text-center py-8 sm:py-12 px-4 w-full max-w-full overflow-hidden">
+        <div className="text-center py-8 sm:py-12 px-4 ">
           <div className="w-14 h-14 sm:w-16 sm:h-16 mx-auto mb-4 bg-muted rounded-full flex items-center justify-center">
             <Calendar className="w-7 h-7 sm:w-8 sm:h-8 text-muted-foreground" />
           </div>
@@ -632,10 +632,10 @@ export default function Orders() {
   };
 
   return (
-    <div className="flex-1 flex flex-col pb-24 lg:pb-0 overflow-x-hidden">
+    <div className="flex-1">
       {/* Enhanced Header with Stats */}
-      <header className="p-4 lg:p-6 border-b border-border bg-background/95 backdrop-blur w-full max-w-full overflow-hidden">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between w-full max-w-full">
+      <header className="p-4 lg:p-6 border-b border-border bg-background/95 backdrop-blur">
+        <div className="max-w-7xl mx-auto flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex-1 min-w-0">
             <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground mb-2 break-words">
               <TranslatedText context="orders">
@@ -692,9 +692,9 @@ export default function Orders() {
       </header>
 
       {/* Filters and Search */}
-      <div className="p-4 lg:p-6 border-b border-border bg-card/50 w-full max-w-full overflow-hidden">
-        <div className="flex flex-col gap-3 w-full max-w-full">
-          <div className="flex gap-2 sm:gap-3 w-full max-w-full">
+      <div className="p-4 lg:p-6 border-b border-border bg-card/50">
+        <div className="max-w-7xl mx-auto flex flex-col gap-3">
+          <div className="flex gap-2 sm:gap-3">
             <div className="relative flex-1 min-w-0">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
               <Input
@@ -733,8 +733,9 @@ export default function Orders() {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 p-4 lg:p-6 w-full max-w-full overflow-x-hidden">
-        <Tabs defaultValue="all" className="w-full max-w-full">
+      <div className="flex-1 p-4 lg:p-6">
+        <div className="max-w-7xl mx-auto">
+        <Tabs defaultValue="all">
           {userRole === 'provider' ? (
             // Provider Tabs
             <>
@@ -855,6 +856,7 @@ export default function Orders() {
             </>
           )}
         </Tabs>
+        </div>
       </div>
 
       {/* Customer Rating Modal */}
