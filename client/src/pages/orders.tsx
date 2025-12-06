@@ -216,7 +216,7 @@ export default function Orders() {
   });
 
   // Handle rating provider for customers
-  const handleRateProvider = (orderId: string, providerId: string) => {
+  const handleRateProvider = (orderId: string) => {
     const order = orders.find((o: Order) => o.id === orderId);
     if (order) {
       setSelectedOrder(order);
@@ -537,7 +537,7 @@ export default function Orders() {
               </div>
               <p className="text-sm text-muted-foreground line-clamp-2">{order.description}</p>
               <Button 
-                onClick={() => order.providerId && handleRateProvider(order.id, order.providerId)}
+                onClick={() => handleRateProvider(order.id)}
                 className="w-full"
               >
                 <Star className="w-4 h-4 mr-2" />
