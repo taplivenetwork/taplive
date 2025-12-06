@@ -50,8 +50,10 @@ export function StreamViewer({ streamId, isLive, onViewerCountChange }: StreamVi
     setConnectionError(null);
 
     // WebSocket connection with enhanced error handling
-    // Connect directly to backend server on port 5000
-    const wsUrl = 'ws://localhost:5000/ws';
+    // Determine WebSocket URL based on environment
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+    // Convert http/https to ws/wss
+    const wsUrl = apiUrl.replace(/^http/, 'ws') + '/ws';
     const websocket = new WebSocket(wsUrl);
     wsRef.current = websocket;
 

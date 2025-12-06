@@ -29,8 +29,10 @@ export function NativeWebRTCBroadcaster({ orderId, onStreamStart, onStreamEnd, c
 
   // WebSocket connection
   useEffect(() => {
-    // Connect directly to backend server on port 5000
-    const wsUrl = 'ws://localhost:5000/ws';
+    // Determine WebSocket URL based on environment
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+    // Convert http/https to ws/wss
+    const wsUrl = apiUrl.replace(/^http/, 'ws') + '/ws';
     console.log('[Broadcaster] Connecting to WebSocket:', wsUrl);
     
     const socket = new WebSocket(wsUrl);
