@@ -302,12 +302,12 @@ export function AAGroupPanel() {
                       <div className="flex items-center gap-2">
                         <span>¥{participant.amount}</span>
                         {participant.isPaid ? (
-                          <CheckCircle className="w-4 h-4 text-green-500" />
-                        ) : (
-                          <Badge variant="outline" size="sm">
-                            <TranslatedText>待支付</TranslatedText>
-                          </Badge>
-                        )}
+                        <CheckCircle className="w-4 h-4 text-green-500" />
+                      ) : (
+                        <Badge variant="outline" className="text-xs">
+                          <TranslatedText>待支付</TranslatedText>
+                        </Badge>
+                      )}
                       </div>
                     </div>
                   ))}

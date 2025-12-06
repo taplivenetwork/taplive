@@ -27,7 +27,7 @@ export function LiveStreamCard({ stream, onJoin, onAccept, onCancel, onDelete, i
   // Get a random placeholder image that stays consistent for this stream instance
   const placeholderImage = useMemo(() => {
     // Use stream.id to generate a consistent random number for each stream
-    const hash = stream.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const hash = stream.id.split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0);
     const imageNumber = (hash % TOTAL_PLACEHOLDER_IMAGES) + 1;
     const imagePath = `/stream-placeholders/stream-${imageNumber}.jpg`;
     console.log(`Stream ${stream.id}: Using placeholder image ${imagePath}`);
