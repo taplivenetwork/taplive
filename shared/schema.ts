@@ -205,7 +205,7 @@ export const insertUserSchema = createInsertSchema(users).pick({
   name: true,
   avatar: true,
   role: true,
-});
+}) as any;
 
 export const insertOrderSchema = createInsertSchema(orders).omit({
   id: true,
@@ -218,12 +218,12 @@ export const insertOrderSchema = createInsertSchema(orders).omit({
   providerId: true,
 }).extend({
   scheduledAt: z.string().transform((val: string) => new Date(val)),
-});
+}) as any;
 
 export const insertRatingSchema = createInsertSchema(ratings).omit({
   id: true,
   createdAt: true,
-});
+}) as any;
 
 export const insertPaymentSchema = createInsertSchema(payments).omit({
   id: true,
@@ -234,7 +234,7 @@ export const insertPaymentSchema = createInsertSchema(payments).omit({
   externalTransactionHash: true,
   paymentGatewayResponse: true,
   failureReason: true,
-});
+}) as any;
 
 export const insertPayoutSchema = createInsertSchema(payouts).omit({
   id: true,
@@ -243,12 +243,12 @@ export const insertPayoutSchema = createInsertSchema(payouts).omit({
   failureReason: true,
   createdAt: true,
   updatedAt: true,
-});
+}) as any;
 
 export const insertTransactionSchema = createInsertSchema(transactions).omit({
   id: true,
   createdAt: true,
-});
+}) as any;
 
 export const ratingValidationSchema = z.object({
   orderId: z.string(),
@@ -334,12 +334,12 @@ export const insertDisputeSchema = createInsertSchema(disputes).omit({
   id: true,
   submittedAt: true,
   updatedAt: true,
-});
+}) as any;
 
 export const insertOrderApprovalSchema = createInsertSchema(orderApprovals).omit({
   id: true,
   requestedAt: true,
-});
+}) as any;
 
 // Validation schemas
 export const disputeSubmissionSchema = z.object({
@@ -492,12 +492,12 @@ export const insertGeoRiskZoneSchema = createInsertSchema(geoRiskZones).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
-});
+}) as any;
 
 export const insertWeatherAlertSchema = createInsertSchema(weatherAlerts).omit({
   id: true,
   createdAt: true,
-});
+}) as any;
 
 export const insertContentViolationSchema = createInsertSchema(contentViolations).omit({
   id: true,
