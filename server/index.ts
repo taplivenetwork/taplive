@@ -54,7 +54,12 @@ app.use((req, res, next) => {
   if (app.get("env") === "development") {
     await setupVite(app, server);
   } else {
-    serveStatic(app);
+    // In production, don't serve static files (frontend deployed separately)
+    app.get("*", (_req, res) => {
+      res.status(404).json({ 
+        message: "API is running. Frontend should be deployed separately." 
+      });
+    });
   }
 
   // ALWAYS serve the app on the port specified in the environment variable PORT
