@@ -1,0 +1,11 @@
+{
+  "name": "@taplive/shared",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "drizzle-orm": "^0.44.6",
+    "drizzle-zod": "^0.8.3",
+    "zod": "^3.22.0"
+  }
+}
