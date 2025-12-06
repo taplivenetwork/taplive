@@ -4,20 +4,6 @@ import path from "path";
 import { type Server } from "http";
 import { nanoid } from "nanoid";
 
-// Dynamic imports to avoid loading vite in production
-let createViteServer: any;
-let createLogger: any;
-let viteConfig: any;
-
-if (process.env.NODE_ENV === "development") {
-  const viteModule = await import("vite");
-  createViteServer = viteModule.createServer;
-  createLogger = viteModule.createLogger;
-  viteConfig = (await import("../vite.config.js")).default;
-}
-
-const viteLogger = createLogger?.() ?? console;
-
 export function log(message: string, source = "express") {
   const formattedTime = new Date().toLocaleTimeString("en-US", {
     hour: "numeric",
@@ -30,51 +16,61 @@ export function log(message: string, source = "express") {
 }
 
 export async function setupVite(app: Express, server: Server) {
-  const serverOptions = {
-    middlewareMode: true,
-    hmr: { server },
-    allowedHosts: true as const,
-  };
+  try {
+    const { createServer: createViteServer, createLogger } = await import("vite");
+    const viteConfigModule = await import("../vite.config.js");
+    const viteConfig = viteConfigModule.default;
+    const viteLogger = createLogger();
 
-  const vite = await createViteServer({
-    ...viteConfig,
-    configFile: false,
-    customLogger: {
-      ...viteLogger,
-      error: (msg, options) => {
-        viteLogger.error(msg, options);
-        process.exit(1);
+    const serverOptions = {
+      middlewareMode: true,
+      hmr: { server },
+      allowedHosts: true as const,
+    };
+
+    const vite = await createViteServer({
+      ...viteConfig,
+      configFile: false,
+      customLogger: {
+        ...viteLogger,
+        error: (msg, options) => {
+          viteLogger.error(msg, options);
+          process.exit(1);
+        },
       },
-    },
-    server: serverOptions,
-    appType: "custom",
-  });
+      server: serverOptions,
+      appType: "custom",
+    });
 
-  app.use(vite.middlewares);
-  app.use("*", async (req, res, next) => {
-    const url = req.originalUrl;
+    app.use(vite.middlewares);
+    app.use("*", async (req, res, next) => {
+      const url = req.originalUrl;
 
-    try {
-      const clientTemplate = path.resolve(
-        import.meta.dirname,
-        "..",
-        "client",
-        "index.html",
-      );
+      try {
+        const clientTemplate = path.resolve(
+          import.meta.dirname,
+          "..",
+          "client",
+          "index.html",
+        );
 
-      // always reload the index.html file from disk incase it changes
-      let template = await fs.promises.readFile(clientTemplate, "utf-8");
-      template = template.replace(
-        `src="/src/main.tsx"`,
-        `src="/src/main.tsx?v=${nanoid()}"`,
-      );
-      const page = await vite.transformIndexHtml(url, template);
-      res.status(200).set({ "Content-Type": "text/html" }).end(page);
-    } catch (e) {
-      vite.ssrFixStacktrace(e as Error);
-      next(e);
-    }
-  });
+        // always reload the index.html file from disk incase it changes
+        let template = await fs.promises.readFile(clientTemplate, "utf-8");
+        template = template.replace(
+          `src="/src/main.tsx"`,
+          `src="/src/main.tsx?v=${nanoid()}"`,
+        );
+        const page = await vite.transformIndexHtml(url, template);
+        res.status(200).set({ "Content-Type": "text/html" }).end(page);
+      } catch (e) {
+        vite.ssrFixStacktrace(e as Error);
+        next(e);
+      }
+    });
+  } catch (error) {
+    console.error("Failed to setup Vite:", error);
+    throw error;
+  }
 }
 
 export function serveStatic(app: Express) {
