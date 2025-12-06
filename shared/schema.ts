@@ -502,39 +502,39 @@ export const insertWeatherAlertSchema = createInsertSchema(weatherAlerts).omit({
 export const insertContentViolationSchema = createInsertSchema(contentViolations).omit({
   id: true,
   createdAt: true,
-});
+}) as any;
 
 export const insertOrderGroupSchema = createInsertSchema(orderGroups).omit({
   id: true,
   createdAt: true,
-});
+}) as any;
 
 export const insertGroupParticipantSchema = createInsertSchema(groupParticipants).omit({
   id: true,
   joinedAt: true,
-});
+}) as any;
 
 export const insertGeofenceSchema = createInsertSchema(geofences).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
-});
+}) as any;
 
 export const insertTimezoneRuleSchema = createInsertSchema(timezoneRules).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
-});
+}) as any;
 
 export const insertLocationTimezoneSchema = createInsertSchema(locationTimezone).omit({
   id: true,
   createdAt: true,
-});
+}) as any;
 
 export const insertNotificationSchema = createInsertSchema(notifications).omit({
   id: true,
   createdAt: true,
-});
+}) as any;
 
 // Validation schemas
 export const geoLocationSchema = z.object({
