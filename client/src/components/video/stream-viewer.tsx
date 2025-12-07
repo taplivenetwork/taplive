@@ -200,7 +200,28 @@ export function StreamViewer({ streamId, isLive, onViewerCountChange }: StreamVi
           const stream = event.streams[0];
           console.log('📺 Stream tracks:', stream.getTracks().map(t => `${t.kind} (${t.readyState})`));
           console.log('📺 Setting video srcObject');
+          
+          // Log video element state before setting srcObject
+          console.log('📺 Video element state:', {
+            videoWidth: videoRef.current.videoWidth,
+            videoHeight: videoRef.current.videoHeight,
+            readyState: videoRef.current.readyState,
+            paused: videoRef.current.paused
+          });
+          
           videoRef.current.srcObject = stream;
+          
+          // Log after setting srcObject
+          setTimeout(() => {
+            if (videoRef.current) {
+              console.log('📺 After srcObject set:', {
+                videoWidth: videoRef.current.videoWidth,
+                videoHeight: videoRef.current.videoHeight,
+                readyState: videoRef.current.readyState,
+                srcObject: videoRef.current.srcObject
+              });
+            }
+          }, 100);
           
           // Force play - handle autoplay blocking
           setTimeout(() => {
