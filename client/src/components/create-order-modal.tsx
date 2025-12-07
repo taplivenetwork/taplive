@@ -65,8 +65,13 @@ export function CreateOrderModal({ open, onOpenChange, selectedLocation }: Creat
     return now.toISOString().slice(0, 16);
   };
 
-  // Handle mouse down on header for dragging
+  // Handle mouse down on header for dragging (desktop only)
   const handleMouseDown = (e: React.MouseEvent) => {
+    // Disable dragging on mobile/tablet
+    if (window.innerWidth < 1024) {
+      return;
+    }
+    
     // Prevent dragging when clicking on interactive elements
     const target = e.target as HTMLElement;
     if (target.closest('button, input, select, textarea')) {
@@ -305,9 +310,9 @@ export function CreateOrderModal({ open, onOpenChange, selectedLocation }: Creat
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent 
         ref={modalRef}
-        className="sm:max-w-md max-h-[80vh] overflow-y-auto bg-white border-2 border-gray-200 shadow-2xl rounded-xl fixed z-[9999]"
+        className="sm:max-w-md w-[calc(100%-2rem)] max-h-[85vh] lg:max-h-[80vh] flex flex-col bg-white border-2 border-gray-200 shadow-2xl rounded-xl lg:fixed lg:z-[9999] overflow-hidden"
         style={{
-          transform: `translate(${position.x}px, ${position.y}px)`,
+          transform: window.innerWidth >= 1024 ? `translate(${position.x}px, ${position.y}px)` : 'none',
           cursor: isDragging ? 'grabbing' : 'default',
           willChange: isDragging ? 'transform' : 'auto'
         }}
@@ -315,20 +320,24 @@ export function CreateOrderModal({ open, onOpenChange, selectedLocation }: Creat
         aria-describedby="create-order-description"
       >
         <DialogHeader 
-          className="cursor-grab active:cursor-grabbing border-b border-gray-100 pb-3 mb-4 select-none"
+          className="lg:cursor-grab lg:active:cursor-grabbing border-b border-gray-100 pb-3 select-none flex-shrink-0"
           onMouseDown={handleMouseDown}
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Move className="w-4 h-4 text-gray-400" />
+              <Move className="w-4 h-4 text-gray-400 hidden lg:block" />
               <DialogTitle className="text-lg font-bold text-foreground"><TranslatedText>Create Streaming Order</TranslatedText></DialogTitle>
             </div>
           </div>
-          <p id="create-order-description" className="text-sm text-muted-foreground"><TranslatedText>Fill out the form below to create a new streaming request. Drag this window to view the map.</TranslatedText></p>
+          <p id="create-order-description" className="text-sm text-muted-foreground">
+            <span className="hidden lg:inline"><TranslatedText>Fill out the form below to create a new streaming request. Drag this window to view the map.</TranslatedText></span>
+            <span className="lg:hidden"><TranslatedText>Fill out the form below to create a new streaming request.</TranslatedText></span>
+          </p>
         </DialogHeader>
 
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
+        <div className="flex-1 overflow-y-auto px-6 py-4">
+          <Form {...form}>
+          <form id="create-order-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
             <FormField
               control={form.control}
               name="title"
@@ -554,28 +563,33 @@ export function CreateOrderModal({ open, onOpenChange, selectedLocation }: Creat
                 )}
               </div>
             </div>
-
-            <div className="flex gap-3 pt-4">
-              <Button 
-                type="button" 
-                variant="outline" 
-                className="flex-1" 
-                onClick={() => onOpenChange(false)}
-                data-testid="button-cancel"
-              >
-                <TranslatedText>Cancel</TranslatedText>
-              </Button>
-              <Button 
-                type="submit" 
-                className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90"
-                disabled={createOrderMutation.isPending}
-                data-testid="button-create-order"
-              >
-                {createOrderMutation.isPending ? <TranslatedText>Creating...</TranslatedText> : <TranslatedText>Proceed to Payment</TranslatedText>}
-              </Button>
-            </div>
           </form>
         </Form>
+        </div>
+
+        {/* Fixed bottom action buttons */}
+        <div className="flex-shrink-0 border-t border-gray-100 px-6 py-4 bg-gray-50">
+          <div className="flex gap-3">
+            <Button 
+              type="button" 
+              variant="outline" 
+              className="flex-1" 
+              onClick={() => onOpenChange(false)}
+              data-testid="button-cancel"
+            >
+              <TranslatedText>Cancel</TranslatedText>
+            </Button>
+            <Button 
+              type="submit" 
+              form="create-order-form"
+              className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90"
+              disabled={createOrderMutation.isPending}
+              data-testid="button-create-order"
+            >
+              {createOrderMutation.isPending ? <TranslatedText>Creating...</TranslatedText> : <TranslatedText>Proceed to Payment</TranslatedText>}
+            </Button>
+          </div>
+        </div>
       </DialogContent>
 
       {/* Mock Payment Confirmation Modal */}
