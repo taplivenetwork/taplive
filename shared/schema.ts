@@ -217,7 +217,10 @@ export const insertOrderSchema = createInsertSchema(orders).omit({
   replayUrl: true,
   providerId: true,
 }).extend({
-  scheduledAt: z.string().transform((val) => new Date(val)) as any,
+  scheduledAt: z.union([
+    z.string().transform((val) => new Date(val)),
+    z.date()
+  ]),
 }) as any;
 
 export const insertRatingSchema = createInsertSchema(ratings).omit({
