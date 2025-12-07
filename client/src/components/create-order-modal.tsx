@@ -147,6 +147,7 @@ export function CreateOrderModal({ open, onOpenChange, selectedLocation }: Creat
         scheduledAt: new Date(data.scheduledAt),
         duration: data.duration,
         price: parseFloat(data.price),
+        currency: 'USD',
         type: data.type,
         maxParticipants: data.type === "group" ? data.maxParticipants : null,
         tags: data.tags || [],
