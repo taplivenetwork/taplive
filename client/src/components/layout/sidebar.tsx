@@ -6,6 +6,7 @@ import { T } from "@/components/T";
 import { useSimpleTranslation } from "@/hooks/useSimpleTranslation";
 import { useUser, SignInButton, SignUpButton, UserButton } from "@clerk/clerk-react";
 import { useState, useEffect } from "react";
+import { authFetch } from "@/lib/api";
 
 export function Sidebar() {
   const [location] = useLocation();
@@ -16,7 +17,7 @@ export function Sidebar() {
   // Fetch user role from our database
   useEffect(() => {
     if (isLoaded && user?.id) {
-      fetch(`/api/users/${user.id}`)
+      authFetch(`/api/users/${user.id}`)
         .then(res => res.json())
         .then(data => {
           if (data.success) {

@@ -7,6 +7,7 @@ import { TranslatedText } from "@/components/translated-text";
 import { useTranslation } from "@/hooks/use-translation";
 import { useState, useEffect } from "react";
 import { useUser } from "@clerk/clerk-react";
+import { authFetch } from "@/lib/api";
 
 export function MobileNavigation() {
   const [location] = useLocation();
@@ -18,7 +19,7 @@ export function MobileNavigation() {
   // Fetch user role from our database
   useEffect(() => {
     if (isLoaded && user?.id) {
-      fetch(`/api/users/${user.id}`)
+      authFetch(`/api/users/${user.id}`)
         .then(res => res.json())
         .then(data => {
           if (data.success) {
