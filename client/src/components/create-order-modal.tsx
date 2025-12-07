@@ -141,17 +141,17 @@ export function CreateOrderModal({ open, onOpenChange, selectedLocation }: Creat
         title: data.title,
         description: data.description,
         category: data.category,
-        latitude: data.latitude.toString(),
-        longitude: data.longitude.toString(),
+        latitude: data.latitude,
+        longitude: data.longitude,
         address: data.address,
         scheduledAt: new Date(data.scheduledAt),
         duration: data.duration,
-        price: parseFloat(data.price).toString(),
+        price: parseFloat(data.price),
         type: data.type,
         maxParticipants: data.type === "group" ? data.maxParticipants : null,
         tags: data.tags || [],
         creatorId: CURRENT_USER_ID !== "guest" ? CURRENT_USER_ID : null,
-        isPaid: false, // Will be updated after payment
+        isPaid: false,
       };
 
       const order = await api.orders.create(orderData);
