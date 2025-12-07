@@ -1105,7 +1105,6 @@ export class MemStorage implements IStorage {
     return Array.from(this.notifications.values())
       .filter(n => 
         n.userId === userId &&
-        n.type === 'order_dispatch' &&
         !n.read &&
         (!n.expiresAt || n.expiresAt > now)
       )
@@ -1502,7 +1501,6 @@ export class DatabaseStorage implements IStorage {
       .where(
         and(
           eq(notifications.userId, userId),
-          eq(notifications.type, 'order_dispatch'),
           eq(notifications.read, false),
           or(
             isNull(notifications.expiresAt),
