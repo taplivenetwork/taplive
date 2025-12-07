@@ -9,6 +9,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
+import { authFetch } from '@/lib/api';
 
 // Initialize Stripe
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || '');
@@ -73,7 +74,7 @@ function CheckoutForm({ orderId, amount, onSuccess, onError }: CheckoutFormProps
           // Update payment status on backend
           try {
             console.log('Updating payment status on backend...');
-            const updateResponse = await fetch(`/api/payments/${paymentIntent.id}/confirm`, {
+            const updateResponse = await authFetch(`/api/payments/${paymentIntent.id}/confirm`, {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -200,7 +201,7 @@ export default function StripePayment({
   const createPayment = async () => {
     setIsCreatingPayment(true);
     try {
-      const response = await fetch(`/api/orders/${orderId}/payment`, {
+      const response = await authFetch(`/api/orders/${orderId}/payment`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

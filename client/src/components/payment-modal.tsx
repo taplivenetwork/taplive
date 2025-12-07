@@ -11,6 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { TranslatedText } from "@/components/translated-text";
 import { useToast } from "@/hooks/use-toast";
+import { authFetch } from "@/lib/api";
 import { CreditCard, Smartphone, Bitcoin, DollarSign, Loader2, CheckCircle, AlertCircle } from "lucide-react";
 import type { Order } from "@shared/schema";
 
@@ -47,14 +48,14 @@ export function PaymentModal({ order, isOpen, onClose, onSuccess }: PaymentModal
   // Fetch commission preview
   const { data: commissionData } = useQuery({
     queryKey: [`/api/payment/commission/${order.price}`],
-    queryFn: () => fetch(`/api/payment/commission/${order.price}`).then(res => res.json()),
+    queryFn: () => authFetch(`/api/payment/commission/${order.price}`).then(res => res.json()),
     enabled: !!order.price,
   });
 
   // Create payment mutation
   const createPaymentMutation = useMutation({
     mutationFn: async (paymentData: any) => {
-      const response = await fetch(`/api/orders/${order.id}/payment`, {
+      const response = await authFetch(`/api/orders/${order.id}/payment`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(paymentData),
@@ -84,7 +85,7 @@ export function PaymentModal({ order, isOpen, onClose, onSuccess }: PaymentModal
   // Process crypto payment mutation
   const processCryptoMutation = useMutation({
     mutationFn: async ({ paymentId, cryptoData }: any) => {
-      const response = await fetch(`/api/payments/${paymentId}/crypto`, {
+      const response = await authFetch(`/api/payments/${paymentId}/crypto`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(cryptoData),
@@ -109,7 +110,7 @@ export function PaymentModal({ order, isOpen, onClose, onSuccess }: PaymentModal
   // Complete fiat payment
   const completeFiatPayment = async (paymentId: string) => {
     try {
-      const response = await fetch(`/api/payments/${paymentId}/complete`, {
+      const response = await authFetch(`/api/payments/${paymentId}/complete`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
