@@ -183,13 +183,30 @@ export function StreamViewer({ streamId, isLive, onViewerCountChange }: StreamVi
     }
 
     try {
-      // Create native RTCPeerConnection (matching broadcaster)
+      // Create native RTCPeerConnection with STUN and public TURN servers
       const pc = new RTCPeerConnection({
         iceServers: [
           { urls: 'stun:stun.l.google.com:19302' },
           { urls: 'stun:global.stun.twilio.com:3478' },
-          { urls: 'stun:stun1.l.google.com:19302' }
-        ]
+          { urls: 'stun:stun1.l.google.com:19302' },
+          // Free public TURN server (open relay project)
+          {
+            urls: 'turn:openrelay.metered.ca:80',
+            username: 'openrelayproject',
+            credential: 'openrelayproject'
+          },
+          {
+            urls: 'turn:openrelay.metered.ca:443',
+            username: 'openrelayproject',
+            credential: 'openrelayproject'
+          },
+          {
+            urls: 'turn:openrelay.metered.ca:443?transport=tcp',
+            username: 'openrelayproject',
+            credential: 'openrelayproject'
+          }
+        ],
+        iceTransportPolicy: 'all' // Try all connection types
       });
 
       // Handle incoming stream

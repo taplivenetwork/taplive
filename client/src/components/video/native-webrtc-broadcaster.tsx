@@ -119,14 +119,31 @@ export function NativeWebRTCBroadcaster({ orderId, onStreamStart, onStreamEnd, c
     // Create unique ID for this viewer
     console.log(`[Broadcaster] Viewer joined: ${viewerId}, creating new peer connection`);
 
-    // Create RTCPeerConnection with better configuration
+    // Create RTCPeerConnection with STUN and public TURN servers
     const pc = new RTCPeerConnection({
       iceServers: [
         { urls: 'stun:stun.l.google.com:19302' },
         { urls: 'stun:global.stun.twilio.com:3478' },
-        { urls: 'stun:stun1.l.google.com:19302' }
+        { urls: 'stun:stun1.l.google.com:19302' },
+        // Free public TURN server (open relay project)
+        {
+          urls: 'turn:openrelay.metered.ca:80',
+          username: 'openrelayproject',
+          credential: 'openrelayproject'
+        },
+        {
+          urls: 'turn:openrelay.metered.ca:443',
+          username: 'openrelayproject',
+          credential: 'openrelayproject'
+        },
+        {
+          urls: 'turn:openrelay.metered.ca:443?transport=tcp',
+          username: 'openrelayproject',
+          credential: 'openrelayproject'
+        }
       ],
-      iceCandidatePoolSize: 10
+      iceCandidatePoolSize: 10,
+      iceTransportPolicy: 'all' // Try all connection types
     });
 
     // Add stream tracks
