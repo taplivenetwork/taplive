@@ -3276,24 +3276,109 @@ export async function registerRoutes(app: Express): Promise<Server> {
                         const providerStripeAccountId = (provider as any)?.stripeConnectedAccountId;
                         
                         if (providerStripeAccountId) {
-                          const transfer = await stripe.transfers.create({
-                            amount: Math.round(commission.providerEarnings * 100),
-                            currency: completedPayment.currency.toLowerCase(),
-                            destination: providerStripeAccountId,
-                            transfer_group: `order_${endStreamId}`,
-                            metadata: {
+                          try {
+                            const transfer = await stripe.transfers.create({
+                              amount: Math.round(commission.providerEarnings * 100),
+                              currency: completedPayment.currency.toLowerCase(),
+                              destination: providerStripeAccountId,
+                              transfer_group: `order_${endStreamId}`,
+                              metadata: {
+                                orderId: endStreamId,
+                                providerId: order.providerId,
+                                paymentId: completedPayment.id,
+                                platformFee: commission.platformFee.toString(),
+                                providerEarnings: commission.providerEarnings.toString(),
+                                releasedVia: 'broadcast-end'
+                              }
+                            });
+                            
+                            console.log(`✅ Stripe Transfer on broadcast end: ${transfer.id} - $${commission.providerEarnings.toFixed(2)}`);
+                            
+                            // Create payout record with completed status
+                            const payout = await storage.createPayout({
                               orderId: endStreamId,
-                              providerId: order.providerId,
                               paymentId: completedPayment.id,
+                              recipientId: order.providerId,
+                              amount: commission.providerEarnings.toString(),
                               platformFee: commission.platformFee.toString(),
-                              providerEarnings: commission.providerEarnings.toString(),
-                              releasedVia: 'broadcast-end'
-                            }
-                          });
-                          
-                          console.log(`✅ Stripe Transfer on broadcast end: ${transfer.id} - $${commission.providerEarnings.toFixed(2)}`);
-                          
-                          // Create payout record
+                              currency: completedPayment.currency,
+                              payoutMethod: 'stripe',
+                              externalPayoutId: transfer.id,
+                              status: 'completed',
+                              processedAt: new Date()
+                            });
+                            
+                            // Update provider's total earnings
+                            const providerUser = await storage.getUser(order.providerId);
+                            const currentEarnings = parseFloat(providerUser?.totalEarnings || '0');
+                            const newTotalEarnings = currentEarnings + commission.providerEarnings;
+                            await storage.updateUser(order.providerId, {
+                              totalEarnings: newTotalEarnings.toFixed(2)
+                            });
+                            console.log(`✅ Provider total earnings updated: $${currentEarnings.toFixed(2)} → $${newTotalEarnings.toFixed(2)}`);
+                            
+                            // Notify provider of successful earnings transfer
+                            await storage.createNotification({
+                              userId: order.providerId,
+                              type: 'payment_received',
+                              title: 'Payment Received! 💰',
+                              message: `You earned $${commission.providerEarnings.toFixed(2)} for completing "${order.title}"`,
+                              orderId: endStreamId,
+                              metadata: JSON.stringify({
+                                amount: commission.providerEarnings,
+                                currency: completedPayment.currency,
+                                transferId: transfer.id,
+                                payoutId: payout.id
+                              })
+                            });
+                            
+                            console.log(`✅ Provider notified of earnings`);
+                          } catch (transferError: any) {
+                            // Transfer failed (e.g., region restrictions) - create pending payout
+                            console.error('⚠️ Stripe transfer failed, creating pending payout:', transferError.message);
+                            
+                            const payout = await storage.createPayout({
+                              orderId: endStreamId,
+                              paymentId: completedPayment.id,
+                              recipientId: order.providerId,
+                              amount: commission.providerEarnings.toString(),
+                              platformFee: commission.platformFee.toString(),
+                              currency: completedPayment.currency,
+                              payoutMethod: 'stripe',
+                              externalPayoutId: null,
+                              status: 'pending',
+                              processedAt: null
+                            });
+                            
+                            // Still update provider's total earnings (payment was captured)
+                            const providerUser = await storage.getUser(order.providerId);
+                            const currentEarnings = parseFloat(providerUser?.totalEarnings || '0');
+                            const newTotalEarnings = currentEarnings + commission.providerEarnings;
+                            await storage.updateUser(order.providerId, {
+                              totalEarnings: newTotalEarnings.toFixed(2)
+                            });
+                            
+                            // Notify provider that payout is pending
+                            await storage.createNotification({
+                              userId: order.providerId,
+                              type: 'system_alert',
+                              title: 'Payout Pending ⏳',
+                              message: `You earned $${commission.providerEarnings.toFixed(2)} for "${order.title}"! Your payout is pending due to Stripe region restrictions. Contact support for manual payout.`,
+                              orderId: endStreamId,
+                              metadata: JSON.stringify({
+                                amount: commission.providerEarnings,
+                                currency: completedPayment.currency,
+                                payoutId: payout.id,
+                                status: 'pending',
+                                reason: 'stripe_transfer_failed',
+                                errorCode: transferError.code || 'unknown'
+                              })
+                            });
+                            
+                            console.log(`⚠️ Provider notified of pending payout (transfer failed)`);
+                          }
+                        } else {
+                          // No Stripe Connect - create pending payout and notify provider
                           const payout = await storage.createPayout({
                             orderId: endStreamId,
                             paymentId: completedPayment.id,
@@ -3302,38 +3387,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
                             platformFee: commission.platformFee.toString(),
                             currency: completedPayment.currency,
                             payoutMethod: 'stripe',
-                            externalPayoutId: transfer.id,
-                            status: 'completed',
-                            processedAt: new Date()
+                            externalPayoutId: null,
+                            status: 'pending',
+                            processedAt: null
                           });
                           
-                          // Update provider's total earnings
-                          const providerUser = await storage.getUser(order.providerId);
-                          const currentEarnings = parseFloat(providerUser?.totalEarnings || '0');
-                          const newTotalEarnings = currentEarnings + commission.providerEarnings;
-                          await storage.updateUser(order.providerId, {
-                            totalEarnings: newTotalEarnings.toFixed(2)
-                          });
-                          console.log(`✅ Provider total earnings updated: $${currentEarnings.toFixed(2)} → $${newTotalEarnings.toFixed(2)}`);
-                          
-                          // Notify provider of earnings
-                          await storage.createNotification({
-                            userId: order.providerId,
-                            type: 'payment_received',
-                            title: 'Payment Received! 💰',
-                            message: `You earned $${commission.providerEarnings.toFixed(2)} for completing "${order.title}"`,
-                            orderId: endStreamId,
-                            metadata: JSON.stringify({
-                              amount: commission.providerEarnings,
-                              currency: completedPayment.currency,
-                              transferId: transfer.id,
-                              payoutId: payout.id
-                            })
-                          });
-                          
-                          console.log(`✅ Provider notified of earnings`);
-                        } else {
-                          // No Stripe Connect - notify provider
                           await storage.createNotification({
                             userId: order.providerId,
                             type: 'system_alert',
@@ -3342,6 +3400,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                             orderId: endStreamId,
                             metadata: JSON.stringify({
                               amount: commission.providerEarnings,
+                              payoutId: payout.id,
                               status: 'awaiting_stripe_connect'
                             })
                           });

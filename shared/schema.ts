@@ -219,7 +219,11 @@ export const insertOrderSchema = z.object({
   platformFee: z.number().optional().nullable(),
   providerEarnings: z.number().optional().nullable(),
   maxParticipants: z.number().optional().nullable(),
-  scheduledAt: z.date().or(z.string().transform((val) => new Date(val))),
+  scheduledAt: z.preprocess((val) => {
+    if (val instanceof Date) return val;
+    if (typeof val === 'string') return new Date(val);
+    return val;
+  }, z.date()),
   duration: z.number(),
   creatorId: z.string().optional().nullable(),
   tags: z.array(z.string()).optional().nullable(),
