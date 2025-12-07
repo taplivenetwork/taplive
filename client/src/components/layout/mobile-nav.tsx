@@ -65,87 +65,90 @@ export function MobileNavigation() {
           className="bg-white dark:bg-gray-800 shadow-xl border-2 border-primary/20 hover:border-primary/40 transition-colors"
         />
       </div>
-
-      {/* Auth buttons for non-logged in users on mobile */}
-      {!user && isLoaded && (
-        <div className="lg:hidden fixed top-4 left-4 z-50 flex gap-2">
-          <SignInButton mode="modal">
-            <Button size="sm" variant="outline" className="bg-white dark:bg-gray-800 shadow-lg">
-              <LogIn className="w-4 h-4 mr-1" />
-              Sign In
-            </Button>
-          </SignInButton>
-          <SignUpButton mode="modal">
-            <Button size="sm" className="bg-blue-600 hover:bg-blue-700 shadow-lg">
-              <UserPlus className="w-4 h-4 mr-1" />
-              Sign Up
-            </Button>
-          </SignUpButton>
-        </div>
-      )}
-
-      {/* User button for logged in users on mobile */}
-      {user && isLoaded && (
-        <div className="lg:hidden fixed top-4 left-4 z-50">
-          <UserButton afterSignOutUrl="/" />
-        </div>
-      )}
       
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-sm border-t border-border p-2 z-40 shadow-lg tech-card" data-testid="mobile-nav">
-        <div className="flex items-center justify-around">
-          {navigation.map((item) => {
-            const Icon = item.icon;
-            const isActive = location === item.href;
-            
-            return (
-              <Link key={item.name} href={item.href}>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className={`flex flex-col items-center gap-1 h-auto py-3 px-4 rounded-xl transition-all duration-200 ${
-                    isActive 
-                      ? "text-primary bg-primary/10 shadow-md" 
-                      : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
-                  }`}
-                  data-testid={`mobile-nav-${item.name.toLowerCase()}`}
-                >
-                  <div className="relative">
-                    <Icon className="w-6 h-6" />
-                    {/* Active indicator */}
-                    {isActive && (
-                      <div className="absolute -top-1 -right-1 w-2 h-2 bg-primary rounded-full animate-pulse" />
-                    )}
-                  </div>
-                  <span className={`text-xs font-medium ${
-                    isActive ? "text-primary" : "text-muted-foreground"
-                  }`}>
-                    <TranslatedText>{item.name}</TranslatedText>
-                  </span>
-                </Button>
-              </Link>
-            );
-          })}
-          
-          {/* Floating Action Button - Expandable Menu */}
-          <div className="relative z-50">
-            <Button
-              size="sm"
-              onClick={handleMenuToggle}
-              className={`w-14 h-14 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 z-50 ${
-                isMenuExpanded 
-                  ? "bg-gray-600 hover:bg-gray-700" 
-                  : "bg-gradient-to-r from-primary to-primary/80"
-              } text-primary-foreground`}
-              data-testid="mobile-menu-toggle"
-            >
-              {isMenuExpanded ? <X className="w-6 h-6" /> : <Plus className="w-6 h-6" />}
-            </Button>
-            
-            {!isMenuExpanded && (
-              <Badge className="absolute -top-1 -right-1 bg-red-500 text-white text-xs px-1.5 z-50">
-                <TranslatedText>More</TranslatedText>
-              </Badge>
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-gradient-to-t from-background via-background/95 to-background/90 backdrop-blur-lg border-t border-border/50 z-40 shadow-2xl" data-testid="mobile-nav">
+        <div className="max-w-screen-xl mx-auto px-2 py-2">
+          <div className="flex items-center justify-between gap-1">
+            {/* Auth Buttons or User Profile - Left Side */}
+            {!user && isLoaded ? (
+              <div className="flex gap-1">
+                <SignInButton mode="modal">
+                  <Button 
+                    size="sm" 
+                    variant="ghost" 
+                    className="flex flex-col items-center gap-0.5 h-auto py-2 px-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent/50"
+                  >
+                    <LogIn className="w-5 h-5" />
+                    <span className="text-[10px] font-medium">Sign In</span>
+                  </Button>
+                </SignInButton>
+                <SignUpButton mode="modal">
+                  <Button 
+                    size="sm"
+                    className="flex flex-col items-center gap-0.5 h-auto py-2 px-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white"
+                  >
+                    <UserPlus className="w-5 h-5" />
+                    <span className="text-[10px] font-medium">Sign Up</span>
+                  </Button>
+                </SignUpButton>
+              </div>
+            ) : user && isLoaded ? (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="flex flex-col items-center gap-0.5 h-auto py-2 px-2 rounded-lg"
+              >
+                <UserButton afterSignOutUrl="/" />
+              </Button>
+            ) : (
+              <div className="w-16 h-12 bg-muted/20 rounded-lg animate-pulse" />
             )}
+
+            {/* Main Navigation Items */}
+            {navigation.map((item) => {
+              const Icon = item.icon;
+              const isActive = location === item.href;
+              
+              return (
+                <Link key={item.name} href={item.href}>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className={`flex flex-col items-center gap-0.5 h-auto py-2 px-2 rounded-lg transition-all ${
+                      isActive 
+                        ? "text-primary bg-primary/10" 
+                        : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
+                    }`}
+                    data-testid={`mobile-nav-${item.name.toLowerCase()}`}
+                  >
+                    <Icon className={`w-5 h-5 ${isActive ? 'scale-110' : ''} transition-transform`} />
+                    <span className="text-[10px] font-medium">
+                      <TranslatedText>{item.name}</TranslatedText>
+                    </span>
+                  </Button>
+                </Link>
+              );
+            })}
+            
+            {/* More Menu Button - Right Side */}
+            <div className="relative">
+              <Button
+                size="sm"
+                onClick={handleMenuToggle}
+                variant="ghost"
+                className={`flex flex-col items-center gap-0.5 h-auto py-2 px-2 rounded-lg transition-all ${
+                  isMenuExpanded 
+                    ? "text-primary bg-primary/10" 
+                    : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
+                }`}
+                data-testid="mobile-menu-toggle"
+              >
+                {isMenuExpanded ? <X className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
+                <span className="text-[10px] font-medium">
+                  <TranslatedText>More</TranslatedText>
+                </span>
+              </Button>
+            </div>
           </div>
         </div>
         
@@ -158,50 +161,53 @@ export function MobileNavigation() {
         <>
           {/* Backdrop */}
           <div 
-            className="lg:hidden fixed inset-0 bg-black/50 z-[60]" 
+            className="lg:hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[60]" 
             onClick={handleMenuToggle}
           />
           
-          {/* Menu Items - Positioned above the nav bar */}
-          <div className="lg:hidden fixed bottom-24 left-0 right-0 flex flex-col items-center gap-3 z-[70] px-4">
-            {extraMenuItems.map((item, index) => {
-              const Icon = item.icon;
-              const isActive = location === item.href;
-              
-              return (
-                <Link key={item.name} href={item.href}>
-                  <Button
-                    onClick={handleMenuItemClick}
-                    className={`flex items-center gap-3 px-6 py-3 rounded-full shadow-xl transition-all duration-200 min-w-[200px] justify-center ${
-                      isActive 
-                        ? "bg-primary text-primary-foreground" 
-                        : "bg-card text-foreground hover:bg-primary/10 border border-border"
-                    }`}
-                    style={{ 
-                      animation: `slideUp 0.3s ease-out ${index * 0.05}s both`
-                    }}
-                    data-testid={`mobile-menu-${item.name.toLowerCase().replace(/\s+/g, '-')}`}
-                  >
-                    <Icon className="w-5 h-5" />
-                    <span className="text-sm font-medium whitespace-nowrap">
-                      <TranslatedText context="navigation">{item.name}</TranslatedText>
-                    </span>
-                  </Button>
-                </Link>
-              );
-            })}
+          {/* Menu Items - Modern card layout above the nav bar */}
+          <div className="lg:hidden fixed bottom-20 left-0 right-0 z-[70] px-4">
+            <div className="bg-card/95 backdrop-blur-lg rounded-2xl shadow-2xl border border-border/50 overflow-hidden">
+              <div className="grid grid-cols-2 gap-px bg-border/50">
+                {extraMenuItems.map((item, index) => {
+                  const Icon = item.icon;
+                  const isActive = location === item.href;
+                  
+                  return (
+                    <Link key={item.name} href={item.href}>
+                      <Button
+                        onClick={handleMenuItemClick}
+                        variant="ghost"
+                        className={`w-full h-20 flex flex-col items-center justify-center gap-2 rounded-none bg-card hover:bg-primary/10 ${
+                          isActive ? "text-primary bg-primary/5" : "text-foreground"
+                        }`}
+                        style={{ 
+                          animation: `fadeIn 0.2s ease-out ${index * 0.05}s both`
+                        }}
+                        data-testid={`mobile-menu-${item.name.toLowerCase().replace(/\s+/g, '-')}`}
+                      >
+                        <Icon className="w-6 h-6" />
+                        <span className="text-xs font-medium text-center">
+                          <TranslatedText context="navigation">{item.name}</TranslatedText>
+                        </span>
+                      </Button>
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
           </div>
           
           {/* CSS Animation */}
           <style>{`
-            @keyframes slideUp {
+            @keyframes fadeIn {
               from {
                 opacity: 0;
-                transform: translateY(20px);
+                transform: scale(0.95);
               }
               to {
                 opacity: 1;
-                transform: translateY(0);
+                transform: scale(1);
               }
             }
           `}</style>
