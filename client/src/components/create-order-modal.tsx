@@ -310,12 +310,12 @@ export function CreateOrderModal({ open, onOpenChange, selectedLocation }: Creat
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent 
         ref={modalRef}
-        className="sm:max-w-md w-[calc(100%-2rem)] max-h-[85vh] lg:max-h-[80vh] flex flex-col bg-white border-2 border-gray-200 shadow-2xl rounded-xl lg:fixed lg:z-[9999] overflow-hidden"
-        style={{
-          transform: window.innerWidth >= 1024 ? `translate(${position.x}px, ${position.y}px)` : 'none',
+        className="sm:max-w-md w-[calc(100%-2rem)] max-h-[85vh] lg:max-h-[80vh] flex flex-col bg-white border-2 border-gray-200 shadow-2xl rounded-xl overflow-hidden data-[state=open]:lg:fixed data-[state=open]:lg:z-[9999]"
+        style={window.innerWidth >= 1024 ? {
+          transform: `translate(${position.x}px, ${position.y}px)`,
           cursor: isDragging ? 'grabbing' : 'default',
           willChange: isDragging ? 'transform' : 'auto'
-        }}
+        } : undefined}
         data-testid="create-order-modal" 
         aria-describedby="create-order-description"
       >
