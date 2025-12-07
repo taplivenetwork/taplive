@@ -183,7 +183,7 @@ export function StreamViewer({ streamId, isLive, onViewerCountChange }: StreamVi
     }
 
     try {
-      // Create native RTCPeerConnection with STUN and public TURN servers
+      // Create native RTCPeerConnection with STUN and TURN servers (matching broadcaster)
       const pc = new RTCPeerConnection({
         iceServers: [
           { urls: 'stun:stun.l.google.com:19302' },
@@ -206,6 +206,7 @@ export function StreamViewer({ streamId, isLive, onViewerCountChange }: StreamVi
             credential: 'openrelayproject'
           }
         ],
+        iceCandidatePoolSize: 10,
         iceTransportPolicy: 'all' // Try all connection types
       });
 
