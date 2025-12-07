@@ -207,7 +207,9 @@ export const insertUserSchema = createInsertSchema(users).pick({
   role: true,
 }) as any;
 
-export const insertOrderSchema = createInsertSchema(orders).omit({
+export const insertOrderSchema = createInsertSchema(orders, {
+  scheduledAt: z.coerce.date(),
+}).omit({
   id: true,
   status: true,
   currentParticipants: true,
