@@ -1,4 +1,4 @@
-import { MapPin, List, Video, User, Globe, Play, TrendingUp, Plus, Settings, Shield, X, Wallet, BarChart3 } from "lucide-react";
+import { MapPin, List, Video, User, Globe, Play, TrendingUp, Plus, Settings, Shield, X, Wallet, BarChart3, LogIn, UserPlus } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -6,7 +6,7 @@ import { LanguageSelector } from "@/components/language-selector";
 import { TranslatedText } from "@/components/translated-text";
 import { useTranslation } from "@/hooks/use-translation";
 import { useState, useEffect } from "react";
-import { useUser } from "@clerk/clerk-react";
+import { useUser, SignInButton, SignUpButton, UserButton } from "@clerk/clerk-react";
 import { authFetch } from "@/lib/api";
 
 export function MobileNavigation() {
@@ -65,6 +65,31 @@ export function MobileNavigation() {
           className="bg-white dark:bg-gray-800 shadow-xl border-2 border-primary/20 hover:border-primary/40 transition-colors"
         />
       </div>
+
+      {/* Auth buttons for non-logged in users on mobile */}
+      {!user && isLoaded && (
+        <div className="lg:hidden fixed top-4 left-4 z-50 flex gap-2">
+          <SignInButton mode="modal">
+            <Button size="sm" variant="outline" className="bg-white dark:bg-gray-800 shadow-lg">
+              <LogIn className="w-4 h-4 mr-1" />
+              Sign In
+            </Button>
+          </SignInButton>
+          <SignUpButton mode="modal">
+            <Button size="sm" className="bg-blue-600 hover:bg-blue-700 shadow-lg">
+              <UserPlus className="w-4 h-4 mr-1" />
+              Sign Up
+            </Button>
+          </SignUpButton>
+        </div>
+      )}
+
+      {/* User button for logged in users on mobile */}
+      {user && isLoaded && (
+        <div className="lg:hidden fixed top-4 left-4 z-50">
+          <UserButton afterSignOutUrl="/" />
+        </div>
+      )}
       
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-sm border-t border-border p-2 z-40 shadow-lg tech-card" data-testid="mobile-nav">
         <div className="flex items-center justify-around">
