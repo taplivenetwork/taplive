@@ -9,7 +9,6 @@ import { TranslatedText } from "@/components/translated-text";
 import { useTranslation } from "@/hooks/use-translation";
 import translationsData from "@/lib/translations.json";
 import { api, authFetch } from "@/lib/api";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -36,6 +35,8 @@ export default function Orders() {
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
   const [hoveredStar, setHoveredStar] = useState(0);
+
+  const [activeTab, setActiveTab] = useState('all');
   
   const CURRENT_USER_ID = user?.id || "guest";
   
@@ -733,131 +734,237 @@ export default function Orders() {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 p-4 lg:p-6">
-        <div className="max-w-7xl mx-auto">
-        <Tabs defaultValue="all">
-          {userRole === 'provider' ? (
-            // Provider Tabs
-            <>
-              <TabsList className="flex lg:grid w-full lg:grid-cols-6 bg-secondary mb-6 overflow-x-auto">
-                <TabsTrigger value="all" data-testid="tab-all" className="flex-shrink-0 min-w-[80px] lg:min-w-0">
-                  <TranslatedText context="orders">All</TranslatedText>
-                  <Badge variant="secondary" className="ml-2">{relevantOrders.length}</Badge>
-                </TabsTrigger>
-                <TabsTrigger value="pending" data-testid="tab-pending" className="flex-shrink-0 min-w-[120px] lg:min-w-0">
-                  <Clock className="w-4 h-4 mr-1" />
-                  <TranslatedText context="orders">Scheduled</TranslatedText>
-                  <Badge variant="secondary" className="ml-2">{pendingOrders.length}</Badge>
-                </TabsTrigger>
-                <TabsTrigger value="golive" data-testid="tab-golive" className="flex-shrink-0 min-w-[110px] lg:min-w-0">
-                  <Play className="w-4 h-4 mr-1" />
-                  <TranslatedText context="orders">Go Live</TranslatedText>
-                  <Badge variant="secondary" className="ml-2">{goLiveOrders.length}</Badge>
-                </TabsTrigger>
-                <TabsTrigger value="live" data-testid="tab-live" className="flex-shrink-0 min-w-[90px] lg:min-w-0">
-                  <Video className="w-4 h-4 mr-1" />
-                  <TranslatedText context="orders">Live</TranslatedText>
-                  <Badge variant="secondary" className="ml-2">{liveOrders.length}</Badge>
-                </TabsTrigger>
-                <TabsTrigger value="completed" data-testid="tab-completed" className="flex-shrink-0 min-w-[130px] lg:min-w-0">
-                  <CheckCircle className="w-4 h-4 mr-1" />
-                  <TranslatedText context="orders">Completed</TranslatedText>
-                  <Badge variant="secondary" className="ml-2">{completedOrders.length}</Badge>
-                </TabsTrigger>
-                <TabsTrigger value="cancelled" data-testid="tab-cancelled" className="flex-shrink-0 min-w-[120px] lg:min-w-0">
-                  <XCircle className="w-4 h-4 mr-1" />
-                  <TranslatedText context="orders">Cancelled</TranslatedText>
-                  <Badge variant="secondary" className="ml-2">{cancelledOrders.length}</Badge>
-                </TabsTrigger>
-              </TabsList>
+<div className="w-full">
+  {userRole === 'provider' ? (
+    // Provider Tabs
+    <>
+      {/* Tab Buttons */}
+      <div 
+        role="tablist" 
+        className="grid grid-cols-3 lg:grid-cols-6 gap-1 bg-secondary rounded-md p-1 mb-6 w-full"
+      >
+        <button
+          role="tab"
+          aria-selected={activeTab === 'all'}
+          data-testid="tab-all"
+          onClick={() => setActiveTab('all')}
+          className={`inline-flex flex-col lg:flex-row items-center justify-center whitespace-nowrap rounded-sm px-2 py-2 text-xs lg:text-sm font-medium transition-all ${
+            activeTab === 'all' 
+              ? 'bg-background text-foreground shadow-sm' 
+              : 'text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          <span><TranslatedText context="orders">All</TranslatedText></span>
+          <Badge variant="secondary" className="text-[10px] lg:text-xs mt-1 lg:mt-0 lg:ml-1">{relevantOrders.length}</Badge>
+        </button>
 
-              <TabsContent value="all">
-                {renderOrderList(filteredOrders, "You haven't accepted any orders yet")}
-              </TabsContent>
+        <button
+          role="tab"
+          aria-selected={activeTab === 'pending'}
+          data-testid="tab-pending"
+          onClick={() => setActiveTab('pending')}
+          className={`inline-flex flex-col lg:flex-row items-center justify-center whitespace-nowrap rounded-sm px-2 py-2 text-xs lg:text-sm font-medium transition-all ${
+            activeTab === 'pending' 
+              ? 'bg-background text-foreground shadow-sm' 
+              : 'text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          <Clock className="w-3 h-3 lg:w-4 lg:h-4 mb-1 lg:mb-0 lg:mr-1" />
+          <span className="lg:inline"><TranslatedText context="orders">Scheduled</TranslatedText></span>
+          <Badge variant="secondary" className="text-[10px] lg:text-xs mt-1 lg:mt-0 lg:ml-1">{pendingOrders.length}</Badge>
+        </button>
 
-              <TabsContent value="pending">
-                {renderOrderList(pendingOrders, "No scheduled orders")}
-              </TabsContent>
+        <button
+          role="tab"
+          aria-selected={activeTab === 'golive'}
+          data-testid="tab-golive"
+          onClick={() => setActiveTab('golive')}
+          className={`inline-flex flex-col lg:flex-row items-center justify-center whitespace-nowrap rounded-sm px-2 py-2 text-xs lg:text-sm font-medium transition-all ${
+            activeTab === 'golive' 
+              ? 'bg-background text-foreground shadow-sm' 
+              : 'text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          <Play className="w-3 h-3 lg:w-4 lg:h-4 mb-1 lg:mb-0 lg:mr-1" />
+          <span className="lg:inline"><TranslatedText context="orders">Go Live</TranslatedText></span>
+          <Badge variant="secondary" className="text-[10px] lg:text-xs mt-1 lg:mt-0 lg:ml-1">{goLiveOrders.length}</Badge>
+        </button>
 
-              <TabsContent value="golive">
-                {renderOrderList(goLiveOrders, "No orders ready to go live")}
-              </TabsContent>
+        <button
+          role="tab"
+          aria-selected={activeTab === 'live'}
+          data-testid="tab-live"
+          onClick={() => setActiveTab('live')}
+          className={`inline-flex flex-col lg:flex-row items-center justify-center whitespace-nowrap rounded-sm px-2 py-2 text-xs lg:text-sm font-medium transition-all ${
+            activeTab === 'live' 
+              ? 'bg-background text-foreground shadow-sm' 
+              : 'text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          <Video className="w-3 h-3 lg:w-4 lg:h-4 mb-1 lg:mb-0 lg:mr-1" />
+          <span><TranslatedText context="orders">Live</TranslatedText></span>
+          <Badge variant="secondary" className="text-[10px] lg:text-xs mt-1 lg:mt-0 lg:ml-1">{liveOrders.length}</Badge>
+        </button>
 
-              <TabsContent value="live">
-                {renderOrderList(liveOrders, "No active streams")}
-              </TabsContent>
+        <button
+          role="tab"
+          aria-selected={activeTab === 'completed'}
+          data-testid="tab-completed"
+          onClick={() => setActiveTab('completed')}
+          className={`inline-flex flex-col lg:flex-row items-center justify-center whitespace-nowrap rounded-sm px-2 py-2 text-xs lg:text-sm font-medium transition-all ${
+            activeTab === 'completed' 
+              ? 'bg-background text-foreground shadow-sm' 
+              : 'text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          <CheckCircle className="w-3 h-3 lg:w-4 lg:h-4 mb-1 lg:mb-0 lg:mr-1" />
+          <span className="lg:inline"><TranslatedText context="orders">Completed</TranslatedText></span>
+          <Badge variant="secondary" className="text-[10px] lg:text-xs mt-1 lg:mt-0 lg:ml-1">{completedOrders.length}</Badge>
+        </button>
 
-              <TabsContent value="completed">
-                {renderOrderList(completedOrders, "No completed orders")}
-              </TabsContent>
-
-              <TabsContent value="cancelled">
-                {renderOrderList(cancelledOrders, "No cancelled orders")}
-              </TabsContent>
-            </>
-          ) : (
-            // Customer Tabs
-            <>
-              <TabsList className="flex lg:grid w-full lg:grid-cols-6 bg-secondary mb-6 overflow-x-auto">
-                <TabsTrigger value="all" data-testid="tab-all" className="flex-shrink-0 min-w-[80px] lg:min-w-0">
-                  <TranslatedText context="orders">All</TranslatedText>
-                  <Badge variant="secondary" className="ml-2">{relevantOrders.length}</Badge>
-                </TabsTrigger>
-                <TabsTrigger value="pending" data-testid="tab-pending" className="flex-shrink-0 min-w-[120px] lg:min-w-0">
-                  <Clock className="w-4 h-4 mr-1" />
-                  <TranslatedText context="orders">Pending</TranslatedText>
-                  <Badge variant="secondary" className="ml-2">{pendingOrders.length}</Badge>
-                </TabsTrigger>
-                <TabsTrigger value="accepted" data-testid="tab-accepted" className="flex-shrink-0 min-w-[120px] lg:min-w-0">
-                  <CreditCard className="w-4 h-4 mr-1" />
-                  <TranslatedText context="orders">Accepted</TranslatedText>
-                  <Badge variant="secondary" className="ml-2">{acceptedOrders.length}</Badge>
-                </TabsTrigger>
-                <TabsTrigger value="live" data-testid="tab-live" className="flex-shrink-0 min-w-[90px] lg:min-w-0">
-                  <Video className="w-4 h-4 mr-1" />
-                  <TranslatedText context="orders">Live</TranslatedText>
-                  <Badge variant="secondary" className="ml-2">{liveOrders.length}</Badge>
-                </TabsTrigger>
-                <TabsTrigger value="completed" data-testid="tab-completed" className="flex-shrink-0 min-w-[130px] lg:min-w-0">
-                  <Star className="w-4 h-4 mr-1" />
-                  <TranslatedText context="orders">Completed</TranslatedText>
-                  <Badge variant="secondary" className="ml-2">{completedOrders.length}</Badge>
-                </TabsTrigger>
-                <TabsTrigger value="cancelled" data-testid="tab-cancelled" className="flex-shrink-0 min-w-[120px] lg:min-w-0">
-                  <XCircle className="w-4 h-4 mr-1" />
-                  <TranslatedText context="orders">Cancelled</TranslatedText>
-                  <Badge variant="secondary" className="ml-2">{cancelledOrders.length}</Badge>
-                </TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="all">
-                {renderOrderList(filteredOrders, "You haven't created any orders yet")}
-              </TabsContent>
-
-              <TabsContent value="pending">
-                {renderOrderList(pendingOrders, "No pending orders")}
-              </TabsContent>
-
-              <TabsContent value="accepted">
-                {renderOrderList(acceptedOrders, "No accepted orders")}
-              </TabsContent>
-
-              <TabsContent value="live">
-                {renderOrderList(liveOrders, "No live streams")}
-              </TabsContent>
-
-              <TabsContent value="completed">
-                {renderOrderList(completedOrders, "No completed orders")}
-              </TabsContent>
-
-              <TabsContent value="cancelled">
-                {renderOrderList(cancelledOrders, "No cancelled orders")}
-              </TabsContent>
-            </>
-          )}
-        </Tabs>
-        </div>
+        <button
+          role="tab"
+          aria-selected={activeTab === 'cancelled'}
+          data-testid="tab-cancelled"
+          onClick={() => setActiveTab('cancelled')}
+          className={`inline-flex flex-col lg:flex-row items-center justify-center whitespace-nowrap rounded-sm px-2 py-2 text-xs lg:text-sm font-medium transition-all ${
+            activeTab === 'cancelled' 
+              ? 'bg-background text-foreground shadow-sm' 
+              : 'text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          <XCircle className="w-3 h-3 lg:w-4 lg:h-4 mb-1 lg:mb-0 lg:mr-1" />
+          <span className="lg:inline"><TranslatedText context="orders">Cancelled</TranslatedText></span>
+          <Badge variant="secondary" className="text-[10px] lg:text-xs mt-1 lg:mt-0 lg:ml-1">{cancelledOrders.length}</Badge>
+        </button>
       </div>
+
+      {/* Tab Content */}
+      <div role="tabpanel">
+        {activeTab === 'all' && renderOrderList(filteredOrders, "You haven't accepted any orders yet")}
+        {activeTab === 'pending' && renderOrderList(pendingOrders, "No scheduled orders")}
+        {activeTab === 'golive' && renderOrderList(goLiveOrders, "No orders ready to go live")}
+        {activeTab === 'live' && renderOrderList(liveOrders, "No active streams")}
+        {activeTab === 'completed' && renderOrderList(completedOrders, "No completed orders")}
+        {activeTab === 'cancelled' && renderOrderList(cancelledOrders, "No cancelled orders")}
+      </div>
+    </>
+  ) : (
+    // Customer Tabs
+    <>
+      {/* Tab Buttons */}
+      <div 
+        role="tablist" 
+        className="grid grid-cols-3 lg:grid-cols-6 gap-1 bg-secondary rounded-md p-1 mb-6 w-full"
+      >
+        <button
+          role="tab"
+          aria-selected={activeTab === 'all'}
+          data-testid="tab-all"
+          onClick={() => setActiveTab('all')}
+          className={`inline-flex flex-col lg:flex-row items-center justify-center whitespace-nowrap rounded-sm px-2 py-2 text-xs lg:text-sm font-medium transition-all ${
+            activeTab === 'all' 
+              ? 'bg-background text-foreground shadow-sm' 
+              : 'text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          <span><TranslatedText context="orders">All</TranslatedText></span>
+          <Badge variant="secondary" className="text-[10px] lg:text-xs mt-1 lg:mt-0 lg:ml-1">{relevantOrders.length}</Badge>
+        </button>
+
+        <button
+          role="tab"
+          aria-selected={activeTab === 'pending'}
+          data-testid="tab-pending"
+          onClick={() => setActiveTab('pending')}
+          className={`inline-flex flex-col lg:flex-row items-center justify-center whitespace-nowrap rounded-sm px-2 py-2 text-xs lg:text-sm font-medium transition-all ${
+            activeTab === 'pending' 
+              ? 'bg-background text-foreground shadow-sm' 
+              : 'text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          <Clock className="w-3 h-3 lg:w-4 lg:h-4 mb-1 lg:mb-0 lg:mr-1" />
+          <span className="lg:inline"><TranslatedText context="orders">Pending</TranslatedText></span>
+          <Badge variant="secondary" className="text-[10px] lg:text-xs mt-1 lg:mt-0 lg:ml-1">{pendingOrders.length}</Badge>
+        </button>
+
+        <button
+          role="tab"
+          aria-selected={activeTab === 'accepted'}
+          data-testid="tab-accepted"
+          onClick={() => setActiveTab('accepted')}
+          className={`inline-flex flex-col lg:flex-row items-center justify-center whitespace-nowrap rounded-sm px-2 py-2 text-xs lg:text-sm font-medium transition-all ${
+            activeTab === 'accepted' 
+              ? 'bg-background text-foreground shadow-sm' 
+              : 'text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          <CreditCard className="w-3 h-3 lg:w-4 lg:h-4 mb-1 lg:mb-0 lg:mr-1" />
+          <span className="lg:inline"><TranslatedText context="orders">Accepted</TranslatedText></span>
+          <Badge variant="secondary" className="text-[10px] lg:text-xs mt-1 lg:mt-0 lg:ml-1">{acceptedOrders.length}</Badge>
+        </button>
+
+        <button
+          role="tab"
+          aria-selected={activeTab === 'live'}
+          data-testid="tab-live"
+          onClick={() => setActiveTab('live')}
+          className={`inline-flex flex-col lg:flex-row items-center justify-center whitespace-nowrap rounded-sm px-2 py-2 text-xs lg:text-sm font-medium transition-all ${
+            activeTab === 'live' 
+              ? 'bg-background text-foreground shadow-sm' 
+              : 'text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          <Video className="w-3 h-3 lg:w-4 lg:h-4 mb-1 lg:mb-0 lg:mr-1" />
+          <span><TranslatedText context="orders">Live</TranslatedText></span>
+          <Badge variant="secondary" className="text-[10px] lg:text-xs mt-1 lg:mt-0 lg:ml-1">{liveOrders.length}</Badge>
+        </button>
+
+        <button
+          role="tab"
+          aria-selected={activeTab === 'completed'}
+          data-testid="tab-completed"
+          onClick={() => setActiveTab('completed')}
+          className={`inline-flex flex-col lg:flex-row items-center justify-center whitespace-nowrap rounded-sm px-2 py-2 text-xs lg:text-sm font-medium transition-all ${
+            activeTab === 'completed' 
+              ? 'bg-background text-foreground shadow-sm' 
+              : 'text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          <Star className="w-3 h-3 lg:w-4 lg:h-4 mb-1 lg:mb-0 lg:mr-1" />
+          <span className="lg:inline"><TranslatedText context="orders">Completed</TranslatedText></span>
+          <Badge variant="secondary" className="text-[10px] lg:text-xs mt-1 lg:mt-0 lg:ml-1">{completedOrders.length}</Badge>
+        </button>
+
+        <button
+          role="tab"
+          aria-selected={activeTab === 'cancelled'}
+          data-testid="tab-cancelled"
+          onClick={() => setActiveTab('cancelled')}
+          className={`inline-flex flex-col lg:flex-row items-center justify-center whitespace-nowrap rounded-sm px-2 py-2 text-xs lg:text-sm font-medium transition-all ${
+            activeTab === 'cancelled' 
+              ? 'bg-background text-foreground shadow-sm' 
+              : 'text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          <XCircle className="w-3 h-3 lg:w-4 lg:h-4 mb-1 lg:mb-0 lg:mr-1" />
+          <span className="lg:inline"><TranslatedText context="orders">Cancelled</TranslatedText></span>
+          <Badge variant="secondary" className="text-[10px] lg:text-xs mt-1 lg:mt-0 lg:ml-1">{cancelledOrders.length}</Badge>
+        </button>
+      </div>
+
+      {/* Tab Content */}
+      <div role="tabpanel">
+        {activeTab === 'all' && renderOrderList(filteredOrders, "You haven't created any orders yet")}
+        {activeTab === 'pending' && renderOrderList(pendingOrders, "No pending orders")}
+        {activeTab === 'accepted' && renderOrderList(acceptedOrders, "No accepted orders")}
+        {activeTab === 'live' && renderOrderList(liveOrders, "No live streams")}
+        {activeTab === 'completed' && renderOrderList(completedOrders, "No completed orders")}
+        {activeTab === 'cancelled' && renderOrderList(cancelledOrders, "No cancelled orders")}
+      </div>
+    </>
+  )}
+</div>
 
       {/* Customer Rating Modal */}
       <Dialog open={ratingModalOpen} onOpenChange={setRatingModalOpen}>
