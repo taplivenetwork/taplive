@@ -372,27 +372,32 @@ export default function Home() {
                       : notification.metadata;
                     const order = orders.find(o => o.id === notification.orderId);
                     
+                    // Check if this is an order dispatch notification
+                    const isOrderDispatch = notification.type === 'order_dispatch';
+                    
                     return (
                       <DropdownMenuItem key={notification.id} className="flex flex-col items-start p-3 cursor-pointer">
                         <div className="flex justify-between w-full items-start">
                           <div className="flex-1">
-                            <p className="font-semibold text-sm">{order?.title || 'New Order'}</p>
+                            <p className="font-semibold text-sm">{notification.title || order?.title || 'Notification'}</p>
                             <p className="text-xs text-muted-foreground mt-1">
-                              ${order?.price || 0} • {Math.round(metadata?.distance || 0)}km away
+                              {notification.message || (order ? `$${order.price} • ${Math.round(metadata?.distance || 0)}km away` : '')}
                             </p>
                           </div>
-                          <Button
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (order?.id) {
-                                handleAcceptOrder(order.id);
-                              }
-                            }}
-                            className="ml-2"
-                          >
-                            <TranslatedText>Accept</TranslatedText>
-                          </Button>
+                          {isOrderDispatch && order && (
+                            <Button
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (order?.id) {
+                                  handleAcceptOrder(order.id);
+                                }
+                              }}
+                              className="ml-2"
+                            >
+                              <TranslatedText>Accept</TranslatedText>
+                            </Button>
+                          )}
                         </div>
                       </DropdownMenuItem>
                     );
