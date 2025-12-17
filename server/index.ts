@@ -10,7 +10,9 @@ const app = express();
 const allowedOrigins = [
   'http://localhost:5173', // Local development
   'https://taplivenetwork-taplive-git-sandbox1-taplivenetwork.vercel.app', // Vercel deployment
-  'https://taplivenetwork.vercel.app', // Production Vercel domain
+  'https://taplivenetwork.vercel.app',
+  'https://taplive.tv',
+   // Production Vercel domain
 ];
 
 app.use(cors({
