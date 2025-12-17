@@ -11,8 +11,8 @@ const allowedOrigins = [
   'http://localhost:5173', // Local development
   'https://taplivenetwork-taplive-git-sandbox1-taplivenetwork.vercel.app', // Vercel deployment
   'https://taplivenetwork.vercel.app',
-  'https://taplive.tv',
-   // Production Vercel domain
+  'https://taplive.tv', // Production domain
+  'https://www.taplive.tv', // Production domain with www
 ];
 
 app.use(cors({
