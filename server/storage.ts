@@ -5,10 +5,10 @@ import { type User, type InsertUser, type Order, type InsertOrder, type Rating, 
          type ContentViolation, type InsertContentViolation, type OrderGroup, type InsertOrderGroup,
          type GroupParticipant, type InsertGroupParticipant, type Geofence, type InsertGeofence,
          type TimezoneRule, type InsertTimezoneRule, type LocationTimezone, type InsertLocationTimezone,
-         type Notification, type InsertNotification,
+         type Notification, type InsertNotification, type AiSummary, type InsertAiSummary,
          users, orders, ratings, payments, payouts, transactions, disputes, orderApprovals,
          geoRiskZones, weatherAlerts, contentViolations, orderGroups, groupParticipants,
-         geofences, timezoneRules, locationTimezone, notifications } from "@shared/schema";
+         geofences, timezoneRules, locationTimezone, notifications, aiSummaries } from "@shared/schema";
 import { type ProviderRanking, rankProvidersForOrder, updateUserDispatchScore } from "@shared/dispatch";
 import { calculateCommission } from "@shared/payment";
 import { randomUUID } from "crypto";
@@ -1575,6 +1575,27 @@ export class DatabaseStorage implements IStorage {
   }
   async getLocationTimezoneByOrder(orderId: string): Promise<LocationTimezone | undefined> { return undefined; }
   async updateLocationTimezone(id: string, updates: Partial<LocationTimezone>): Promise<LocationTimezone | undefined> { return undefined; }
+  
+  // AI Summary methods
+  async createAiSummary(summary: InsertAiSummary): Promise<AiSummary> {
+    const [newSummary] = await db.insert(aiSummaries).values(summary).returning();
+    return newSummary;
+  }
+  
+  async getAiSummaryByOrder(orderId: string): Promise<AiSummary | undefined> {
+    const [summary] = await db.select().from(aiSummaries).where(eq(aiSummaries.orderId, orderId));
+    return summary || undefined;
+  }
+  
+  async updateAiSummary(id: string, updates: Partial<AiSummary>): Promise<AiSummary | undefined> {
+    const [summary] = await db.update(aiSummaries).set({ ...updates, updatedAt: new Date() }).where(eq(aiSummaries.id, id)).returning();
+    return summary || undefined;
+  }
+  
+  async deleteAiSummary(orderId: string): Promise<boolean> {
+    const result = await db.delete(aiSummaries).where(eq(aiSummaries.orderId, orderId));
+    return !!result;
+  }
 }
 
 // Use DatabaseStorage for production (PostgreSQL)

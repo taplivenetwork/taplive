@@ -438,6 +438,23 @@ export const contentViolations = pgTable("content_violations", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// AI Summaries for order recordings
+export const aiSummaries = pgTable("ai_summaries", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  orderId: varchar("order_id").notNull().unique().references(() => orders.id), // One summary per order
+  transcription: text("transcription").notNull(), // Full transcription text
+  aiSummary: text("ai_summary").notNull(), // AI-generated summary
+  keyPoints: text("key_points").array().notNull(), // Array of key discussion points
+  trustIndicators: text("trust_indicators").array().notNull(), // Array of trust indicators
+  riskFactors: text("risk_factors").array().notNull(), // Array of risk factors
+  credibilityScore: decimal("credibility_score", { precision: 4, scale: 2 }).notNull(), // Score out of 10
+  recommendations: text("recommendations").array().notNull(), // Array of recommendations
+  recordingUrl: text("recording_url"), // S3 URL or signed URL
+  generatedAt: timestamp("generated_at").notNull().defaultNow(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // AA Split Group Management
 export const orderGroups = pgTable("order_groups", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -532,6 +549,12 @@ export const insertContentViolationSchema = createInsertSchema(contentViolations
   createdAt: true,
 }) as any;
 
+export const insertAiSummarySchema = createInsertSchema(aiSummaries).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}) as any;
+
 export const insertOrderGroupSchema = createInsertSchema(orderGroups).omit({
   id: true,
   createdAt: true,
@@ -622,3 +645,5 @@ export type LocationTimezone = typeof locationTimezone.$inferSelect;
 export type InsertLocationTimezone = z.infer<typeof insertLocationTimezoneSchema>;
 export type Notification = typeof notifications.$inferSelect;
 export type InsertNotification = z.infer<typeof insertNotificationSchema>;
+export type AiSummary = typeof aiSummaries.$inferSelect;
+export type InsertAiSummary = z.infer<typeof insertAiSummarySchema>;

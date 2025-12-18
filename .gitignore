@@ -7,3 +7,8 @@ vite.config.ts.*
 .env.local
 
 .env
+
+# Google Cloud Service Account Keys
+*.json
+keys/
+vertexai-*.json

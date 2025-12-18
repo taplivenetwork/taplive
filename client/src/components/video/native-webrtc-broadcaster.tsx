@@ -21,11 +21,15 @@ export function NativeWebRTCBroadcaster({ orderId, onStreamStart, onStreamEnd, c
   const [ws, setWs] = useState<WebSocket | null>(null);
   const [needsUserClick, setNeedsUserClick] = useState(false);
   const [viewerCount, setViewerCount] = useState(0);
+  const [isRecording, setIsRecording] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const wsRef = useRef<WebSocket | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const peerConnectionsRef = useRef<Map<string, RTCPeerConnection>>(new Map());
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const recordedChunksRef = useRef<Blob[]>([]);
 
   // WebSocket connection
   useEffect(() => {
@@ -281,6 +285,38 @@ export function NativeWebRTCBroadcaster({ orderId, onStreamStart, onStreamEnd, c
         setTimeout(checkVideoState, 3000);
       }
 
+      // Start recording the stream
+      try {
+        const recorder = new MediaRecorder(mediaStream, {
+          mimeType: 'video/webm;codecs=vp8,opus',
+          videoBitsPerSecond: 2500000 // 2.5 Mbps
+        });
+
+        recorder.ondataavailable = (event) => {
+          if (event.data && event.data.size > 0) {
+            recordedChunksRef.current.push(event.data);
+            console.log('[Recorder] Chunk received:', event.data.size, 'bytes');
+          }
+        };
+
+        recorder.onstart = () => {
+          console.log('[Recorder] Recording started');
+          setIsRecording(true);
+        };
+
+        recorder.onstop = () => {
+          console.log('[Recorder] Recording stopped');
+          setIsRecording(false);
+        };
+
+        recorder.start(1000); // Capture in 1-second chunks
+        mediaRecorderRef.current = recorder;
+        console.log('[Recorder] MediaRecorder created and started');
+      } catch (recorderError) {
+        console.error('[Recorder] Failed to start recording:', recorderError);
+        // Continue even if recording fails
+      }
+
       // Notify WebSocket that broadcaster is ready
       const currentWs = wsRef.current;
       if (currentWs && currentWs.readyState === WebSocket.OPEN) {
@@ -307,6 +343,12 @@ export function NativeWebRTCBroadcaster({ orderId, onStreamStart, onStreamEnd, c
   const stopBroadcast = () => {
     console.log('[Broadcaster] Stopping native WebRTC broadcast');
     
+    // Stop recording if active
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop();
+      mediaRecorderRef.current = null;
+    }
+    
     if (stream) {
       stream.getTracks().forEach(track => track.stop());
       setStream(null);
@@ -332,8 +374,55 @@ export function NativeWebRTCBroadcaster({ orderId, onStreamStart, onStreamEnd, c
     console.log('[Broadcaster] Native WebRTC broadcast stopped');
   };
 
-  const manualStopBroadcast = () => {
+  const manualStopBroadcast = async () => {
     console.log('[Broadcaster] User manually stopping broadcast');
+    
+    // Stop recording and upload
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop();
+      
+      // Wait for recording to finish and upload
+      await new Promise<void>((resolve) => {
+        const checkAndUpload = async () => {
+          if (mediaRecorderRef.current?.state === 'inactive' && recordedChunksRef.current.length > 0) {
+            console.log('[Recorder] Recording stopped, uploading...');
+            setIsUploading(true);
+            
+            try {
+              const recordingBlob = new Blob(recordedChunksRef.current, { type: 'video/webm' });
+              console.log('[Recorder] Recording size:', (recordingBlob.size / 1024 / 1024).toFixed(2), 'MB');
+              
+              // Upload to server
+              const formData = new FormData();
+              formData.append('recording', recordingBlob, `stream_${orderId}_${Date.now()}.webm`);
+              formData.append('orderId', orderId);
+              
+              const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+              const response = await fetch(`${apiUrl}/api/orders/${orderId}/upload-recording`, {
+                method: 'POST',
+                body: formData
+              });
+              
+              if (response.ok) {
+                const result = await response.json();
+                console.log('[Recorder] Upload successful:', result);
+              } else {
+                console.error('[Recorder] Upload failed:', response.statusText);
+              }
+            } catch (uploadError) {
+              console.error('[Recorder] Upload error:', uploadError);
+            } finally {
+              setIsUploading(false);
+              recordedChunksRef.current = [];
+              resolve();
+            }
+          } else {
+            setTimeout(checkAndUpload, 100);
+          }
+        };
+        checkAndUpload();
+      });
+    }
     
     // Send end-stream message to trigger payment release on backend
     const currentWs = wsRef.current;
@@ -392,6 +481,18 @@ export function NativeWebRTCBroadcaster({ orderId, onStreamStart, onStreamEnd, c
               <Badge variant="destructive">
                 <div className="w-2 h-2 bg-white rounded-full animate-pulse mr-1" />
                 <TranslatedText context="broadcaster">直播中</TranslatedText>
+              </Badge>
+            )}
+            {isRecording && (
+              <Badge variant="default" className="bg-red-600">
+                <div className="w-2 h-2 bg-white rounded-full animate-pulse mr-1" />
+                <TranslatedText context="broadcaster">Recording</TranslatedText>
+              </Badge>
+            )}
+            {isUploading && (
+              <Badge variant="default" className="bg-blue-600">
+                <div className="w-2 h-2 bg-white rounded-full animate-pulse mr-1" />
+                <TranslatedText context="broadcaster">Uploading...</TranslatedText>
               </Badge>
             )}
           </div>

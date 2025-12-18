@@ -425,14 +425,24 @@ export default function Orders() {
                 <span className="text-xl font-bold text-green-600 flex-shrink-0">${order.price}</span>
               </div>
               <p className="text-sm text-muted-foreground line-clamp-2">{order.description}</p>
-              <Button 
-                variant="outline"
-                className="w-full"
-                onClick={() => handleViewRatings(order.id)}
-              >
-                <Eye className="w-4 h-4 mr-2" />
-                View Reviews
-              </Button>
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => window.location.href = `/stream/${order.id}?mode=viewer`}
+                >
+                  <Video className="w-4 h-4 mr-2" />
+                  View Summary
+                </Button>
+                <Button 
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => handleViewRatings(order.id)}
+                >
+                  <Eye className="w-4 h-4 mr-2" />
+                  View Reviews
+                </Button>
+              </div>
             </div>
           </Card>
         );
@@ -537,13 +547,23 @@ export default function Orders() {
                 <span className="text-xl font-bold flex-shrink-0">${order.price}</span>
               </div>
               <p className="text-sm text-muted-foreground line-clamp-2">{order.description}</p>
-              <Button 
-                onClick={() => handleRateProvider(order.id)}
-                className="w-full"
-              >
-                <Star className="w-4 h-4 mr-2" />
-                Rate Provider
-              </Button>
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => window.location.href = `/stream/${order.id}?mode=viewer`}
+                >
+                  <Video className="w-4 h-4 mr-2" />
+                  View Summary
+                </Button>
+                <Button 
+                  onClick={() => handleRateProvider(order.id)}
+                  className="flex-1"
+                >
+                  <Star className="w-4 h-4 mr-2" />
+                  Rate Provider
+                </Button>
+              </div>
             </div>
           </Card>
         );

@@ -8,9 +8,11 @@ import { Badge } from '@/components/ui/badge';
 import { StreamViewer } from '@/components/video/stream-viewer';
 import { NativeWebRTCBroadcaster } from '@/components/video/native-webrtc-broadcaster';
 import { TranslatedText } from '@/components/translated-text';
-import { ArrowLeft, MapPin, Clock, DollarSign, XCircle, Video, Users } from 'lucide-react';
+import { AISummaryModal } from '@/components/ai-summary-modal';
+import { ArrowLeft, MapPin, Clock, DollarSign, XCircle, Video, Users, Brain } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
 import type { Order } from '@shared/schema';
+import { authFetch } from '@/lib/api';
 
 interface LiveStreamPageProps {
   orderId: string;
@@ -34,6 +36,9 @@ export default function LiveStreamPage() {
   
   // For manual mode switching (debugging only)
   const [manualMode, setManualMode] = useState<'viewer' | 'broadcaster' | null>(null);
+
+  // AI Summary state
+  const [showAISummary, setShowAISummary] = useState(false);
 
   // Fetch current user data to get their role
   const { data: userData } = useQuery({
@@ -121,6 +126,34 @@ export default function LiveStreamPage() {
     if (window.confirm('确定要取消订单吗？取消订单会降低您的信用评分作为惩罚。')) {
       cancelOrderMutation.mutate();
     }
+  };
+
+  // AI Summary generation mutation
+  const generateAISummaryMutation = useMutation({
+    mutationFn: async () => {
+      // Get Clerk session token
+     
+      
+      const response = await authFetch('/api/ai/summary', {
+        method: 'POST',
+        body: JSON.stringify({ orderId })
+      });
+
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(`Failed to generate summary: ${error}`);
+      }
+
+      return response.json();
+    },
+    onSuccess: (response) => {
+      setShowAISummary(true);
+      // The response data is already available in mutation.data
+    }
+  });
+
+  const handleGenerateAISummary = () => {
+    generateAISummaryMutation.mutate();
   };
 
   const handleGoBack = () => {
@@ -347,6 +380,36 @@ export default function LiveStreamPage() {
 
           {/* Sidebar */}
           <div className="space-y-6">
+            {/* AI Summary Card - Show only when stream is done and has recording */}
+            {order.status === 'done' && order.recordingUrl && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Brain className="w-5 h-5 text-purple-600" />
+                    <TranslatedText>AI Collaboration Summary</TranslatedText>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    <TranslatedText>
+                      Generate an AI-powered summary of your collaboration session with credibility analysis.
+                    </TranslatedText>
+                  </p>
+                  <Button
+                    onClick={handleGenerateAISummary}
+                    disabled={generateAISummaryMutation.isPending}
+                    className="w-full"
+                    variant="outline"
+                  >
+                    <Brain className="w-4 h-4 mr-2" />
+                    <TranslatedText>
+                      {generateAISummaryMutation.isPending ? 'Generating...' : 'Generate AI Brief'}
+                    </TranslatedText>
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Stream Info */}
             <Card>
               <CardHeader>
@@ -469,6 +532,14 @@ export default function LiveStreamPage() {
             </Card>
           </div>
         </div>
+
+        {/* AI Summary Modal */}
+        <AISummaryModal
+          isOpen={showAISummary}
+          onClose={() => setShowAISummary(false)}
+          summaryData={generateAISummaryMutation.data?.data}
+          isLoading={generateAISummaryMutation.isPending}
+        />
       </div>
     </div>
   );

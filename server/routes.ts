@@ -10,6 +10,20 @@ import { calculateCommission, PAYMENT_METHODS } from "@shared/payment";
 import { assessGeoRisk, checkContentViolations, checkVoiceContent, formatRiskLevel } from "@shared/geo-safety";
 import { validateAAGroupCreation, getAAGroupStatus, calculateSplitAmount, getAAGroupExpirationTime } from "@shared/aa-group";
 import { z } from "zod";
+import axios from "axios";
+import { GoogleGenerativeAI } from "@google/generative-ai";
+import AWS from "aws-sdk";
+import { spawn } from "child_process";
+import fs from "fs";
+import path from "path";
+import os from "os";
+import multer from "multer";
+
+// Configure multer for file uploads
+const upload = multer({ 
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 500 * 1024 * 1024 } // 500MB limit
+});
 
 // Initialize Stripe
 if (!process.env.STRIPE_SECRET_KEY) {
@@ -17,6 +31,15 @@ if (!process.env.STRIPE_SECRET_KEY) {
 }
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "empty", {
   apiVersion: "2025-08-27.basil",
+});
+
+// Initialize AI services
+const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GEMINI_API_KEY || "");
+
+const s3 = new AWS.S3({
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  region: process.env.AWS_REGION || "us-east-1",
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -3046,6 +3069,333 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
+
+  // Upload recording to S3
+  app.post("/api/orders/:id/upload-recording", upload.single('recording'), async (req, res) => {
+    try {
+      const { id } = req.params;
+      const file = req.file;
+
+      if (!file) {
+        return res.status(400).json({
+          success: false,
+          message: "No recording file provided"
+        });
+      }
+
+      console.log('[Upload] Received recording:', {
+        orderId: id,
+        size: (file.size / 1024 / 1024).toFixed(2) + ' MB',
+        mimetype: file.mimetype
+      });
+
+      // Upload to S3
+      const key = `recordings/${id}_${Date.now()}.webm`;
+      const s3Params = {
+        Bucket: process.env.AWS_S3_BUCKET_NAME || "taplive-recordings",
+        Key: key,
+        Body: file.buffer,
+        ContentType: file.mimetype
+      };
+
+      const uploadResult = await s3.upload(s3Params).promise();
+      console.log('[Upload] S3 upload successful:', uploadResult.Location);
+
+      // Update order with recording URL
+      await storage.updateOrder(id, {
+        recordingUrl: uploadResult.Location
+      });
+
+      res.json({
+        success: true,
+        data: {
+          recordingUrl: uploadResult.Location,
+          key: key
+        },
+        message: "Recording uploaded successfully"
+      });
+
+    } catch (error) {
+      console.error('Error uploading recording:', error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to upload recording"
+      });
+    }
+  });
+
+  // AI Summary Generation Route
+  app.post("/api/ai/summary", authenticateUser, async (req, res) => {
+    try {
+      const { orderId } = req.body;
+
+      if (!orderId) {
+        return res.status(400).json({
+          success: false,
+          message: "Order ID is required"
+        });
+      }
+
+      // Check if AI summary already exists in database
+      const existingSummary = await storage.getAiSummaryByOrder(orderId);
+      if (existingSummary) {
+        console.log('[AI Summary] Returning cached summary for order:', orderId);
+        
+        // Generate fresh signed URL for video playback
+        let s3Key: string;
+        try {
+          const url = new URL(existingSummary.recordingUrl || '');
+          s3Key = url.pathname.substring(1);
+        } catch (e) {
+          const parts = (existingSummary.recordingUrl || '').split('/');
+          const keyParts = parts.slice(parts.indexOf('recordings'));
+          s3Key = keyParts.join('/');
+        }
+        
+        const signedUrl = s3.getSignedUrl('getObject', {
+          Bucket: process.env.AWS_S3_BUCKET_NAME || "taplive-recordings",
+          Key: s3Key,
+          Expires: 3600 // 1 hour
+        });
+        
+        return res.json({
+          success: true,
+          data: {
+            orderId: existingSummary.orderId,
+            transcription: existingSummary.transcription.substring(0, 500) + (existingSummary.transcription.length > 500 ? "..." : ""),
+            aiSummary: existingSummary.aiSummary,
+            keyPoints: existingSummary.keyPoints,
+            credibilityReport: {
+              trustIndicators: existingSummary.trustIndicators,
+              riskFactors: existingSummary.riskFactors,
+              credibilityScore: parseFloat(existingSummary.credibilityScore.toString()),
+              recommendations: existingSummary.recommendations
+            },
+            generatedAt: existingSummary.generatedAt.toISOString(),
+            recordingUrl: signedUrl
+          },
+          message: "AI summary retrieved from cache"
+        });
+      }
+
+      // Get order details
+      const order = await storage.getOrderById(orderId);
+      if (!order) {
+        return res.status(404).json({
+          success: false,
+          message: "Order not found"
+        });
+      }
+
+      // Check if recording URL exists
+      if (!order.recordingUrl) {
+        return res.status(400).json({
+          success: false,
+          message: "No recording available for this order"
+        });
+      }
+
+      console.log('[AI Summary] Generating new summary for order:', orderId);
+
+      // Extract S3 key from recording URL
+      // URL format: https://bucket.s3.region.amazonaws.com/recordings/orderId_timestamp.webm
+      // or https://bucket.s3.amazonaws.com/recordings/orderId_timestamp.webm
+      let s3Key: string;
+      try {
+        const url = new URL(order.recordingUrl);
+        // Remove leading slash from pathname to get the key
+        s3Key = url.pathname.substring(1);
+      } catch (e) {
+        // If URL parsing fails, try simple split method (fallback)
+        const parts = order.recordingUrl.split('/');
+        const keyParts = parts.slice(parts.indexOf('recordings'));
+        s3Key = keyParts.join('/');
+      }
+
+      if (!s3Key) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid recording URL format"
+        });
+      }
+
+      console.log('[AI Summary] Extracting video from S3:', {
+        recordingUrl: order.recordingUrl,
+        s3Key: s3Key
+      });
+
+      // Download video from S3
+      const s3Params = {
+        Bucket: process.env.AWS_S3_BUCKET_NAME || "taplive-recordings",
+        Key: s3Key
+      };
+
+      // First check if the file exists in S3
+      try {
+        await s3.headObject(s3Params).promise();
+      } catch (err: any) {
+        console.error('[AI Summary] S3 file check failed:', err);
+        if (err.code === 'NotFound' || err.code === 'NoSuchKey') {
+          return res.status(404).json({
+            success: false,
+            message: "Recording file not found in storage. Please ensure the recording was uploaded successfully."
+          });
+        }
+        throw err;
+      }
+
+      console.log('[AI Summary] File exists in S3, downloading...');
+      const videoData = await s3.getObject(s3Params).promise();
+
+      // Save video to temporary file for local Whisper processing
+      const tempDir = os.tmpdir();
+      // Extract just the filename from s3Key to avoid path issues
+      const filename = s3Key.split('/').pop() || 'recording.webm';
+      const tempFilePath = path.join(tempDir, `temp_audio_${Date.now()}_${filename}`);
+      
+      try {
+        // Write the video data to a temporary file
+        fs.writeFileSync(tempFilePath, videoData.Body as Buffer);
+
+        // Transcribe using local Whisper via Python script
+        // Use 'python' on Windows, 'python3' on Unix-like systems
+        const pythonCommand = process.platform === 'win32' ? 'python' : 'python3';
+        console.log(`[AI Summary] Using Python command: ${pythonCommand}`);
+        
+        const transcription = await new Promise<string>((resolve, reject) => {
+          const pythonProcess = spawn(pythonCommand, [
+            path.join(process.cwd(), 'script/transcribe.py'),
+            tempFilePath
+          ], {
+            cwd: process.cwd(),
+            stdio: ['pipe', 'pipe', 'pipe']
+          });
+
+          let stdout = '';
+          let stderr = '';
+
+          pythonProcess.stdout.on('data', (data) => {
+            stdout += data.toString();
+          });
+
+          pythonProcess.stderr.on('data', (data) => {
+            stderr += data.toString();
+          });
+
+          pythonProcess.on('close', (code) => {
+            if (code === 0) {
+              resolve(stdout.trim());
+            } else {
+              reject(new Error(`Python script failed with code ${code}: ${stderr}`));
+            }
+          });
+
+          pythonProcess.on('error', (error) => {
+            reject(error);
+          });
+        });
+console.log('[AI Summary] Transcription completed. Length:', transcription.length);
+      // Generate AI summary and credibility report using Gemini AI
+      const generativeModel = genAI.getGenerativeModel({
+        model: 'gemini-2.5-flash'
+      });
+
+      const prompt = `
+You are an AI assistant analyzing a cross-border collaboration session recording. Based on the transcription provided, generate:
+
+1. A concise summary of the collaboration session (2-3 paragraphs)
+2. Key discussion points and outcomes
+3. Credibility assessment including:
+   - Trust indicators (consistency, professionalism, transparency)
+   - Risk factors (if any)
+   - Overall credibility score (1-10)
+   - Recommendations for future collaborations
+
+Transcription:
+${transcription}
+
+Please format your response as JSON with the following structure:
+{
+  "summary": "string",
+  "keyPoints": ["string"],
+  "credibilityReport": {
+    "trustIndicators": ["string"],
+    "riskFactors": ["string"],
+    "credibilityScore": number,
+    "recommendations": ["string"]
+  }
+}
+`;
+
+      const result = await generativeModel.generateContent(prompt);
+      const response = await result.response;
+      
+      // Clean the response text - remove markdown code blocks if present
+      let responseText = response.text();
+      responseText = responseText.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
+      
+      const aiAnalysis = JSON.parse(responseText);
+
+      // Generate a signed URL for video playback (valid for 1 hour)
+      const signedUrl = s3.getSignedUrl('getObject', {
+        Bucket: process.env.AWS_S3_BUCKET_NAME || "taplive-recordings",
+        Key: s3Key,
+        Expires: 3600 // 1 hour
+      });
+
+      // Save the AI summary to the database for future retrieval
+      const savedSummary = await storage.createAiSummary({
+        orderId: orderId,
+        transcription: transcription,
+        aiSummary: aiAnalysis.summary,
+        keyPoints: aiAnalysis.keyPoints,
+        trustIndicators: aiAnalysis.credibilityReport.trustIndicators,
+        riskFactors: aiAnalysis.credibilityReport.riskFactors,
+        credibilityScore: aiAnalysis.credibilityReport.credibilityScore.toString(),
+        recommendations: aiAnalysis.credibilityReport.recommendations,
+        recordingUrl: order.recordingUrl, // Store the original S3 URL
+        generatedAt: new Date()
+      });
+
+      console.log('[AI Summary] Summary saved to database:', savedSummary.id);
+
+      res.json({
+        success: true,
+        data: {
+          orderId,
+          transcription: transcription.substring(0, 500) + (transcription.length > 500 ? "..." : ""),
+          aiSummary: aiAnalysis.summary,
+          keyPoints: aiAnalysis.keyPoints,
+          credibilityReport: aiAnalysis.credibilityReport,
+          generatedAt: new Date().toISOString(),
+          recordingUrl: signedUrl // Use signed URL for video playback
+        },
+        message: "AI summary generated successfully"
+      });
+
+      } finally {
+        // Clean up temporary file
+        try {
+          if (fs.existsSync(tempFilePath)) {
+            fs.unlinkSync(tempFilePath);
+          }
+        } catch (cleanupError) {
+          console.warn('Failed to clean up temporary file:', cleanupError);
+        }
+      }
+
+    } catch (error) {
+      console.error('Error generating AI summary:', error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to generate AI summary"
+      });
+    }
+  });
+
+  // Test endpoint for Vertex AI
+  
+
 
   const httpServer = createServer(app);
   
