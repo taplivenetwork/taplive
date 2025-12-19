@@ -75,15 +75,6 @@ CLERK_WEBHOOK_SECRET="your_clerk_webhook_secret_here"
 # Stripe Payment (Backend)
 STRIPE_SECRET_KEY="your_stripe_secret_key_here"
 STRIPE_WEBHOOK_SECRET="your_stripe_webhook_secret_here"
-
-# AWS S3 Configuration (for video recording storage)
-AWS_ACCESS_KEY_ID="your_aws_access_key_id"
-AWS_SECRET_ACCESS_KEY="your_aws_secret_access_key"
-AWS_REGION="us-east-1"
-AWS_S3_BUCKET_NAME="taplive-recordings"
-
-# Google Gemini AI Configuration (for AI summary generation)
-GOOGLE_GEMINI_API_KEY="your_gemini_api_key"
 ```
 
 **How to get Clerk keys:**
@@ -99,84 +90,6 @@ GOOGLE_GEMINI_API_KEY="your_gemini_api_key"
 3. Name the template "neon" (this will be used for JWT authentication)
 4. Configure the template with your desired claims and settings
 5. Save the template
-
-**How to get AWS S3 credentials:**
-1. Go to [AWS Console](https://aws.amazon.com/console/) and sign in
-2. Navigate to **IAM** (Identity and Access Management)
-3. Click "Users" → "Create user"
-4. Enter a username (e.g., `taplive-s3-user`)
-5. Click "Next" → Select "Attach policies directly"
-6. Search and select `AmazonS3FullAccess` policy
-7. Click "Create user"
-8. Go to the user → "Security credentials" tab
-9. Click "Create access key" → Select "Application running outside AWS"
-10. Copy the **Access Key ID** and **Secret Access Key**
-11. Create an S3 bucket:
-    - Go to **S3** service in AWS Console
-    - Click "Create bucket"
-    - Enter bucket name (e.g., `taplive-recordings`)
-    - Select your preferred region (e.g., `us-east-1`)
-    - Keep default settings for "Block Public Access" (recommended)
-    - Click "Create bucket"
-
-**How to get Google Gemini API key:**
-1. Go to [Google AI Studio](https://aistudio.google.com/app/apikey)
-2. Sign in with your Google account
-3. Click "Create API Key"
-4. Select a project or create a new one
-5. Copy the generated API key
-
-### Setup Whisper for AI Transcription
-
-TapLive uses OpenAI's Whisper for transcribing video recordings. Follow these steps to install Whisper locally:
-
-**Prerequisites:**
-- Python 3.8 or higher
-- pip (Python package manager)
-- ffmpeg (for audio processing)
-
-**Installation Steps:**
-
-1. **Install Python** (if not already installed):
-   - Windows: Download from [python.org](https://www.python.org/downloads/)
-   - macOS: `brew install python3`
-   - Linux: `sudo apt-get install python3 python3-pip`
-
-2. **Install ffmpeg**:
-   - Windows: Download from [ffmpeg.org](https://ffmpeg.org/download.html) or use `winget install ffmpeg`
-   - macOS: `brew install ffmpeg`
-   - Linux: `sudo apt-get install ffmpeg`
-
-3. **Install Whisper**:
-   ```bash
-   pip install openai-whisper
-   ```
-   
-   Or if using `pip3`:
-   ```bash
-   pip3 install openai-whisper
-   ```
-
-4. **Verify Installation**:
-   ```bash
-   # Windows
-   python -c "import whisper; print('Whisper installed successfully!')"
-   
-   # macOS/Linux
-   python3 -c "import whisper; print('Whisper installed successfully!')"
-   ```
-
-5. **Install Additional Dependencies** (optional, for better performance):
-   ```bash
-   pip install torch torchvision torchaudio
-   ```
-
-**Troubleshooting:**
-- If you get `ModuleNotFoundError`, ensure Python is in your system PATH
-- For Windows users: Use `python` instead of `python3` in commands
-- For permission errors on macOS/Linux: Use `sudo pip3 install openai-whisper`
-
-**Note:** The first time you run transcription, Whisper will download the model file (~1-2GB). This is a one-time download.
 
 Start server:
 ```bash
