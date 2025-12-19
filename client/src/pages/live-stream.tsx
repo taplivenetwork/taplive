@@ -129,11 +129,12 @@ export default function LiveStreamPage() {
 
   // AI Summary generation mutation
   const generateAISummaryMutation = useMutation({
-    mutationFn: () => 
-      apiRequest('POST', '/api/ai/summary', { orderId }),
-    onSuccess: (response) => {
+    mutationFn: async () => {
+      const response = await apiRequest('POST', '/api/ai/summary', { orderId });
+      return response.json();
+    },
+    onSuccess: () => {
       setShowAISummary(true);
-      // The response data is already available in mutation.data
     }
   });
 
