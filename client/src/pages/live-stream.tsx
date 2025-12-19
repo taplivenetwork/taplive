@@ -12,6 +12,7 @@ import { AISummaryModal } from '@/components/ai-summary-modal';
 import { ArrowLeft, MapPin, Clock, DollarSign, XCircle, Video, Users, Brain } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
 import type { Order } from '@shared/schema';
+import { authFetch } from '@/lib/api';
 
 interface LiveStreamPageProps {
   orderId: string;
@@ -130,7 +131,11 @@ export default function LiveStreamPage() {
   // AI Summary generation mutation
   const generateAISummaryMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiRequest('POST', '/api/ai/summary', { orderId });
+      const response = await authFetch('/api/ai/summary', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId }),
+      });
       return response.json();
     },
     onSuccess: () => {
