@@ -12,7 +12,6 @@ import { AISummaryModal } from '@/components/ai-summary-modal';
 import { ArrowLeft, MapPin, Clock, DollarSign, XCircle, Video, Users, Brain } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
 import type { Order } from '@shared/schema';
-import { authFetch } from '@/lib/api';
 
 interface LiveStreamPageProps {
   orderId: string;
@@ -130,22 +129,8 @@ export default function LiveStreamPage() {
 
   // AI Summary generation mutation
   const generateAISummaryMutation = useMutation({
-    mutationFn: async () => {
-      // Get Clerk session token
-     
-      
-      const response = await authFetch('/api/ai/summary', {
-        method: 'POST',
-        body: JSON.stringify({ orderId })
-      });
-
-      if (!response.ok) {
-        const error = await response.text();
-        throw new Error(`Failed to generate summary: ${error}`);
-      }
-
-      return response.json();
-    },
+    mutationFn: () => 
+      apiRequest('POST', '/api/ai/summary', { orderId }),
     onSuccess: (response) => {
       setShowAISummary(true);
       // The response data is already available in mutation.data
