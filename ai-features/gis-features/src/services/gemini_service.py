@@ -1,41 +1,52 @@
 from config.settings import GEMINI_API_KEY
-import importlib
 
-# ------------------------------------
-# ALWAYS DEFINE MODEL FIRST
-# ------------------------------------
-model = None
+# -------------------------------
+# SAFE DEFAULT
+# -------------------------------
+client = None
+MODEL_NAME = "models/gemini-1.5-flash"  # currently supported free-tier model
 
-# ------------------------------------
-# TRY TO LOAD GEMINI SDK IF KEY EXISTS
-# ------------------------------------
+# -------------------------------
+# TRY TO INITIALIZE GEMINI
+# -------------------------------
 if GEMINI_API_KEY:
     try:
-        genai = importlib.import_module("google.generativeai")
-        genai.configure(api_key=GEMINI_API_KEY)
-        model = genai.GenerativeModel("gemini-pro")
+        from google import genai
+        client = genai.Client(api_key=GEMINI_API_KEY)
     except Exception:
-        model = None
+        client = None
 
 
 def generate_reasoning(prompt: str) -> str:
     """
     Generate AI reasoning using Gemini.
-    Falls back to mock response if Gemini is unavailable.
+    Falls back to mock response if Gemini is unavailable or fails.
     """
 
     # --------------------
     # MOCK FALLBACK
     # --------------------
-    if not GEMINI_API_KEY or model is None:
+    if not client:
         return (
             "Decision: Proceed with Caution\n"
-            "Reason: Moderate wind conditions detected in an urban environment.\n"
-            "Recommendation: Proceed carefully and continue monitoring weather updates."
+            "Reason: Moderate wind and urban operational risks detected.\n"
+            "Recommendation: Proceed carefully and monitor weather updates."
         )
 
     # --------------------
-    # REAL GEMINI RESPONSE
+    # REAL GEMINI CALL
     # --------------------
-    response = model.generate_content(prompt)
-    return response.text.strip()
+    try:
+        response = client.models.generate_content(
+            model=MODEL_NAME,
+            contents=prompt
+        )
+        return response.text.strip()
+
+    except Exception as e:
+        # Absolute safety net
+        return (
+            "Decision: Proceed with Caution\n"
+            "Reason: AI service temporarily unavailable.\n"
+            "Recommendation: Use standard safety protocols."
+        )
