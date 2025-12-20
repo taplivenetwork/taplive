@@ -1,10 +1,11 @@
 from config.settings import GEMINI_API_KEY
 
 # -------------------------------
-# SAFE DEFAULT
+# SAFE DEFAULTS
 # -------------------------------
 client = None
-MODEL_NAME = "models/gemini-1.5-flash"  # currently supported free-tier model
+MODEL_NAME = "models/gemini-flash-lite-latest"
+
 
 # -------------------------------
 # TRY TO INITIALIZE GEMINI
@@ -13,10 +14,36 @@ if GEMINI_API_KEY:
     try:
         from google import genai
         client = genai.Client(api_key=GEMINI_API_KEY)
-    except Exception:
+    except Exception as e:
+        print(f"Gemini init failed: {e}")
         client = None
 
 
+# -------------------------------
+# LIST AVAILABLE MODELS (DEBUG)
+# -------------------------------
+def list_available_models():
+    """
+    Lists available Gemini models.
+    Safe to call manually for debugging.
+    """
+    if not client:
+        print("Gemini client not initialized.")
+        return []
+
+    try:
+        models = client.models.list()
+        model_names = [m.name for m in models]
+        print("Available Gemini Models:", model_names)
+        return model_names
+    except Exception as e:
+        print(f"Model listing failed: {e}")
+        return []
+
+
+# -------------------------------
+# MAIN GENERATION FUNCTION
+# -------------------------------
 def generate_reasoning(prompt: str) -> str:
     """
     Generate AI reasoning using Gemini.
@@ -44,7 +71,8 @@ def generate_reasoning(prompt: str) -> str:
         return response.text.strip()
 
     except Exception as e:
-        # Absolute safety net
+        print(f"Gemini generation error: {e}")
+        list_available_models()  # Debug model availability
         return (
             "Decision: Proceed with Caution\n"
             "Reason: AI service temporarily unavailable.\n"
