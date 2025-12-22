@@ -57,12 +57,44 @@ interface LocationCheckResult {
   hasTimeRestrictions: boolean;
 }
 
+interface GisRiskAssessment {
+  context: {
+    task_context: {
+      task: string;
+      location: string;
+      time_window: string;
+    };
+    gis: {
+      area_type: string;
+      risk_notes: string;
+    };
+    weather: {
+      temperature: number;
+      wind_speed: number;
+      rain_risk: string;
+    };
+    user_preferences: {
+      risk_tolerance: string;
+      mission_criticality: string;
+      asset_sensitivity: string;
+    };
+  };
+  ai_decision: string;
+  formatted_context: string;
+}
+
 export function GeoSafetyPanel() {
   const [location, setLocation] = useState({ latitude: 0, longitude: 0 });
   const [locationRisk, setLocationRisk] = useState<LocationRisk | null>(null);
   const [weatherAlerts, setWeatherAlerts] = useState<WeatherAlert[]>([]);
   const [locationCheck, setLocationCheck] = useState<LocationCheckResult | null>(null);
+  const [gisAssessment, setGisAssessment] = useState<GisRiskAssessment | null>(null);
   const [checking, setChecking] = useState(false);
+  const [task, setTask] = useState("Outdoor drone inspection");
+  const [timeWindow, setTimeWindow] = useState("Next 2 hours");
+  const [riskTolerance, setRiskTolerance] = useState("medium");
+  const [missionCriticality, setMissionCriticality] = useState("routine");
+  const [assetSensitivity, setAssetSensitivity] = useState("medium");
 
   const getCurrentLocation = () => {
     setChecking(true);
@@ -121,10 +153,42 @@ export function GeoSafetyPanel() {
         const geofenceResult = await geofenceResponse.json();
         setLocationCheck(geofenceResult.data);
       }
+
+      // NEW: AI GIS Risk Assessment
+      await assessGisRisk(coords);
     } catch (error) {
       console.error('Failed to check location safety:', error);
     }
     setChecking(false);
+  };
+
+  const assessGisRisk = async (coords: { latitude: number; longitude: number }) => {
+    try {
+      // Get location name (you might want to use reverse geocoding here)
+      const locationName = "Current Location"; // Replace with actual geocoding if available
+
+      const response = await fetch('/api/gis-risk-assessment?' + new URLSearchParams({
+        location: locationName,
+        lat: coords.latitude.toString(),
+        lon: coords.longitude.toString(),
+        task: task,
+        timeWindow: timeWindow,
+        riskTolerance: riskTolerance,
+        missionCriticality: missionCriticality,
+        assetSensitivity: assetSensitivity
+      }));
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success) {
+          setGisAssessment(result.data);
+        }
+      } else {
+        console.error('GIS Risk Assessment failed:', response.statusText);
+      }
+    } catch (error) {
+      console.error('GIS Risk Assessment error:', error);
+    }
   };
 
   const loadWeatherAlerts = async () => {
@@ -378,6 +442,157 @@ export function GeoSafetyPanel() {
           ) : (
             <div className="text-sm text-muted-foreground text-center py-4">
               <TranslatedText context="safety">No Weather Alerts</TranslatedText>
+            </div>
+          )}
+        </div>
+
+        {/* AI GIS Risk Assessment */}
+        <div className="space-y-4 p-4 bg-white/50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
+          <div className="flex items-center gap-2">
+            <div className="p-2 bg-gradient-to-br from-purple-100 to-blue-100 dark:from-purple-900/50 dark:to-blue-900/50 rounded-md">
+              <Globe className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+            </div>
+            <span className="font-semibold text-lg">
+              <TranslatedText context="safety">AI GIS Risk Assessment</TranslatedText>
+            </span>
+          </div>
+
+          {/* Task Configuration */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">
+                <TranslatedText context="safety">Task</TranslatedText>
+              </label>
+              <select
+                value={task}
+                onChange={(e) => setTask(e.target.value)}
+                className="w-full p-2 border rounded-md bg-white dark:bg-gray-800"
+              >
+                <option value="Outdoor drone inspection">Outdoor drone inspection</option>
+                <option value="Delivery service">Delivery service</option>
+                <option value="Field survey">Field survey</option>
+                <option value="Emergency response">Emergency response</option>
+                <option value="Construction monitoring">Construction monitoring</option>
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">
+                <TranslatedText context="safety">Time Window</TranslatedText>
+              </label>
+              <select
+                value={timeWindow}
+                onChange={(e) => setTimeWindow(e.target.value)}
+                className="w-full p-2 border rounded-md bg-white dark:bg-gray-800"
+              >
+                <option value="Next 30 minutes">Next 30 minutes</option>
+                <option value="Next 1 hour">Next 1 hour</option>
+                <option value="Next 2 hours">Next 2 hours</option>
+                <option value="Next 4 hours">Next 4 hours</option>
+                <option value="Next 24 hours">Next 24 hours</option>
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">
+                <TranslatedText context="safety">Risk Tolerance</TranslatedText>
+              </label>
+              <select
+                value={riskTolerance}
+                onChange={(e) => setRiskTolerance(e.target.value)}
+                className="w-full p-2 border rounded-md bg-white dark:bg-gray-800"
+              >
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">
+                <TranslatedText context="safety">Mission Criticality</TranslatedText>
+              </label>
+              <select
+                value={missionCriticality}
+                onChange={(e) => setMissionCriticality(e.target.value)}
+                className="w-full p-2 border rounded-md bg-white dark:bg-gray-800"
+              >
+                <option value="routine">Routine</option>
+                <option value="important">Important</option>
+                <option value="emergency">Emergency</option>
+              </select>
+            </div>
+
+            <div className="space-y-2 md:col-span-2">
+              <label className="text-sm font-medium">
+                <TranslatedText context="safety">Asset Sensitivity</TranslatedText>
+              </label>
+              <select
+                value={assetSensitivity}
+                onChange={(e) => setAssetSensitivity(e.target.value)}
+                className="w-full p-2 border rounded-md bg-white dark:bg-gray-800"
+              >
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Assessment Results */}
+          {gisAssessment && (
+            <div className="mt-6 space-y-4">
+              <div className="border-t pt-4">
+                <h4 className="font-semibold text-lg mb-3 flex items-center gap-2">
+                  <Shield className="w-5 h-5 text-blue-600" />
+                  <TranslatedText context="safety">AI Risk Assessment</TranslatedText>
+                </h4>
+
+                {/* Context Summary */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                  <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                    <div className="text-sm font-medium text-blue-900 dark:text-blue-200 mb-2">
+                      <TranslatedText context="safety">Task Context</TranslatedText>
+                    </div>
+                    <div className="text-xs space-y-1 text-blue-800 dark:text-blue-300">
+                      <div><strong>Task:</strong> {gisAssessment.context.task_context.task}</div>
+                      <div><strong>Location:</strong> {gisAssessment.context.task_context.location}</div>
+                      <div><strong>Time:</strong> {gisAssessment.context.task_context.time_window}</div>
+                    </div>
+                  </div>
+
+                  <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                    <div className="text-sm font-medium text-green-900 dark:text-green-200 mb-2">
+                      <TranslatedText context="safety">Environmental Data</TranslatedText>
+                    </div>
+                    <div className="text-xs space-y-1 text-green-800 dark:text-green-300">
+                      <div><strong>Area:</strong> {gisAssessment.context.gis.area_type}</div>
+                      <div><strong>Weather:</strong> {gisAssessment.context.weather.temperature}°C, Wind {gisAssessment.context.weather.wind_speed} km/h</div>
+                      <div><strong>Rain Risk:</strong> {gisAssessment.context.weather.rain_risk}</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* AI Decision */}
+                <div className="p-4 bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
+                  <div className="flex items-center gap-2 mb-2">
+                    <AlertTriangle className="w-5 h-5 text-yellow-600" />
+                    <span className="font-semibold text-yellow-900 dark:text-yellow-200">
+                      <TranslatedText context="safety">AI Decision</TranslatedText>
+                    </span>
+                  </div>
+                  <div className="text-sm text-yellow-800 dark:text-yellow-300 whitespace-pre-line">
+                    {gisAssessment.ai_decision}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {!gisAssessment && location.latitude !== 0 && (
+            <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+              <Globe className="w-12 h-12 mx-auto mb-2 opacity-50" />
+              <p><TranslatedText context="safety">Configure task parameters and click "Check Location" to get AI risk assessment</TranslatedText></p>
             </div>
           )}
         </div>

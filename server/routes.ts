@@ -2563,6 +2563,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // AI GIS Risk Assessment endpoint
+  app.get("/api/gis-risk-assessment", async (req, res) => {
+    try {
+      const { location, lat, lon, task, timeWindow, riskTolerance, missionCriticality, assetSensitivity } = req.query;
+
+      if (!location || !lat || !lon || !task || !timeWindow) {
+        return res.status(400).json({
+          success: false,
+          message: "Missing required parameters: location, lat, lon, task, timeWindow"
+        });
+      }
+
+      // Call the Python GIS service
+      const pythonServiceUrl = process.env.GIS_SERVICE_URL || "http://127.0.0.1:5000";
+      const response = await axios.get(`${pythonServiceUrl}/assess-risk`, {
+        params: {
+          location: location,
+          lat: parseFloat(lat as string),
+          lon: parseFloat(lon as string),
+          task: task,
+          time_window: timeWindow,
+          risk_tolerance: riskTolerance || "medium",
+          mission_criticality: missionCriticality || "routine",
+          asset_sensitivity: assetSensitivity || "medium"
+        },
+        timeout: 30000 // 30 second timeout
+      });
+
+      res.json({
+        success: true,
+        data: response.data
+      });
+    } catch (error) {
+      console.error("GIS Risk Assessment error:", error);
+      res.status(500).json({
+        success: false,
+        message: "GIS service unavailable or request failed",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
   // Payment endpoints for MVP
   
   // Webhook endpoint for Stripe payment status updates
