@@ -1,4 +1,4 @@
-from core.engine import run_risk_engine
+import requests
 from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
@@ -33,12 +33,27 @@ if __name__ == "__main__":
     asset_sensitivity = prompt_choice("Asset Sensitivity", ["low", "medium", "high"], "medium")
 
     # --------------------
-    # Run Risk Engine
+    # Call FastAPI backend
     # --------------------
-    result = run_risk_engine(
-        location, lat, lon, task, time_window,
-        risk_tolerance, mission_criticality, asset_sensitivity
-    )
+    url = "http://127.0.0.1:5000/assess-risk"  # Change if your FastAPI runs elsewhere
+    params = {
+        "location": location,
+        "lat": lat,
+        "lon": lon,
+        "task": task,
+        "time_window": time_window,
+        "risk_tolerance": risk_tolerance,
+        "mission_criticality": mission_criticality,
+        "asset_sensitivity": asset_sensitivity
+    }
+
+    try:
+        response = requests.get(url, params=params)
+        response.raise_for_status()
+        result = response.json()
+    except Exception as e:
+        console.print(f"[bold red]Error connecting to API:[/] {e}")
+        exit(1)
 
     # --------------------
     # Pretty Display
@@ -74,4 +89,3 @@ if __name__ == "__main__":
     console.print(Panel(Markdown(decision_text), title=f"Decision: {badge}", title_align="left", border_style="bright_blue"))
 
     console.rule("[bold blue]END OF ASSESSMENT[/]")
-
