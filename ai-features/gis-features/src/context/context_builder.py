@@ -1,18 +1,21 @@
-def build_context(user: dict, gis: dict, weather: dict) -> str:
+def build_context(user: dict, gis: dict, weather: dict) -> dict:
     """
-    Build a plain-language context string for AI reasoning.
+    Build a structured context dict for AI reasoning.
     """
-    return f"""
-Task Context:
-- Task: {user['task']}
-- Time Window: {user['time_window']}
+    return {
+        "task_context": {
+            "task": user["task"],
+            "time_window": user["time_window"]
+        },
+        "location": user["location"],
+        "gis": {
+            "area_type": gis["area_type"],
+            "risk_notes": gis["risk_notes"]
+        },
+        "weather": {
+            "temperature": weather["temperature"],
+            "wind_speed": weather["wind_speed"],
+            "rain_risk": weather["rain_risk"]
+        }
+    }
 
-GIS Analysis:
-- Area Type: {gis['area_type']}
-- Notes: {gis['risk_notes']}
-
-Weather Analysis:
-- Temperature: {weather['temperature']}°C
-- Wind Speed: {weather['wind_speed']} km/h
-- Rain Risk: {weather['rain_risk']}
-"""
