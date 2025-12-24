@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { TranslatedText } from '@/components/translated-text';
-import { Play, Square, Camera, Wifi, WifiOff, RefreshCw, Users } from 'lucide-react';
+import { Play, Square, Camera, Wifi, WifiOff, RefreshCw, Users, Clock } from 'lucide-react';
 
 interface NativeWebRTCBroadcasterProps {
   orderId: string;
@@ -571,7 +571,8 @@ export function NativeWebRTCBroadcaster({ orderId, onStreamStart, onStreamEnd, c
               )}
               {isConnected && !canStartBroadcast && (
                 <p className="text-xs text-orange-600 mt-1 text-center">
-                  <TranslatedText context="broadcaster">⏰ Waiting for scheduled time...</TranslatedText>
+                  <Clock className="w-3 h-3 mr-1 inline" />
+                  <TranslatedText context="broadcaster">Waiting for scheduled time...</TranslatedText>
                 </p>
               )}
             </div>
