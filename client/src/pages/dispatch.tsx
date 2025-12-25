@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { ProviderRankingCard } from "@/components/provider-ranking";
 import { TranslatedText } from "@/components/translated-text";
-import { TrendingUp, Users, MapPin, Zap } from "lucide-react";
+import { TrendingUp, Users, MapPin, Zap, DollarSign, Clock } from "lucide-react";
 import type { Order } from "@shared/schema";
 import type { ProviderRanking } from "@shared/dispatch";
 
@@ -163,9 +163,18 @@ export function DispatchPage() {
             <h4 className="font-medium text-foreground">{selectedOrder.title}</h4>
             <p className="text-sm text-muted-foreground mt-1">{selectedOrder.description}</p>
             <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
-              <span>📍 {selectedOrder.address}</span>
-              <span>💰 ${selectedOrder.price}</span>
-              <span>⏱️ {selectedOrder.duration}min</span>
+              <span className="flex items-center gap-1">
+                <MapPin className="w-3 h-3" />
+                {selectedOrder.address}
+              </span>
+              <span className="flex items-center gap-1">
+                <DollarSign className="w-3 h-3" />
+                ${selectedOrder.price}
+              </span>
+              <span className="flex items-center gap-1">
+                <Clock className="w-3 h-3" />
+                {selectedOrder.duration}min
+              </span>
             </div>
           </div>
         )}

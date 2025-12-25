@@ -72,16 +72,16 @@ export function Map({ orders, onLocationSelect, className, center, zoom = 13 }: 
         const lng = parseFloat(order.longitude);
         
         const categoryIcons: Record<string, string> = {
-          music: '♪',
-          food: '🍽',
-          fitness: '🧘',
-          travel: '🗺',
-          events: '🎉',
-          education: '📚'
+          music: 'M',
+          food: 'F',
+          fitness: 'G',
+          travel: 'T',
+          events: 'E',
+          education: 'L'
         };
 
         const icon = window.L.divIcon({
-          html: `<div class="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-white text-sm font-bold shadow-lg animate-pulse-glow">${categoryIcons[order.category] || '📍'}</div>`,
+          html: `<div class="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-white text-sm font-bold shadow-lg animate-pulse-glow">${categoryIcons[order.category] || '•'}</div>`,
           className: 'custom-marker',
           iconSize: [32, 32],
           iconAnchor: [16, 16]
