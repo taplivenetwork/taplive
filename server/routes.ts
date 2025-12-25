@@ -2588,6 +2588,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { location, lat, lon, task, timeWindow, riskTolerance, missionCriticality, assetSensitivity } = req.query;
 
+      console.log("🔍 [EXPRESS BACKEND] GIS risk assessment request received:");
+      console.log(`   Location: ${location}, Lat: ${lat}, Lon: ${lon}`);
+      console.log(`   Task: ${task}, Time Window: ${timeWindow}`);
+      console.log(`   Risk Tolerance: ${riskTolerance}, Mission Criticality: ${missionCriticality}, Asset Sensitivity: ${assetSensitivity}`);
+
       if (!location || !lat || !lon || !task || !timeWindow) {
         return res.status(400).json({
           success: false,
@@ -2596,7 +2601,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Call the Python GIS service
-      const pythonServiceUrl = process.env.GIS_SERVICE_URL || "http://127.0.0.1:5000";
+      const pythonServiceUrl = process.env.GIS_SERVICE_URL || "http://127.0.0.1:5001";
+      console.log(`🌐 [EXPRESS BACKEND] Calling Python GIS service at: ${pythonServiceUrl}/assess-risk`);
+
       const response = await axios.get(`${pythonServiceUrl}/assess-risk`, {
         params: {
           location: location,
@@ -2611,12 +2618,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         timeout: 30000 // 30 second timeout
       });
 
-      res.json({
+      console.log("✅ [EXPRESS BACKEND] Python GIS service responded:");
+      console.log(`   Status: ${response.status}`);
+      console.log(`   AI Decision: ${response.data?.ai_decision || 'N/A'}`);
+      console.log(`   Full Python Response:`, JSON.stringify(response.data, null, 2));
+
+      const finalResponse = {
         success: true,
         data: response.data
-      });
+      };
+
+      console.log("📤 [EXPRESS BACKEND] Sending response to frontend:");
+      console.log(`   Full Response:`, JSON.stringify(finalResponse, null, 2));
+
+      res.json(finalResponse);
     } catch (error) {
-      console.error("GIS Risk Assessment error:", error);
+      console.error("❌ [EXPRESS BACKEND] GIS Risk Assessment error:", error);
       res.status(500).json({
         success: false,
         message: "GIS service unavailable or request failed",

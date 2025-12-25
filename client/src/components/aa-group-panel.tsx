@@ -34,14 +34,14 @@ export function AAGroupPanel() {
 
   // Demo orders for AA group creation
   const demoOrders = [
-    { id: 'demo-order-1', title: '演唱会现场直播', price: 120, type: 'group' },
-    { id: 'demo-order-2', title: '美食探店拍摄', price: 80, type: 'group' },
-    { id: 'demo-order-3', title: '城市夜景直播', price: 60, type: 'group' }
+    { id: 'demo-order-1', title: 'Concert Live Stream', price: 120, type: 'group' },
+    { id: 'demo-order-2', title: 'Food Review Filming', price: 80, type: 'group' },
+    { id: 'demo-order-3', title: 'City Night Scene Live', price: 60, type: 'group' }
   ];
 
   const createAAGroup = async () => {
     if (!selectedOrder) {
-      alert('请选择一个订单');
+      alert('Please select an order');
       return;
     }
 
@@ -60,13 +60,13 @@ export function AAGroupPanel() {
         const result = await response.json();
         setAAGroup(result.data);
         setGroupId(result.data.id);
-        alert('AA拼团创建成功！');
+        alert('AA Group created successfully!');
       } else {
         const error = await response.json();
-        alert(error.message || '创建失败');
+        alert(error.message || 'Failed to create group');
       }
     } catch (error) {
-      alert('创建AA拼团失败');
+      alert('Failed to create AA Group');
     } finally {
       setCreating(false);
     }
@@ -74,7 +74,7 @@ export function AAGroupPanel() {
 
   const loadAAGroup = async () => {
     if (!groupId) {
-      alert('请输入群组ID');
+      alert('Please enter group ID');
       return;
     }
 
@@ -85,10 +85,10 @@ export function AAGroupPanel() {
         const result = await response.json();
         setAAGroup(result.data);
       } else {
-        alert('未找到该群组');
+        alert('Group not found');
       }
     } catch (error) {
-      alert('加载群组失败');
+      alert('Failed to load group');
     } finally {
       setLoading(false);
     }
