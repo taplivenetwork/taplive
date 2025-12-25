@@ -179,8 +179,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const distanceKm = getDistanceKm(
             providerLat,
             providerLng,
-            order.latitude,
-            order.longitude
+            parseFloat(order.latitude),
+            parseFloat(order.longitude)
           );
 
           return distanceKm <= maxDistanceKm;
