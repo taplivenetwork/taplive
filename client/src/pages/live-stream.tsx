@@ -138,12 +138,18 @@ export default function LiveStreamPage() {
       });
       return response.json();
     },
-    onSuccess: () => {
-      setShowAISummary(true);
+    onSuccess: (data) => {
+      // Modal is already open, data will be passed to modal
+      console.log('AI Summary generated successfully:', data);
+    },
+    onError: (error) => {
+      console.error('AI Summary generation failed:', error);
+      // Keep modal open to show error state
     }
   });
 
   const handleGenerateAISummary = () => {
+    setShowAISummary(true);
     generateAISummaryMutation.mutate();
   };
 
@@ -527,9 +533,19 @@ export default function LiveStreamPage() {
         {/* AI Summary Modal */}
         <AISummaryModal
           isOpen={showAISummary}
-          onClose={() => setShowAISummary(false)}
+          onClose={() => {
+            setShowAISummary(false);
+            if (generateAISummaryMutation.isError) {
+              generateAISummaryMutation.reset();
+            }
+          }}
           summaryData={generateAISummaryMutation.data?.data}
           isLoading={generateAISummaryMutation.isPending}
+          error={generateAISummaryMutation.error as Error | null}
+          onRetry={() => {
+            generateAISummaryMutation.reset();
+            generateAISummaryMutation.mutate();
+          }}
         />
       </div>
     </div>

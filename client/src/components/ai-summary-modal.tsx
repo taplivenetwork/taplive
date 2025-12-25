@@ -1,10 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TranslatedText } from '@/components/translated-text';
-import { Brain, CheckCircle, AlertTriangle, Star, X } from 'lucide-react';
+import { Brain, CheckCircle, AlertTriangle, Star, X, FileAudio, MessageSquare, Shield, Zap } from 'lucide-react';
 
 interface AISummaryData {
   orderId: string;
@@ -26,9 +26,33 @@ interface AISummaryModalProps {
   onClose: () => void;
   summaryData?: AISummaryData;
   isLoading?: boolean;
+  error?: Error | null;
+  onRetry?: () => void;
 }
 
-export function AISummaryModal({ isOpen, onClose, summaryData, isLoading }: AISummaryModalProps) {
+export function AISummaryModal({ isOpen, onClose, summaryData, isLoading, error, onRetry }: AISummaryModalProps) {
+  const [loadingMessageIndex, setLoadingMessageIndex] = useState(0);
+
+  const loadingMessages = [
+    { text: "Analyzing audio recording...", icon: FileAudio, color: "text-blue-600" },
+    { text: "Transcribing conversation...", icon: MessageSquare, color: "text-green-600" },
+    { text: "Processing with AI intelligence...", icon: Brain, color: "text-purple-600" },
+    { text: "Assessing credibility factors...", icon: Shield, color: "text-orange-600" },
+    { text: "Generating comprehensive report...", icon: Zap, color: "text-red-600" },
+    { text: "Finalizing analysis...", icon: CheckCircle, color: "text-indigo-600" }
+  ];
+
+  // Cycle through loading messages
+  useEffect(() => {
+    if (!isLoading) return;
+
+    const interval = setInterval(() => {
+      setLoadingMessageIndex((prev) => (prev + 1) % loadingMessages.length);
+    }, 3000); // Change message every 3 seconds
+
+    return () => clearInterval(interval);
+  }, [isLoading, loadingMessages.length]);
+
   const getCredibilityColor = (score: number) => {
     if (score >= 8) return 'text-green-600 bg-green-100';
     if (score >= 6) return 'text-yellow-600 bg-yellow-100';
@@ -52,11 +76,83 @@ export function AISummaryModal({ isOpen, onClose, summaryData, isLoading }: AISu
         </DialogHeader>
 
         {isLoading ? (
-          <div className="flex items-center justify-center py-8 bg-purple-50 dark:bg-purple-900/10 rounded-lg">
-            <div className="animate-spin w-8 h-8 border-4 border-purple-600 border-t-transparent rounded-full mr-4" />
-            <span className="text-lg text-gray-900 dark:text-white">
-              <TranslatedText>Generating AI analysis...</TranslatedText>
-            </span>
+          <div className="flex flex-col items-center justify-center py-12 bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50 dark:from-purple-900/20 dark:via-blue-900/20 dark:to-indigo-900/20 rounded-lg border-2 border-purple-200 dark:border-purple-800">
+            {/* Animated brain icon */}
+            <div className="relative mb-6">
+              <div className="absolute inset-0 bg-purple-400 rounded-full animate-ping opacity-20"></div>
+              <div className="relative bg-gradient-to-br from-purple-500 to-blue-600 p-4 rounded-full shadow-lg">
+                <Brain className="w-12 h-12 text-white animate-pulse" />
+              </div>
+            </div>
+
+            {/* Current loading message with icon */}
+            <div className="flex items-center gap-3 mb-4">
+              {(() => {
+                const currentMessage = loadingMessages[loadingMessageIndex];
+                const IconComponent = currentMessage.icon;
+                return (
+                  <>
+                    <div className={`p-2 rounded-full bg-white shadow-md ${currentMessage.color}`}>
+                      <IconComponent className="w-6 h-6" />
+                    </div>
+                    <span className="text-xl font-semibold text-gray-900 dark:text-white">
+                      <TranslatedText>{currentMessage.text}</TranslatedText>
+                    </span>
+                  </>
+                );
+              })()}
+            </div>
+
+            {/* Progress dots animation */}
+            <div className="flex gap-1 mb-4">
+              {[0, 1, 2].map((i) => (
+                <div
+                  key={i}
+                  className="w-3 h-3 bg-purple-600 rounded-full animate-bounce"
+                  style={{ animationDelay: `${i * 0.2}s` }}
+                />
+              ))}
+            </div>
+
+            {/* Progress bar */}
+            <div className="w-full max-w-xs bg-gray-200 dark:bg-gray-700 rounded-full h-2 mb-4">
+              <div
+                className="bg-gradient-to-r from-purple-500 to-blue-600 h-2 rounded-full transition-all duration-1000 ease-in-out"
+                style={{
+                  width: `${((loadingMessageIndex + 1) / loadingMessages.length) * 100}%`
+                }}
+              />
+            </div>
+
+            {/* Estimated time */}
+            <p className="text-sm text-gray-600 dark:text-gray-400 text-center">
+              <TranslatedText>This may take 20-30 seconds depending on recording length</TranslatedText>
+            </p>
+          </div>
+        ) : error ? (
+          <div className="flex flex-col items-center justify-center py-12 bg-red-50 dark:bg-red-900/20 rounded-lg border-2 border-red-200 dark:border-red-800">
+            <div className="text-red-600 dark:text-red-400 mb-4">
+              <X className="w-12 h-12" />
+            </div>
+            <h3 className="text-xl font-semibold text-red-900 dark:text-red-100 mb-2">
+              <TranslatedText>Generation Failed</TranslatedText>
+            </h3>
+            <p className="text-sm text-red-700 dark:text-red-300 text-center mb-4">
+              {error.message || <TranslatedText>Failed to generate AI summary. Please try again.</TranslatedText>}
+            </p>
+            <div className="flex gap-2">
+              <Button onClick={onClose} variant="outline" className="border-red-300 text-red-700 hover:bg-red-50">
+                <TranslatedText>Close</TranslatedText>
+              </Button>
+              {onRetry && (
+                <Button 
+                  onClick={onRetry}
+                  className="bg-red-600 hover:bg-red-700 text-white"
+                >
+                  <TranslatedText>Try Again</TranslatedText>
+                </Button>
+              )}
+            </div>
           </div>
         ) : summaryData ? (
           <div className="space-y-6">

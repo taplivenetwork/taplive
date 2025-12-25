@@ -3188,6 +3188,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // AI Summary Generation Route
   app.post("/api/ai/summary", authenticateUser, async (req, res) => {
+    const totalStartTime = Date.now();
     try {
       const { orderId } = req.body;
 
@@ -3307,7 +3308,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       console.log('[AI Summary] File exists in S3, downloading...');
+      const downloadStartTime = Date.now();
       const videoData = await s3.getObject(s3Params).promise();
+      console.log(`[AI Summary] Download completed in ${Date.now() - downloadStartTime}ms`);
 
       // Save video to temporary file for local Whisper processing
       const tempDir = os.tmpdir();
@@ -3324,6 +3327,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const pythonCommand = process.platform === 'win32' ? 'python' : 'python3';
         console.log(`[AI Summary] Using Python command: ${pythonCommand}`);
         
+        const transcribeStartTime = Date.now();
         const transcription = await new Promise<string>((resolve, reject) => {
           const pythonProcess = spawn(pythonCommand, [
             path.join(process.cwd(), 'script/transcribe.py'),
@@ -3357,6 +3361,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
         });
 console.log('[AI Summary] Transcription completed. Length:', transcription.length);
+        console.log(`[AI Summary] Transcription completed in ${Date.now() - transcribeStartTime}ms`);
       // Generate AI summary and credibility report using Gemini AI
       const generativeModel = genAI.getGenerativeModel({
         model: 'gemini-2.5-flash'
@@ -3389,6 +3394,7 @@ Please format your response as JSON with the following structure:
 }
 `;
 
+      const aiStartTime = Date.now();
       const result = await generativeModel.generateContent(prompt);
       const response = await result.response;
       
@@ -3397,6 +3403,7 @@ Please format your response as JSON with the following structure:
       responseText = responseText.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
       
       const aiAnalysis = JSON.parse(responseText);
+      console.log(`[AI Summary] AI generation completed in ${Date.now() - aiStartTime}ms`);
 
       // Generate a signed URL for video playback (valid for 1 hour)
       const signedUrl = s3.getSignedUrl('getObject', {
@@ -3406,6 +3413,7 @@ Please format your response as JSON with the following structure:
       });
 
       // Save the AI summary to the database for future retrieval
+      const dbStartTime = Date.now();
       const savedSummary = await storage.createAiSummary({
         orderId: orderId,
         transcription: transcription,
@@ -3420,7 +3428,9 @@ Please format your response as JSON with the following structure:
       });
 
       console.log('[AI Summary] Summary saved to database:', savedSummary.id);
+      console.log(`[AI Summary] Database save completed in ${Date.now() - dbStartTime}ms`);
 
+      console.log(`[AI Summary] Total processing time: ${Date.now() - totalStartTime}ms`);
       res.json({
         success: true,
         data: {
