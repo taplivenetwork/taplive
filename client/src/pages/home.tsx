@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useUser } from "@clerk/clerk-react";
 import { Link } from "wouter";
-import { Plus, Search, Filter, Play, Users, MapPin, Clock, X, Settings, Bell } from "lucide-react";
+import { Plus, Search, Filter, Play, Users, MapPin, Clock, X, Settings, Bell, Video, Monitor, Lock, Rocket, Lightbulb } from "lucide-react";
 import { LanguageSelector } from "@/components/language-selector";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -434,7 +434,8 @@ export default function Home() {
                 className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold px-6 py-3 shadow-lg shadow-purple-500/25"
                 data-testid="button-watch-live"
               >
-                👥 <TranslatedText context="home">Watch Live Now</TranslatedText>
+                <Users className="w-4 h-4 mr-2" />
+                <TranslatedText context="home">Watch Live Now</TranslatedText>
               </Button>
             </div>
             
@@ -503,7 +504,8 @@ export default function Home() {
                   className={viewMode === 'cards' ? 'bg-blue-600 text-white hover:bg-blue-700' : ''}
                   data-testid="button-card-view"
                 >
-                  🎬 <TranslatedText context="home">Single Stream</TranslatedText> {viewMode === 'cards' && '✓'}
+                  <Video className="w-4 h-4 mr-2" />
+                  <TranslatedText context="home">Single Stream</TranslatedText> {viewMode === 'cards' && '✓'}
                 </Button>
                 
                 <TooltipProvider>
@@ -516,11 +518,16 @@ export default function Home() {
                         className="opacity-50 cursor-not-allowed"
                         data-testid="button-grid-view"
                       >
-                        📺 <TranslatedText context="home">Multi-Grid</TranslatedText> 🔒
+                        <Monitor className="w-4 h-4 mr-2" />
+                        <TranslatedText context="home">Multi-Grid</TranslatedText>
+                        <Lock className="w-4 h-4 ml-1" />
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent>
-                      <p className="text-sm">🚀 Coming Soon! Multi-grid view will be enabled in a future update.</p>
+                      <p className="text-sm">
+                        <Rocket className="w-4 h-4 mr-1 inline" />
+                        Coming Soon! Multi-grid view will be enabled in a future update.
+                      </p>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
@@ -805,8 +812,9 @@ export default function Home() {
                           
                           {/* Distance indicator */}
                           {metadata?.distance && (
-                            <Badge className="text-xs bg-green-500 text-white">
-                              📍 {Math.round(metadata.distance)}km away
+                            <Badge className="text-xs bg-green-500 text-white flex items-center gap-1">
+                              <MapPin className="w-3 h-3" />
+                              {Math.round(metadata.distance)}km away
                             </Badge>
                           )}
                           
@@ -828,7 +836,8 @@ export default function Home() {
                     <TranslatedText>No active requests</TranslatedText>
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    💡 <TranslatedText context="home">New orders matching your profile will appear here</TranslatedText>
+                    <Lightbulb className="w-4 h-4 mr-1 inline" />
+                    <TranslatedText context="home">New orders matching your profile will appear here</TranslatedText>
                   </p>
                 </div>
               )}

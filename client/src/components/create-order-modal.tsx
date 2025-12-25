@@ -268,7 +268,7 @@ export function CreateOrderModal({ open, onOpenChange, selectedLocation }: Creat
           
           toast({
             title: "Location Found",
-            description: `📍 ${result.display_name.split(',').slice(0, 3).join(', ')} (via ${provider.name})`,
+            description: `${result.display_name.split(',').slice(0, 3).join(', ')} (via ${provider.name})`,
           });
           
           setIsGeocoding(false);
