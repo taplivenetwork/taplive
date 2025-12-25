@@ -1,3 +1,5 @@
+import { checkLbsEligibility } from "./services/lbs/lbsEligibility";
+
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { WebSocketServer, WebSocket } from "ws";
@@ -153,6 +155,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/orders", async (req, res) => {
     try {
       const { status, latitude, longitude, radius } = req.query;
+      const providerLat = latitude ? parseFloat(latitude as string) : null;
+      const providerLng = longitude ? parseFloat(longitude as string) : null;
+      const maxDistanceKm = radius ? parseFloat(radius as string) : 10;
       
       let orders: Order[];
       
@@ -165,6 +170,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         orders = await storage.getOrdersByLocation(lat, lng, radiusKm);
       } else {
         orders = await storage.getAllOrders();
+      } 
+      // LBS-based filtering (basic proximity check)
+      if (providerLat && providerLng) {
+        orders = orders.filter(order => {
+          if (!order.latitude || !order.longitude) return false;
+
+          const distanceKm = getDistanceKm(
+            providerLat,
+            providerLng,
+            order.latitude,
+            order.longitude
+          );
+
+          return distanceKm <= maxDistanceKm;
+        });
       }
 
       res.json({
@@ -3870,4 +3890,24 @@ Please format your response as JSON with the following structure:
   });
 
   return httpServer;
+}
+function getDistanceKm(
+  lat1: number,
+  lng1: number,
+  lat2: number,
+  lng2: number
+): number {
+  const R = 6371; // Earth radius in km
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLng = ((lng2 - lng1) * Math.PI) / 180;
+
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLng / 2) *
+      Math.sin(dLng / 2);
+
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
 }
