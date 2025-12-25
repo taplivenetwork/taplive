@@ -3898,6 +3898,20 @@ Please format your response as JSON with the following structure:
       console.error('❌ WebSocket error:', error);
     });
   });
+app.get("/api/stream/config", (req, res) => {
+  res.status(200).json({
+    success: true,
+    stream: {
+      streamId: "mock-stream-001",
+      signalingUrl: "wss://localhost:5000/ws",
+      iceServers: [
+        { urls: "stun:stun.l.google.com:19302" }
+      ],
+      mode: "mock",
+      createdAt: new Date().toISOString()
+    }
+  });
+});
 
   return httpServer;
 }
