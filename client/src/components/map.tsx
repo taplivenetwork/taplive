@@ -59,7 +59,7 @@ const LocationPicker: React.FC<LocationPickerProps> = ({ onLocationSelect }) => 
     setLoading(false)
   }
 
-  // Reverse geocoding (on drag end)
+  // Reverse geocoding
   const reverseGeocode = async (lat: number, lng: number) => {
     try {
       const res = await fetch(
@@ -82,37 +82,43 @@ const LocationPicker: React.FC<LocationPickerProps> = ({ onLocationSelect }) => 
 
   return (
     <div style={{ maxWidth: 420, margin: '0 auto', fontFamily: 'system-ui' }}>
-      {/* Address input */}
-      <input
-        value={addressInput}
-        onChange={(e) => setAddressInput(e.target.value)}
-        placeholder='Enter address'
-        style={{
-          width: '100%',
-          padding: 12,
-          fontSize: 15,
-          borderRadius: 8,
-          border: '1px solid #ccc',
-        }}
-      />
+      {/* Input with icon */}
+      <div style={{ position: 'relative' }}>
+        <input
+          value={addressInput}
+          onChange={(e) => setAddressInput(e.target.value)}
+          placeholder='Enter address'
+          style={{
+            width: '100%',
+            padding: '12px 44px 12px 12px',
+            fontSize: 15,
+            borderRadius: 8,
+            border: '1px solid #ccc',
+          }}
+        />
 
-      {/* Locate button */}
-      <button
-        onClick={geocodeAddress}
-        disabled={loading}
-        style={{
-          marginTop: 10,
-          width: '100%',
-          padding: 12,
-          borderRadius: 8,
-          background: '#111',
-          color: '#fff',
-          fontSize: 15,
-          cursor: 'pointer',
-        }}
-      >
-        📍 Locate on map
-      </button>
+        <button
+          onClick={geocodeAddress}
+          disabled={loading}
+          title='Locate on map'
+          style={{
+            position: 'absolute',
+            right: 8,
+            top: '50%',
+            transform: 'translateY(-50%)',
+            width: 32,
+            height: 32,
+            borderRadius: '50%',
+            border: 'none',
+            background: '#0b77a5ff',
+            color: '#fff',
+            cursor: 'pointer',
+            fontSize: 16,
+          }}
+        >
+          📍
+        </button>
+      </div>
 
       {/* Map bottom sheet */}
       {mapOpen && position && (
@@ -152,7 +158,6 @@ const LocationPicker: React.FC<LocationPickerProps> = ({ onLocationSelect }) => 
             </Marker>
           </MapContainer>
 
-          {/* Address preview + done */}
           <div style={{ padding: 12 }}>
             <div style={{ fontSize: 13, marginBottom: 8, color: '#555' }}>
               {tempAddress || 'Move marker to adjust location'}
@@ -163,13 +168,13 @@ const LocationPicker: React.FC<LocationPickerProps> = ({ onLocationSelect }) => 
                 width: '100%',
                 padding: 10,
                 borderRadius: 8,
-                background: '#0d6efd',
+                background: '#0b77a5ff',
                 color: '#fff',
                 fontSize: 15,
                 border: 'none',
               }}
             >
-              ✅ Done
+              Done
             </button>
           </div>
         </div>

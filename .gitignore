@@ -5,7 +5,7 @@ server/public
 vite.config.ts.*
 *.tar.gz
 .env.local
-
+.env.example
 .env
 
 # Google Cloud Service Account Keys
