@@ -7,6 +7,22 @@ import { setupVite, serveStatic, log } from "./vite";
 const app = express();
 const port = parseInt(process.env.PORT || "5000", 10);
 
+// 🔓 XR / WebView CORS unblock (mock phase)
+app.use((req, res, next) => {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  res.setHeader(
+    "Access-Control-Allow-Headers",
+    "Content-Type, Authorization"
+  );
+
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(200);
+  }
+
+  next();
+});
+
 
 // Configure CORS to allow requests from Vercel deployment
 const allowedOrigins = [
@@ -17,35 +33,36 @@ const allowedOrigins = [
   'https://www.taplive.tv', // Production domain with www
 ];
 // 🔓 XR / WebView CORS unblock (mock phase)
-app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-  res.header(
-    "Access-Control-Allow-Headers",
-    "Content-Type, Authorization"
-  );
+//app.use((req, res, next) => {
+//  res.header("Access-Control-Allow-Origin", "*");
+//  res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+//  res.header(
+//    "Access-Control-Allow-Headers",
+//    "Content-Type, Authorization"
+//  );
 
   // Handle preflight requests
-  if (req.method === "OPTIONS") {
-    return res.sendStatus(200);
-  }
+//  if (req.method === "OPTIONS") {
+//    return res.sendStatus(200);
+//  }
 
-  next();
-});
+//  next();
+//});
 
-app.use(cors({
-  origin: (origin, callback) => {
-    // Allow requests with no origin (like mobile apps or curl)
-    if (!origin) return callback(null, true);
-    
-    if (allowedOrigins.includes(origin) || origin.endsWith('.vercel.app')) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true,
-}));
+// ❌ Disabled during XR / WebView mock phase
+// app.use(cors({
+//   origin: (origin, callback) => {
+//     if (!origin) return callback(null, true);
+//     
+//     if (allowedOrigins.includes(origin) || origin.endsWith('.vercel.app')) {
+//       callback(null, true);
+//     } else {
+//       callback(new Error('Not allowed by CORS'));
+//     }
+//   },
+//   credentials: true,
+// }));
+
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -112,7 +129,7 @@ app.use((req, res, next) => {
   server.listen(
   {
     port,
-    host: "127.0.0.1",
+    host: "0.0.0.0",
   },
   () => {
     log(`serving on port ${port}`);
