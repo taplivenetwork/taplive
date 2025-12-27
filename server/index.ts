@@ -7,61 +7,30 @@ import { setupVite, serveStatic, log } from "./vite";
 const app = express();
 const port = parseInt(process.env.PORT || "5000", 10);
 
-// 🔓 XR / WebView CORS unblock (mock phase)
-app.use((req, res, next) => {
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-  res.setHeader(
-    "Access-Control-Allow-Headers",
-    "Content-Type, Authorization"
-  );
-
-  if (req.method === "OPTIONS") {
-    return res.sendStatus(200);
-  }
-
-  next();
-});
 
 
 // Configure CORS to allow requests from Vercel deployment
 const allowedOrigins = [
   'http://localhost:5173', // Local development
+  'http://localhost:8080', // Additional local dev port (guest access)
   'https://taplivenetwork-taplive-git-sandbox1-taplivenetwork.vercel.app', // Vercel deployment
   'https://taplivenetwork.vercel.app',
   'https://taplive.tv', // Production domain
   'https://www.taplive.tv', // Production domain with www
 ];
-// 🔓 XR / WebView CORS unblock (mock phase)
-//app.use((req, res, next) => {
-//  res.header("Access-Control-Allow-Origin", "*");
-//  res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-//  res.header(
-//    "Access-Control-Allow-Headers",
-//    "Content-Type, Authorization"
-//  );
+// CORS: allow listed origins and enable credentials
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true);
 
-  // Handle preflight requests
-//  if (req.method === "OPTIONS") {
-//    return res.sendStatus(200);
-//  }
+    if (allowedOrigins.includes(origin) || (origin && origin.endsWith('.vercel.app'))) {
+      return callback(null, true);
+    }
 
-//  next();
-//});
-
-// ❌ Disabled during XR / WebView mock phase
-// app.use(cors({
-//   origin: (origin, callback) => {
-//     if (!origin) return callback(null, true);
-//     
-//     if (allowedOrigins.includes(origin) || origin.endsWith('.vercel.app')) {
-//       callback(null, true);
-//     } else {
-//       callback(new Error('Not allowed by CORS'));
-//     }
-//   },
-//   credentials: true,
-// }));
+    return callback(new Error('Not allowed by CORS'));
+  },
+  credentials: true,
+}));
 
 
 app.use(express.json());
