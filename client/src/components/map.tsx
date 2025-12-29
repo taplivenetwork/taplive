@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react'
+import { MapPin } from 'lucide-react'
 import { MapContainer, TileLayer, Marker, Tooltip } from 'react-leaflet'
 import L, { Map as LeafletMap } from 'leaflet'
 import 'leaflet/dist/leaflet.css'
@@ -101,6 +102,7 @@ const LocationPicker: React.FC<LocationPickerProps> = ({ onLocationSelect }) => 
           onClick={geocodeAddress}
           disabled={loading}
           title='Locate on map'
+          aria-label='Locate on map'
           style={{
             position: 'absolute',
             right: 8,
@@ -114,9 +116,14 @@ const LocationPicker: React.FC<LocationPickerProps> = ({ onLocationSelect }) => 
             color: '#fff',
             cursor: 'pointer',
             fontSize: 16,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 0,
+            lineHeight: 0,
           }}
         >
-          📍
+          <MapPin size={16} aria-hidden color="currentColor" />
         </button>
       </div>
 
