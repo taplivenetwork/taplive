@@ -1,4 +1,4 @@
-import { Video, MapPin, List, Wallet, Settings, LogOut, User, TrendingUp, BarChart3, Shield } from "lucide-react";
+import { Video, MapPin, List, Wallet, Settings, LogOut, User, TrendingUp, BarChart3, Shield, Brain } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "wouter";
 import { SimpleLanguageSelector } from "@/components/SimpleLanguageSelector";
@@ -37,6 +37,7 @@ export function Sidebar() {
     { name: "Live Streams", href: "/streams", icon: Video, current: location === "/streams" },
     { name: "Smart Dispatch", href: "/dispatch", icon: TrendingUp, current: location === "/dispatch" },
     { name: "Safety & AA", href: "/safety", icon: Shield, current: location === "/safety" },
+    { name: "AI Command", href: "/ai-command", icon: Brain, current: location === "/ai-command" },
   ];
 
   const providerNavigation = [

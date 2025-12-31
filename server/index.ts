@@ -11,6 +11,7 @@ const port = parseInt(process.env.PORT || "5000", 10);
 
 // Configure CORS to allow requests from Vercel deployment
 const allowedOrigins = [
+  'http://localhost:5000', // Local development (same port as server)
   'http://localhost:5173', // Local development
   'http://localhost:8080', // Additional local dev port (guest access)
   'https://taplivenetwork-taplive-git-sandbox1-taplivenetwork.vercel.app', // Vercel deployment

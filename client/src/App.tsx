@@ -20,6 +20,7 @@ import SafetyPage from '@/pages/safety'
 import Payment from '@/pages/payment'
 import LiveStreamPage from '@/pages/live-stream'
 import NotFound from '@/pages/not-found'
+import AICommandCenter from '@/pages/ai-command-center'
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY
 
@@ -44,6 +45,7 @@ function Router() {
       <Route path='/payment/:orderId' component={Payment} />
       <Route path='/stream/:orderId' component={LiveStreamPage} />
       <Route path='/settings' component={Settings} />
+      <Route path='/ai-command' component={AICommandCenter} />
       <Route component={NotFound} />
     </Switch>
   )
