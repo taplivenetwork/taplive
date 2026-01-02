@@ -26,8 +26,10 @@ app.use(helmet({
   crossOriginEmbedderPolicy: false, // Required for video streaming
 }));
 
-// Global rate limiting
-app.use(globalLimiter);
+// Global rate limiting (production only - dev needs unrestricted for Vite HMR)
+if (process.env.NODE_ENV === 'production') {
+  app.use(globalLimiter);
+}
 
 // Configure CORS to allow requests from Vercel deployment
 const allowedOrigins = [
