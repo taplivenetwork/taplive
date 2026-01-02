@@ -12,3 +12,6 @@ vite.config.ts.*
 *.json
 keys/
 vertexai-*.json
+
+# Agent Configuration
+.agent/

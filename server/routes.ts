@@ -6,7 +6,16 @@ import { WebSocketServer, WebSocket } from "ws";
 import Stripe from "stripe";
 import { Webhook } from "svix";
 import { storage } from "./storage";
-import { syncClerkUserToDatabase, authenticateUser } from "./auth";
+import { syncClerkUserToDatabase } from "./auth";
+import { 
+  authenticateUser, 
+  optionalAuth,
+  globalLimiter, 
+  orderLimiter, 
+  paymentLimiter,
+  requireOwnership,
+  requireOrderOwnership 
+} from "./middleware";
 import { insertOrderSchema, ratingValidationSchema, paymentValidationSchema, cryptoPaymentSchema, disputeSubmissionSchema, geoLocationSchema, aaGroupCreationSchema, type Order } from "@shared/schema";
 import { calculateCommission, PAYMENT_METHODS } from "@shared/payment";
 import { assessGeoRisk, checkContentViolations, checkVoiceContent, formatRiskLevel } from "@shared/geo-safety";
@@ -231,7 +240,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Create new order
-  app.post("/api/orders", async (req, res) => {
+  app.post("/api/orders", authenticateUser, orderLimiter, async (req, res) => {
     try {
       const validation = insertOrderSchema.safeParse(req.body);
       
@@ -325,7 +334,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Update order
-  app.patch("/api/orders/:id", async (req, res) => {
+  app.patch("/api/orders/:id", authenticateUser, async (req, res) => {
     try {
       const { id } = req.params;
       const updates = req.body;
@@ -397,7 +406,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Provider cancel order (with rating penalty)
-  app.post("/api/orders/:id/cancel-by-provider", async (req, res) => {
+  app.post("/api/orders/:id/cancel-by-provider", authenticateUser, async (req, res) => {
     try {
       const { id } = req.params;
       
@@ -935,7 +944,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // });
 
   // Customer disputes order
-  app.post("/api/orders/:id/dispute", async (req, res) => {
+  app.post("/api/orders/:id/dispute", authenticateUser, async (req, res) => {
     try {
       const { id: orderId } = req.params;
       const validation = disputeSubmissionSchema.safeParse(req.body);
@@ -1008,7 +1017,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Delete order
-  app.delete("/api/orders/:id", async (req, res) => {
+  app.delete("/api/orders/:id", authenticateUser, async (req, res) => {
     try {
       const { id } = req.params;
       const deleted = await storage.deleteOrder(id);
@@ -1063,7 +1072,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Update user profile
-  app.patch("/api/users/:id", async (req, res) => {
+  app.patch("/api/users/:id", authenticateUser, requireOwnership('id'), async (req, res) => {
     try {
       const { id } = req.params;
       const updates = req.body;
@@ -1642,7 +1651,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Create Stripe Connect account link (for onboarding)
-  app.post("/api/stripe/connect/create-account-link", async (req, res) => {
+  app.post("/api/stripe/connect/create-account-link", authenticateUser, paymentLimiter, async (req, res) => {
     try {
       const { userId, returnUrl, refreshUrl } = req.body;
       
@@ -1738,7 +1747,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Create Stripe Connect dashboard link (for existing connected accounts)
-  app.post("/api/stripe/connect/dashboard-link", async (req, res) => {
+  app.post("/api/stripe/connect/dashboard-link", authenticateUser, async (req, res) => {
     try {
       const { userId } = req.body;
       
@@ -1785,7 +1794,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Disconnect Stripe Connect account
-  app.post("/api/stripe/connect/disconnect", async (req, res) => {
+  app.post("/api/stripe/connect/disconnect", authenticateUser, async (req, res) => {
     try {
       const { userId } = req.body;
       
@@ -1890,7 +1899,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Create payment for order
-  app.post("/api/orders/:id/payment", async (req, res) => {
+  app.post("/api/orders/:id/payment", authenticateUser, paymentLimiter, async (req, res) => {
     try {
       const { id: orderId } = req.params;
       const validation = paymentValidationSchema.safeParse({
@@ -2028,7 +2037,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 
   // Complete fiat payment (webhook simulation)
-  app.post("/api/payments/:id/complete", async (req, res) => {
+  app.post("/api/payments/:id/complete", authenticateUser, async (req, res) => {
     try {
       const { id: paymentId } = req.params;
       
@@ -2655,8 +2664,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (process.env.STRIPE_WEBHOOK_SECRET) {
           event = stripe.webhooks.constructEvent(req.body, sig as string, process.env.STRIPE_WEBHOOK_SECRET);
         } else {
-          console.warn('⚠️  STRIPE_WEBHOOK_SECRET not set - webhook signature verification skipped');
-          event = JSON.parse(req.body);
+          // SECURITY FIX: Never accept webhooks without signature verification
+          console.error('❌ STRIPE_WEBHOOK_SECRET not configured - rejecting webhook');
+          return res.status(500).json({
+            success: false,
+            message: 'Webhook processing not available - server misconfiguration'
+          });
         }
       } catch (err) {
         console.error('Webhook signature verification failed:', err);
