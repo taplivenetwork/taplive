@@ -358,43 +358,16 @@ export function CreateOrderModal({ open, onOpenChange, selectedLocation }: Creat
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         ref={modalRef}
-        className='sm:max-w-md w-[calc(100%-2rem)] max-h-[85vh] lg:max-h-[80vh] flex flex-col bg-white border-2 border-gray-200 shadow-2xl rounded-xl overflow-hidden data-[state=open]:lg:fixed data-[state=open]:lg:z-[9999]'
-        style={
-          window.innerWidth >= 1024
-            ? {
-                transform: `translate(${position.x}px, ${position.y}px)`,
-                cursor: isDragging ? 'grabbing' : 'default',
-                willChange: isDragging ? 'transform' : 'auto',
-              }
-            : undefined
-        }
+        className='sm:max-w-md w-[calc(100%-2rem)] max-h-[85vh] lg:max-h-[80vh] flex flex-col bg-white border border-border shadow-2xl rounded-xl overflow-hidden'
         data-testid='create-order-modal'
         aria-describedby='create-order-description'
       >
-        <DialogHeader
-          className='lg:cursor-grab lg:active:cursor-grabbing border-b border-gray-100 pb-3 select-none flex-shrink-0'
-          onMouseDown={handleMouseDown}
-        >
-          <div className='flex items-center justify-between'>
-            <div className='flex items-center gap-2'>
-              <Move className='w-4 h-4 text-gray-400 hidden lg:block' />
-              <DialogTitle className='text-lg font-bold text-foreground'>
-                <TranslatedText>Create Streaming Order</TranslatedText>
-              </DialogTitle>
-            </div>
-          </div>
+        <DialogHeader className='border-b border-border pb-3 select-none flex-shrink-0 bg-muted/30 px-6 pt-4'>
+          <DialogTitle className='text-lg font-bold text-foreground'>
+            <TranslatedText>Create Streaming Order</TranslatedText>
+          </DialogTitle>
           <p id='create-order-description' className='text-sm text-muted-foreground'>
-            <span className='hidden lg:inline'>
-              <TranslatedText>
-                Fill out the form below to create a new streaming request. Drag this window to view
-                the map.
-              </TranslatedText>
-            </span>
-            <span className='lg:hidden'>
-              <TranslatedText>
-                Fill out the form below to create a new streaming request.
-              </TranslatedText>
-            </span>
+            <TranslatedText>Fill out the form below to create a new streaming request.</TranslatedText>
           </p>
         </DialogHeader>
 
@@ -564,7 +537,7 @@ export function CreateOrderModal({ open, onOpenChange, selectedLocation }: Creat
                 )}
               />
 
-              <div className='border-2 border-gray-200 bg-gray-50 rounded-lg p-4 space-y-4'>
+              <div className='border border-border bg-muted/50 rounded-lg p-4 space-y-4'>
                 <h4 className='font-medium text-foreground'>
                   <TranslatedText>Payment Options</TranslatedText>
                 </h4>
@@ -670,7 +643,7 @@ export function CreateOrderModal({ open, onOpenChange, selectedLocation }: Creat
         </div>
 
         {/* Fixed bottom action buttons */}
-        <div className='flex-shrink-0 border-t border-gray-100 px-6 py-4 bg-gray-50'>
+        <div className='flex-shrink-0 border-t border-border px-6 py-4 bg-muted/50'>
           <div className='flex gap-3'>
             <Button
               type='button'
@@ -700,51 +673,51 @@ export function CreateOrderModal({ open, onOpenChange, selectedLocation }: Creat
 
       {/* Mock Payment Confirmation Modal */}
       <Dialog open={showPaymentModal} onOpenChange={setShowPaymentModal}>
-        <DialogContent className='sm:max-w-[440px] bg-white border-2 border-gray-300 shadow-xl p-0'>
+        <DialogContent className='sm:max-w-[440px] bg-background border border-border shadow-xl p-0'>
           <div className='p-5'>
             <DialogHeader className='mb-4'>
-              <DialogTitle className='flex items-center gap-2 text-lg font-bold text-gray-900'>
-                <CreditCard className='h-5 w-5 text-blue-600' />
+              <DialogTitle className='flex items-center gap-2 text-lg font-bold text-foreground'>
+                <CreditCard className='h-5 w-5 text-primary' />
                 Confirm Payment
               </DialogTitle>
             </DialogHeader>
 
             <div className='space-y-3'>
               {/* Order Summary */}
-              <div className='bg-blue-50 border border-blue-200 rounded-lg p-3'>
-                <h4 className='flex items-center gap-1.5 font-semibold text-blue-900 text-sm mb-2'>
+              <div className='bg-primary/5 border border-primary/20 rounded-lg p-3'>
+                <h4 className='flex items-center gap-1.5 font-semibold text-primary text-sm mb-2'>
                   <FileText className='h-4 w-4' />
                   Order Summary
                 </h4>
                 {pendingOrderData && (
                   <div className='space-y-1.5'>
                     <div className='flex justify-between items-center'>
-                      <span className='text-gray-600 text-xs'>Title:</span>
+                      <span className='text-muted-foreground text-xs'>Title:</span>
                       <span
-                        className='font-medium text-xs text-gray-900 max-w-[240px] truncate'
+                        className='font-medium text-xs text-foreground max-w-[240px] truncate'
                         title={pendingOrderData.title}
                       >
                         {pendingOrderData.title}
                       </span>
                     </div>
                     <div className='flex justify-between items-center'>
-                      <span className='text-gray-600 text-xs'>Location:</span>
+                      <span className='text-muted-foreground text-xs'>Location:</span>
                       <span
-                        className='font-medium text-xs text-gray-900 max-w-[240px] truncate'
+                        className='font-medium text-xs text-foreground max-w-[240px] truncate'
                         title={pendingOrderData.address}
                       >
                         {pendingOrderData.address}
                       </span>
                     </div>
                     <div className='flex justify-between items-center'>
-                      <span className='text-gray-600 text-xs'>Duration:</span>
-                      <span className='font-medium text-xs text-gray-900'>
+                      <span className='text-muted-foreground text-xs'>Duration:</span>
+                      <span className='font-medium text-xs text-foreground'>
                         {pendingOrderData.duration} min
                       </span>
                     </div>
-                    <div className='flex justify-between items-center pt-2 mt-2 border-t border-blue-300'>
-                      <span className='font-semibold text-blue-900 text-sm'>Total Amount:</span>
-                      <span className='text-xl font-bold text-blue-900'>
+                    <div className='flex justify-between items-center pt-2 mt-2 border-t border-primary/20'>
+                      <span className='font-semibold text-primary text-sm'>Total Amount:</span>
+                      <span className='text-xl font-bold text-primary'>
                         ${pendingOrderData.price}
                       </span>
                     </div>
@@ -775,8 +748,8 @@ export function CreateOrderModal({ open, onOpenChange, selectedLocation }: Creat
               </div>
 
               {/* Mock Payment Notice */}
-              <div className='bg-gray-100 border border-gray-300 rounded-lg p-2.5'>
-                <p className='flex items-center justify-center gap-1.5 text-xs text-gray-700 leading-relaxed'>
+              <div className='bg-muted border border-border rounded-lg p-2.5'>
+                <p className='flex items-center justify-center gap-1.5 text-xs text-muted-foreground leading-relaxed'>
                   <Lock className='h-3.5 w-3.5' />
                   Mock payment for testing. No actual charges.
                 </p>
@@ -787,7 +760,7 @@ export function CreateOrderModal({ open, onOpenChange, selectedLocation }: Creat
                 <Button
                   type='button'
                   variant='outline'
-                  className='flex-1 h-10 border-gray-300'
+                  className='flex-1 h-10'
                   onClick={handleCancelPayment}
                   disabled={createOrderMutation.isPending}
                 >
