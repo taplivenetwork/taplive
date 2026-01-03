@@ -1,8 +1,11 @@
 import React, { useState, useRef } from 'react'
-import { MapPin } from 'lucide-react'
+import { MapPin, Loader2, Check } from 'lucide-react'
 import { MapContainer, TileLayer, Marker, Tooltip } from 'react-leaflet'
 import L, { Map as LeafletMap } from 'leaflet'
 import 'leaflet/dist/leaflet.css'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
 
 // Fix Leaflet marker icons
 delete (L.Icon.Default.prototype as any)._getIconUrl
@@ -41,7 +44,7 @@ const LocationPicker: React.FC<LocationPickerProps> = ({ onLocationSelect }) => 
         `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
           addressInput
         )}`,
-        { headers: { 'User-Agent': 'YourAppNameHere' } }
+        { headers: { 'User-Agent': 'TapLive' } }
       )
       const data = await res.json()
 
@@ -65,7 +68,7 @@ const LocationPicker: React.FC<LocationPickerProps> = ({ onLocationSelect }) => 
     try {
       const res = await fetch(
         `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`,
-        { headers: { 'User-Agent': 'YourAppNameHere' } }
+        { headers: { 'User-Agent': 'TapLive' } }
       )
       const data = await res.json()
       setTempAddress(data?.display_name || '')
@@ -82,109 +85,81 @@ const LocationPicker: React.FC<LocationPickerProps> = ({ onLocationSelect }) => 
   }
 
   return (
-    <div style={{ maxWidth: 420, margin: '0 auto', fontFamily: 'system-ui' }}>
+    <div className="w-full space-y-4">
       {/* Input with icon */}
-      <div style={{ position: 'relative' }}>
-        <input
+      <div className="relative">
+        <Input
           value={addressInput}
           onChange={(e) => setAddressInput(e.target.value)}
-          placeholder='Enter address'
-          style={{
-            width: '100%',
-            padding: '12px 44px 12px 12px',
-            fontSize: 15,
-            borderRadius: 8,
-            border: '1px solid #ccc',
-          }}
+          placeholder="Enter address"
+          className="pr-12"
+          onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), geocodeAddress())}
         />
 
-        <button
+        <Button
+          type="button"
+          size="icon"
+          variant="ghost"
           onClick={geocodeAddress}
           disabled={loading}
-          title='Locate on map'
-          aria-label='Locate on map'
-          style={{
-            position: 'absolute',
-            right: 8,
-            top: '50%',
-            transform: 'translateY(-50%)',
-            width: 32,
-            height: 32,
-            borderRadius: '50%',
-            border: 'none',
-            background: '#0b77a5ff',
-            color: '#fff',
-            cursor: 'pointer',
-            fontSize: 16,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: 0,
-            lineHeight: 0,
-          }}
+          className="absolute right-0 top-0 h-full w-10 text-muted-foreground hover:text-primary"
         >
-          <MapPin size={16} aria-hidden color="currentColor" />
-        </button>
+          {loading ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <MapPin className="h-4 w-4" />
+          )}
+          <span className="sr-only">Locate</span>
+        </Button>
       </div>
 
       {/* Map bottom sheet */}
       {mapOpen && position && (
-        <div
-          style={{
-            marginTop: 16,
-            borderRadius: 12,
-            overflow: 'hidden',
-            boxShadow: '0 10px 30px rgba(0,0,0,0.15)',
-            background: '#fff',
-          }}
-        >
-          <MapContainer
-            center={position}
-            zoom={16}
-            style={{ height: 280, width: '100%' }}
-            ref={mapRef}
-            doubleClickZoom={false}
-            scrollWheelZoom={false}
-            attributionControl={false}
-          >
-            <TileLayer url='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png' />
-            <Marker
-              draggable
-              position={position}
-              eventHandlers={{
-                dragend: (e) => {
-                  const latLng = (e.target as L.Marker).getLatLng()
-                  setPosition(latLng)
-                  reverseGeocode(latLng.lat, latLng.lng)
-                },
-              }}
+        <Card className="overflow-hidden border border-border shadow-lg animate-in slide-in-from-top-2">
+          <div className="h-[280px] w-full relative">
+            <MapContainer
+              center={position}
+              zoom={16}
+              style={{ height: '100%', width: '100%' }}
+              ref={mapRef}
+              doubleClickZoom={false}
+              scrollWheelZoom={false}
+              attributionControl={false}
             >
-              <Tooltip permanent direction='top'>
-                Drag to adjust
-              </Tooltip>
-            </Marker>
-          </MapContainer>
+              <TileLayer url='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png' />
+              <Marker
+                draggable
+                position={position}
+                eventHandlers={{
+                  dragend: (e) => {
+                    const latLng = (e.target as L.Marker).getLatLng()
+                    setPosition(latLng)
+                    reverseGeocode(latLng.lat, latLng.lng)
+                  },
+                }}
+              >
+                <Tooltip permanent direction='top'>
+                  Drag to adjust
+                </Tooltip>
+              </Marker>
+            </MapContainer>
+          </div>
 
-          <div style={{ padding: 12 }}>
-            <div style={{ fontSize: 13, marginBottom: 8, color: '#555' }}>
+          <div className="p-3 bg-muted/30 border-t border-border space-y-3">
+            <div className="text-xs text-muted-foreground truncate px-1">
+              <MapPin className="inline-block w-3 h-3 mr-1 mb-0.5" />
               {tempAddress || 'Move marker to adjust location'}
             </div>
-            <button
-              onClick={handleDone}
-              style={{
-                width: '100%',
-                padding: 10,
-                borderRadius: 8,
-                background: '#0b77a5ff',
-                color: '#fff',
-                fontSize: 15,
-                border: 'none',
-              }}
+            <Button 
+              onClick={handleDone} 
+              className="w-full h-9 text-sm"
+              size="sm"
             >
-              Done
-            </button>
+              <Check className="w-3.5 h-3.5 mr-2" />
+              Confirm Location
+            </Button>
           </div>
-        </div>
+        </Card>
       )}
     </div>
   )
